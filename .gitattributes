@@ -1,0 +1,14 @@
+# GitHub Linguist Overrides
+# Force GitHub to detect repository languages as JavaScript and TypeScript
+
+# TypeScript files
+*.ts linguist-language=TypeScript linguist-detectable=true
+
+# JavaScript files
+*.js linguist-language=JavaScript linguist-detectable=true linguist-vendored=false
+src/lib/GamepadCoreHost.js linguist-language=JavaScript linguist-detectable=true linguist-vendored=false
+
+# Exclude markup, tests UI and build artifacts from language statistics
+*.html linguist-detectable=false
+testes/** linguist-detectable=false
+dist/** linguist-vendored=true linguist-detectable=false
