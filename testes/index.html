@@ -1,0 +1,2262 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DualSense Integration Test - GamepadCoreHost</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090d16;
+      --card: #131b2e;
+      --card-soft: #0e1526;
+      --card-inner: #19233c;
+      --border: #233152;
+      --border-light: #344670;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.25);
+      --ok: #10b981;
+      --ok-glow: rgba(16, 185, 129, 0.25);
+      --warn: #f59e0b;
+      --danger: #ef4444;
+      --cross: #60a5fa;
+      --circle: #f87171;
+      --square: #ec4899;
+      --triangle: #34d399;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    code { color: var(--accent); font-family: "Fira Code", monospace, Consolas; }
+
+    .app-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Header */
+    .header-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .header-title h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-title p {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .header-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      padding: 9px 16px;
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      background: #1b2642;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:hover:not(:disabled) {
+      background: #25355c;
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.btn-primary {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #fff;
+    }
+    button.btn-primary:hover:not(:disabled) {
+      background: #0369a1;
+    }
+
+    button.btn-danger {
+      background: #991b1b;
+      border-color: #ef4444;
+      color: #fff;
+    }
+    button.btn-danger:hover:not(:disabled) {
+      background: #7f1d1d;
+    }
+
+    /* Badges Bar */
+    .status-ribbon {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 10px 18px;
+      background: var(--card-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 0.85rem;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+    .status-dot.active {
+      background: var(--ok);
+      box-shadow: 0 0 8px var(--ok-glow);
+    }
+    .status-dot.warn {
+      background: var(--warn);
+    }
+
+    /* Main Grid Layout */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+    }
+
+    .left-column, .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-header h2, .card-header h3 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-header p {
+      margin: 2px 0 0;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .card-body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Sub-grid of cards */
+    .inner-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .inner-grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .inner-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    /* Command Map Section */
+    .map-banner {
+      font-family: "Fira Code", monospace, Consolas;
+      font-size: 0.82rem;
+      background: var(--card-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      color: var(--text);
+      line-height: 1.45;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .command-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.15s ease;
+    }
+
+    .command-item-row.active {
+      border-color: var(--ok);
+      background: rgba(16, 185, 129, 0.15);
+      box-shadow: 0 0 10px var(--ok-glow);
+    }
+
+    .command-btn-tag {
+      font-weight: 700;
+      font-family: monospace;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.85rem;
+    }
+
+    .command-desc {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--ok);
+    }
+
+    /* Analogs & Triggers visual cards */
+    .meter-card {
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .meter-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .meter-val {
+      color: var(--accent);
+      font-family: monospace;
+      font-weight: 700;
+    }
+
+    .progress-bar-bg {
+      height: 10px;
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0284c7, var(--accent));
+      width: 0%;
+      transition: width 0.05s linear;
+    }
+
+    .progress-bar-fill.right-trigger {
+      background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    /* 2D Stick visualizer */
+    .stick-pad-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stick-canvas {
+      width: 90px;
+      height: 90px;
+      background: #090e1a;
+      border: 2px solid var(--border);
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .stick-cursor {
+      width: 18px;
+      height: 18px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: absolute;
+      top: calc(50% - 9px);
+      left: calc(50% - 9px);
+      box-shadow: 0 0 10px var(--accent-glow);
+      transform: translate(0, 0);
+      pointer-events: none;
+    }
+
+    .stick-cursor.pressed {
+      background: var(--ok);
+      box-shadow: 0 0 12px var(--ok-glow);
+    }
+
+    .stick-data-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.8rem;
+      font-family: monospace;
+    }
+
+    /* Digital Buttons Grid */
+    .pill-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      font-family: monospace;
+      transition: all 0.1s ease;
+    }
+
+    .pill-btn.active {
+      background: var(--accent);
+      color: #041324;
+      font-weight: 700;
+      border-color: #7dd3fc;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .pill-btn.btn-cross.active { background: var(--cross); color: #000; }
+    .pill-btn.btn-circle.active { background: var(--circle); color: #000; }
+    .pill-btn.btn-square.active { background: var(--square); color: #fff; }
+    .pill-btn.btn-triangle.active { background: var(--triangle); color: #000; }
+
+    /* Touchpad Surface Visualizer */
+    .touchpad-surface {
+      height: 120px;
+      background: #080d1a;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .touch-dot {
+      width: 16px;
+      height: 16px;
+      background: var(--ok);
+      border-radius: 50%;
+      position: absolute;
+      box-shadow: 0 0 12px var(--ok-glow);
+      display: none;
+      transform: translate(-50%, -50%);
+    }
+
+    .touchpad-idle-hint {
+      color: var(--muted);
+      font-size: 0.78rem;
+      pointer-events: none;
+    }
+
+    /* Sensors Data Grid */
+    .sensor-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 10px;
+      background: var(--card-inner);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    .sensor-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    /* Logs */
+    .log-container {
+      background: #080d19;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-family: "Fira Code", monospace, Consolas;
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      height: 280px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+
+    .log-container::-webkit-scrollbar { width: 6px; }
+    .log-container::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+    .lang-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1b2642;
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+
+    .lang-dropdown {
+      background: #131b2e;
+      color: var(--accent);
+      border: 1px solid var(--border-light);
+      border-radius: 6px;
+      padding: 3px 8px;
+      outline: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .lang-dropdown:focus {
+      border-color: var(--accent);
+    }
+
+    @media (max-width: 1100px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .inner-grid-3, .inner-grid-4 { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+
+    <!-- Header Bar -->
+    <header class="header-bar">
+      <div class="header-title">
+        <h1 data-i18n="header.title">DualSense Integration Test</h1>
+        <p data-i18n="header.subtitle">GamepadCoreHost WebHID & WASM Diagnostic Suite</p>
+      </div>
+      <div class="header-controls">
+        <div class="lang-container">
+          <label for="lang-select">🌐 <span data-i18n="header.language">Language</span>:</label>
+          <select id="lang-select" class="lang-dropdown">
+            <option value="en" selected>🇺🇸 English (EN)</option>
+            <option value="pt-BR">🇧🇷 Português (PT-BR)</option>
+            <option value="es">🇪🇸 Español (ES)</option>
+          </select>
+        </div>
+        <button id="btn-load" class="btn-primary" data-i18n="header.btnLoadWasm">1) Load WASM</button>
+        <button id="btn-request" disabled data-i18n="header.btnConnectHid">2) Connect DualSense (WebHID)</button>
+        <button id="btn-start" disabled data-i18n="header.btnStartLoop">3) Start Loop</button>
+        <button id="btn-stop" class="btn-danger" disabled data-i18n="header.btnStopLoop">4) Stop Loop</button>
+        <button id="btn-clear-logs" data-i18n="header.btnClearLogs">Clear Logs</button>
+      </div>
+    </header>
+
+    <!-- Status Ribbon -->
+    <div class="status-ribbon">
+      <div class="status-badge">
+        <span id="dot-wasm" class="status-dot"></span>
+        <span><span data-i18n="status.wasm">WASM</span>: <strong id="lbl-wasm" data-i18n="status.notLoaded">Not Loaded</strong></span>
+      </div>
+      <div class="status-badge">
+        <span id="dot-hid" class="status-dot"></span>
+        <span><span data-i18n="status.device">Device</span>: <strong id="lbl-device" data-i18n="status.none">None</strong></span>
+      </div>
+      <div class="status-badge">
+        <span id="dot-gyro" class="status-dot"></span>
+        <span><span data-i18n="status.gyro">Gyroscope</span>: <strong id="lbl-gyro" data-i18n="status.inactive">Inactive</strong></span>
+      </div>
+      <div class="status-badge">
+        <span id="dot-touch" class="status-dot"></span>
+        <span><span data-i18n="status.touch">Touchpad</span>: <strong id="lbl-touch" data-i18n="status.inactive">Inactive</strong></span>
+      </div>
+      <div class="status-badge">
+        <span>🔋 <span data-i18n="status.battery">Battery</span>: <strong id="lbl-battery">--%</strong></span>
+      </div>
+      <div class="status-badge">
+        <span>⏱️ <span data-i18n="status.rate">Rate</span>: <strong id="lbl-fps">60 Hz</strong></span>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <main class="main-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="left-column">
+
+        <!-- CARD 1: MAPA DE FUNÇÕES -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h2 data-i18n="cards.commands.title">🎮 Function Map (DUALSENSE INTEGRATION TEST)</h2>
+              <p data-i18n="cards.commands.subtitle">Press the buttons on the controller to trigger corresponding effects or click to test</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="inner-grid-2">
+              <div class="command-item-row" id="cmd-cross">
+                <span class="command-btn-tag">(X) Cross</span>
+                <span class="command-desc" data-i18n="commands.cross">Heavy Rumble + RED Light</span>
+              </div>
+              <div class="command-item-row" id="cmd-circle">
+                <span class="command-btn-tag">(O) Circle</span>
+                <span class="command-desc" data-i18n="commands.circle">Soft Rumble + YELLOW Light</span>
+              </div>
+              <div class="command-item-row" id="cmd-square">
+                <span class="command-btn-tag">[ ] Square</span>
+                <span class="command-desc" data-i18n="commands.square">Trigger Effect: GAMECUBE (R2)</span>
+              </div>
+              <div class="command-item-row" id="cmd-triangle">
+                <span class="command-btn-tag">/\ Triangle</span>
+                <span class="command-desc" data-i18n="commands.triangle">Stop All (Triggers &amp; Lights)</span>
+              </div>
+              <div class="command-item-row" id="cmd-l1">
+                <span class="command-btn-tag">[L1]</span>
+                <span class="command-desc" data-i18n="commands.l1">Trigger Effect: Gallop (L2)</span>
+              </div>
+              <div class="command-item-row" id="cmd-r1">
+                <span class="command-btn-tag">[R1]</span>
+                <span class="command-desc" data-i18n="commands.r1">Trigger Effect: Machine (R2)</span>
+              </div>
+              <div class="command-item-row" id="cmd-up">
+                <span class="command-btn-tag">[UP]</span>
+                <span class="command-desc" data-i18n="commands.up">Trigger Effect: Feedback (Rigid)</span>
+              </div>
+              <div class="command-item-row" id="cmd-down">
+                <span class="command-btn-tag">[DOWN]</span>
+                <span class="command-desc" data-i18n="commands.down">Trigger Effect: Bow (Tension)</span>
+              </div>
+              <div class="command-item-row" id="cmd-left">
+                <span class="command-btn-tag">[LEFT]</span>
+                <span class="command-desc" data-i18n="commands.left">Trigger Effect: Weapon (Semi)</span>
+              </div>
+              <div class="command-item-row" id="cmd-right">
+                <span class="command-btn-tag">[RIGHT]</span>
+                <span class="command-desc" data-i18n="commands.right">Trigger Effect: Automatic Gun (Buzz)</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 2: ANALÓGICOS & GATILHOS -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h3 data-i18n="cards.analogs.title">🕹️ Analogs &amp; Triggers (Sticks &amp; Triggers)</h3>
+              <p data-i18n="cards.analogs.subtitle">Continuous analog values and L2/R2 trigger thresholds</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Gatilhos L1, L2, R1, R2 -->
+            <div class="inner-grid-2">
+              <div class="meter-card">
+                <div class="meter-title">
+                  <span>L1 : <strong id="lbl-l1">0</strong></span>
+                  <span><span data-i18n="analogs.l2">L2 (Trigger)</span> : <strong id="lbl-l2" class="meter-val">0.000</strong></span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div id="bar-l2" class="progress-bar-fill"></div>
+                </div>
+                <div style="font-size:0.75rem; color:var(--muted); display:flex; justify-content:space-between;">
+                  <span><span data-i18n="analogs.threshold">Threshold</span>: <strong id="lbl-l2-th">false</strong></span>
+                  <span><span data-i18n="analogs.deadzone">DeadZone</span>: <strong id="lbl-deadzone">0.08</strong></span>
+                </div>
+              </div>
+
+              <div class="meter-card">
+                <div class="meter-title">
+                  <span>R1 : <strong id="lbl-r1">0</strong></span>
+                  <span><span data-i18n="analogs.r2">R2 (Trigger)</span> : <strong id="lbl-r2" class="meter-val">0.000</strong></span>
+                </div>
+                <div class="progress-bar-bg">
+                  <div id="bar-r2" class="progress-bar-fill right-trigger"></div>
+                </div>
+                <div style="font-size:0.75rem; color:var(--muted); display:flex; justify-content:space-between;">
+                  <span><span data-i18n="analogs.threshold">Threshold</span>: <strong id="lbl-r2-th">false</strong></span>
+                  <span><span data-i18n="analogs.active">Active</span>: <strong id="lbl-r2-active">0.00</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analógicos 2D -->
+            <div class="inner-grid-2">
+              <div class="meter-card">
+                <div class="meter-title">
+                  <span data-i18n="analogs.leftStick">Left Analog (L-Stick)</span>
+                  <span id="lbl-lstick-coords" class="meter-val">(0.000, 0.000)</span>
+                </div>
+                <div class="stick-pad-container">
+                  <div class="stick-canvas">
+                    <div id="stick-left-dot" class="stick-cursor"></div>
+                  </div>
+                  <div class="stick-data-list">
+                    <div><span data-i18n="analogs.l3Click">L3 (Click)</span>: <strong id="lbl-l3">0</strong></div>
+                    <div><span data-i18n="analogs.up">Up</span>: <strong id="lbl-la-up">0</strong> | <span data-i18n="analogs.down">Down</span>: <strong id="lbl-la-down">0</strong></div>
+                    <div><span data-i18n="analogs.left">Left</span>: <strong id="lbl-la-left">0</strong> | <span data-i18n="analogs.right">Right</span>: <strong id="lbl-la-right">0</strong></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="meter-card">
+                <div class="meter-title">
+                  <span data-i18n="analogs.rightStick">Right Analog (R-Stick)</span>
+                  <span id="lbl-rstick-coords" class="meter-val">(0.000, 0.000)</span>
+                </div>
+                <div class="stick-pad-container">
+                  <div class="stick-canvas">
+                    <div id="stick-right-dot" class="stick-cursor"></div>
+                  </div>
+                  <div class="stick-data-list">
+                    <div><span data-i18n="analogs.r3Click">R3 (Click)</span>: <strong id="lbl-r3">0</strong></div>
+                    <div><span data-i18n="analogs.up">Up</span>: <strong id="lbl-ra-up">0</strong> | <span data-i18n="analogs.down">Down</span>: <strong id="lbl-ra-down">0</strong></div>
+                    <div><span data-i18n="analogs.left">Left</span>: <strong id="lbl-ra-left">0</strong> | <span data-i18n="analogs.right">Right</span>: <strong id="lbl-ra-right">0</strong></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 3: BOTÕES DIGITAIS & SISTEMA -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h3 data-i18n="cards.buttons.title">🔘 Digital Buttons &amp; System</h3>
+              <p data-i18n="cards.buttons.subtitle">Face buttons, D-Pad, system buttons, and back paddles (DualSense Edge)</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Face Buttons -->
+            <div class="inner-grid-4">
+              <div class="pill-btn btn-cross" id="pill-cross"><span data-i18n="buttons.cross">Cross (X)</span> : <span id="v-cross">0</span></div>
+              <div class="pill-btn btn-circle" id="pill-circle"><span data-i18n="buttons.circle">Circle (O)</span> : <span id="v-circle">0</span></div>
+              <div class="pill-btn btn-square" id="pill-square"><span data-i18n="buttons.square">Square ([ ])</span> : <span id="v-square">0</span></div>
+              <div class="pill-btn btn-triangle" id="pill-triangle"><span data-i18n="buttons.triangle">Triangle (/\)</span> : <span id="v-triangle">0</span></div>
+            </div>
+
+            <!-- D-Pad -->
+            <div class="inner-grid-4">
+              <div class="pill-btn" id="pill-up"><span data-i18n="buttons.dpadUp">D-Pad UP</span> : <span id="v-up">0</span></div>
+              <div class="pill-btn" id="pill-down"><span data-i18n="buttons.dpadDown">D-Pad DOWN</span> : <span id="v-down">0</span></div>
+              <div class="pill-btn" id="pill-left"><span data-i18n="buttons.dpadLeft">D-Pad LEFT</span> : <span id="v-left">0</span></div>
+              <div class="pill-btn" id="pill-right"><span data-i18n="buttons.dpadRight">D-Pad RIGHT</span> : <span id="v-right">0</span></div>
+            </div>
+
+            <!-- System Buttons -->
+            <div class="inner-grid-3">
+              <div class="pill-btn" id="pill-ps"><span data-i18n="buttons.ps">PS Button</span> : <span id="v-ps">0</span></div>
+              <div class="pill-btn" id="pill-share"><span data-i18n="buttons.share">Create/Share</span> : <span id="v-share">0</span></div>
+              <div class="pill-btn" id="pill-options"><span data-i18n="buttons.options">Options/Start</span> : <span id="v-options">0</span></div>
+              <div class="pill-btn" id="pill-touch-btn"><span data-i18n="buttons.touchClick">Touch Click</span> : <span id="v-touch-btn">0</span></div>
+              <div class="pill-btn" id="pill-mute"><span data-i18n="buttons.mute">Mute Button</span> : <span id="v-mute">0</span></div>
+              <div class="pill-btn" id="pill-phone"><span data-i18n="buttons.phone">Headset Connected</span> : <span id="v-phone">0</span></div>
+            </div>
+
+            <!-- Edge Buttons -->
+            <div class="inner-grid-4">
+              <div class="pill-btn" id="pill-fn1"><span data-i18n="buttons.fn1">Fn 1</span> : <span id="v-fn1">0</span></div>
+              <div class="pill-btn" id="pill-fn2"><span data-i18n="buttons.fn2">Fn 2</span> : <span id="v-fn2">0</span></div>
+              <div class="pill-btn" id="pill-padd-l"><span data-i18n="buttons.paddleL">Paddle L</span> : <span id="v-padd-l">0</span></div>
+              <div class="pill-btn" id="pill-padd-r"><span data-i18n="buttons.paddleR">Paddle R</span> : <span id="v-padd-r">0</span></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="right-column">
+
+        <!-- CARD 4: GIROSCÓPIO & SENSORES DE MOVIMENTO -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h3 data-i18n="cards.motion.title">🧭 Gyroscope &amp; Motion (IMU 6-Axis)</h3>
+              <p data-i18n="cards.motion.subtitle">Sensors enabled via GCH_EnableGyroscopeValues</p>
+            </div>
+            <span class="status-badge"><span class="status-dot active"></span> 1000 Hz Raw</span>
+          </div>
+          <div class="card-body">
+            <div class="inner-grid-2">
+              <div class="sensor-item">
+                <span class="sensor-label" data-i18n="motion.gyroscope">Gyroscope (Rotational Velocity)</span>
+                <div>X: <strong id="lbl-gyro-x">0.0000</strong></div>
+                <div>Y: <strong id="lbl-gyro-y">0.0000</strong></div>
+                <div>Z: <strong id="lbl-gyro-z">0.0000</strong></div>
+              </div>
+
+              <div class="sensor-item">
+                <span class="sensor-label" data-i18n="motion.accelerometer">Accelerometer (Linear Acceleration)</span>
+                <div>X: <strong id="lbl-acc-x">0.0000</strong></div>
+                <div>Y: <strong id="lbl-acc-y">0.0000</strong></div>
+                <div>Z: <strong id="lbl-acc-z">0.0000</strong></div>
+              </div>
+
+              <div class="sensor-item">
+                <span class="sensor-label" data-i18n="motion.gravity">Gravity (Gravity Vector)</span>
+                <div>X: <strong id="lbl-grav-x">0.0000</strong></div>
+                <div>Y: <strong id="lbl-grav-y">0.0000</strong></div>
+                <div>Z: <strong id="lbl-grav-z">0.0000</strong></div>
+              </div>
+
+              <div class="sensor-item">
+                <span class="sensor-label" data-i18n="motion.tilt">Tilt (Pitch, Roll, Yaw)</span>
+                <div>Pitch: <strong id="lbl-tilt-x">0.0000</strong></div>
+                <div>Roll : <strong id="lbl-tilt-y">0.0000</strong></div>
+                <div>Yaw  : <strong id="lbl-tilt-z">0.0000</strong></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 5: TOUCHPAD -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <h3 data-i18n="cards.touchpad.title">👆 Touchpad (Capacitive Touch)</h3>
+              <p data-i18n="cards.touchpad.subtitle">Enabled via GCH_EnableTouch</p>
+            </div>
+            <span id="lbl-touch-status" class="status-badge">Fingers: 0</span>
+          </div>
+          <div class="card-body">
+            <div class="touchpad-surface" id="touchpad-area">
+              <div class="touch-dot" id="touch-dot-1"></div>
+              <div class="touchpad-idle-hint" id="touch-hint" data-i18n="touchpad.touchingHint">Touch the DualSense surface to visualize</div>
+            </div>
+
+            <div class="inner-grid-2">
+              <div class="sensor-item">
+                <span class="sensor-label" data-i18n="touchpad.status">Touch Status</span>
+                <div><span data-i18n="touchpad.touching">Touching</span>: <strong id="lbl-is-touching">false</strong></div>
+                <div><span data-i18n="touchpad.touchId">Touch ID</span>: <strong id="lbl-touch-id">0</strong></div>
+                <div><span data-i18n="touchpad.direction">Direction</span>: <strong id="lbl-touch-dir">0</strong></div>
+              </div>
+
+              <div class="sensor-item">
+                <span class="sensor-label" data-i18n="touchpad.coordinates">Coordinates</span>
+                <div><span data-i18n="touchpad.position">Position (X, Y)</span>: <strong id="lbl-touch-pos">(0.00, 0.00)</strong></div>
+                <div><span data-i18n="touchpad.relative">Relative (X, Y)</span>: <strong id="lbl-touch-rel">(0.00, 0.00)</strong></div>
+                <div><span data-i18n="touchpad.radius">Radius (X, Y)</span>: <strong id="lbl-touch-rad">(0.00, 0.00)</strong></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 6: LOGS EM TEMPO REAL -->
+        <section class="card" style="flex:1;">
+          <div class="card-header">
+            <div>
+              <h3 data-i18n="cards.logs.title">📜 Diagnostic &amp; Event Log</h3>
+              <p data-i18n="cards.logs.subtitle">Real-time readings from 148-byte buffer and executed commands</p>
+            </div>
+          </div>
+          <div class="card-body" style="padding:12px; flex:1;">
+            <div id="log-box" class="log-container" data-i18n="logs.wasmLoading">Waiting for WASM module initialization...</div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <script src="../src/lib/GamepadCoreHost.js"></script>
+  <script type="module">
+    // ==========================================
+    // I18N Translation System
+    // ==========================================
+    const translations = {
+      en: {
+        header: {
+          title: "DualSense Integration Test",
+          subtitle: "GamepadCoreHost WebHID & WASM Diagnostic Suite",
+          btnLoadWasm: "1) Load WASM",
+          btnConnectHid: "2) Connect DualSense (WebHID)",
+          btnStartLoop: "3) Start Loop",
+          btnStopLoop: "4) Stop Loop",
+          btnClearLogs: "Clear Logs",
+          language: "Language",
+        },
+        status: {
+          wasm: "WASM",
+          notLoaded: "Not Loaded",
+          ready: "Ready",
+          error: "Error",
+          device: "Device",
+          none: "None",
+          connected: "Connected",
+          gyro: "Gyroscope",
+          touch: "Touchpad",
+          active: "Active",
+          inactive: "Inactive",
+          battery: "Battery",
+          rate: "Rate",
+        },
+        cards: {
+          commands: {
+            title: "🎮 Function Map (DUALSENSE INTEGRATION TEST)",
+            subtitle: "Press the buttons on the controller to trigger corresponding effects or click to test",
+          },
+          analogs: {
+            title: "🕹️ Analogs & Triggers (Sticks & Triggers)",
+            subtitle: "Continuous analog values and L2/R2 trigger thresholds",
+          },
+          buttons: {
+            title: "🔘 Digital Buttons & System",
+            subtitle: "Face buttons, D-Pad, system buttons, and back paddles (DualSense Edge)",
+          },
+          motion: {
+            title: "🧭 Gyroscope & Motion (IMU 6-Axis)",
+            subtitle: "Sensors enabled via GCH_EnableGyroscopeValues",
+          },
+          touchpad: {
+            title: "👆 Touchpad (Capacitive Touch)",
+            subtitle: "Enabled via GCH_EnableTouch",
+            touchingHint: "Touch the DualSense surface to visualize",
+          },
+          logs: {
+            title: "📜 Diagnostic & Event Log",
+            subtitle: "Real-time readings from 148-byte buffer and executed commands",
+          },
+        },
+        commands: {
+          cross: "Heavy Rumble + RED Light",
+          circle: "Soft Rumble + YELLOW Light",
+          square: "Trigger Effect: GAMECUBE (R2)",
+          triangle: "Stop All (Triggers & Lights)",
+          l1: "Trigger Effect: Gallop (L2)",
+          r1: "Trigger Effect: Machine (R2)",
+          up: "Trigger Effect: Feedback (Rigid)",
+          down: "Trigger Effect: Bow (Tension)",
+          left: "Trigger Effect: Weapon (Semi)",
+          right: "Trigger Effect: Automatic Gun (Buzz)",
+        },
+        analogs: {
+          l1: "L1",
+          l2: "L2 (Trigger)",
+          r1: "R1",
+          r2: "R2 (Trigger)",
+          threshold: "Threshold",
+          deadzone: "DeadZone",
+          active: "Active",
+          leftStick: "Left Analog (L-Stick)",
+          rightStick: "Right Analog (R-Stick)",
+          l3Click: "L3 (Click)",
+          r3Click: "R3 (Click)",
+          up: "Up",
+          down: "Down",
+          left: "Left",
+          right: "Right",
+        },
+        buttons: {
+          cross: "Cross (X)",
+          circle: "Circle (O)",
+          square: "Square ([ ])",
+          triangle: "Triangle (/\\)",
+          dpadUp: "D-Pad UP",
+          dpadDown: "D-Pad DOWN",
+          dpadLeft: "D-Pad LEFT",
+          dpadRight: "D-Pad RIGHT",
+          ps: "PS Button",
+          share: "Create/Share",
+          options: "Options/Start",
+          touchClick: "Touch Click",
+          mute: "Mute Button",
+          phone: "Headset Connected",
+          fn1: "Fn 1",
+          fn2: "Fn 2",
+          paddleL: "Paddle L",
+          paddleR: "Paddle R",
+        },
+        motion: {
+          gyroscope: "Gyroscope (Rotational Velocity)",
+          accelerometer: "Accelerometer (Linear Acceleration)",
+          gravity: "Gravity (Gravity Vector)",
+          tilt: "Tilt (Pitch, Roll, Yaw)",
+        },
+        touchpad: {
+          status: "Touch Status",
+          touching: "Touching",
+          notTouching: "Not Touching",
+          touchId: "Touch ID",
+          fingers: "Fingers",
+          direction: "Direction Raw",
+          coordinates: "Coordinates",
+          position: "Position (X, Y)",
+          relative: "Relative (X, Y)",
+          radius: "Radius (X, Y)",
+          touchingHint: "Touch the DualSense surface to visualize",
+        },
+        logs: {
+          wasmLoading: "Waiting for WASM module initialization...",
+          wasmLoaded: "✅ WASM GamepadCoreHost loaded successfully.",
+          wasmFailed: "❌ Error loading WASM: {{error}}",
+          webHidPrompt: "Opening WebHID device selection dialog...",
+          webHidConnected: "✅ DualSense device connected: {{name}}",
+          webHidNotSupported: "❌ WebHID not supported in this browser.",
+          webHidFailed: "❌ Device request failed: {{error}}",
+          loopStarted: "▶️ Reading and telemetry loop started.",
+          loopStopped: "⏹️ Loop paused.",
+          bridgeConnected: "✅ PlatformBridge and DeviceRegistryPolicy connected to WASM.",
+          devicesReady: "ℹ️ Authorized devices ready: {{count}}",
+          deviceDispatched: "✅ Device connected and dispatched: ID = {{id}}",
+          gyroActive: "🧭 Device {{id}}: Gyroscope enabled successfully.",
+          touchActive: "👆 Device {{id}}: Touchpad enabled successfully.",
+          deviceDisconnected: "❌ Device disconnected: ID = {{id}}",
+          triggerSuccess: "⚙️ Device {{id}}: {{msg}} [Success]",
+          triggerFailed: "⚙️ Device {{id}}: {{msg}} [Failed]",
+          triggersReset: "🛑 Device {{id}}: All trigger effects reset.",
+        },
+      },
+      "pt-BR": {
+        header: {
+          title: "DualSense Integration Test",
+          subtitle: "Conjunto de Diagnóstico GamepadCoreHost WebHID & WASM",
+          btnLoadWasm: "1) Carregar WASM",
+          btnConnectHid: "2) Conectar DualSense (WebHID)",
+          btnStartLoop: "3) Iniciar Loop",
+          btnStopLoop: "4) Parar Loop",
+          btnClearLogs: "Limpar Logs",
+          language: "Idioma",
+        },
+        status: {
+          wasm: "WASM",
+          notLoaded: "Não carregado",
+          ready: "Pronto",
+          error: "Erro",
+          device: "Dispositivo",
+          none: "Nenhum",
+          connected: "Conectado",
+          gyro: "Giroscópio",
+          touch: "Touchpad",
+          active: "Ativo",
+          inactive: "Inativo",
+          battery: "Bateria",
+          rate: "Frequência",
+        },
+        cards: {
+          commands: {
+            title: "🎮 Mapa de Funções (DUALSENSE INTEGRATION TEST)",
+            subtitle: "Pressione os botões no controle para acionar os efeitos correspondentes ou clique para testar",
+          },
+          analogs: {
+            title: "🕹️ Analógicos & Gatilhos (Sticks & Triggers)",
+            subtitle: "Valores analógicos contínuos e thresholds dos gatilhos L2 e R2",
+          },
+          buttons: {
+            title: "🔘 Botões Digitais & Sistema",
+            subtitle: "Botões de ação, D-Pad, botões de sistema e paddles traseiros (DualSense Edge)",
+          },
+          motion: {
+            title: "🧭 Giroscópio & Movimento (IMU 6-Axis)",
+            subtitle: "Sensores habilitados via GCH_EnableGyroscopeValues",
+          },
+          touchpad: {
+            title: "👆 Touchpad (Capacitive Touch)",
+            subtitle: "Habilitado via GCH_EnableTouch",
+            touchingHint: "Toque na superfície do DualSense para visualizar",
+          },
+          logs: {
+            title: "📜 Log de Leituras & Eventos",
+            subtitle: "Registro automático das leituras do buffer de 148 bytes e comandos executados",
+          },
+        },
+        commands: {
+          cross: "Heavy Rumble + Luz VERMELHA",
+          circle: "Soft Rumble + Luz AMARELA",
+          square: "Efeito de Gatilho: GAMECUBE (R2)",
+          triangle: "Parar Tudo (Gatilhos & Luzes)",
+          l1: "Efeito de Gatilho: Gallop (L2)",
+          r1: "Efeito de Gatilho: Machine (R2)",
+          up: "Efeito de Gatilho: Feedback (Rigid)",
+          down: "Efeito de Gatilho: Bow (Tension)",
+          left: "Efeito de Gatilho: Weapon (Semi)",
+          right: "Efeito de Gatilho: Automatic Gun (Buzz)",
+        },
+        analogs: {
+          l1: "L1",
+          l2: "L2 (Gatilho)",
+          r1: "R1",
+          r2: "R2 (Gatilho)",
+          threshold: "Threshold",
+          deadzone: "DeadZone",
+          active: "Ativo",
+          leftStick: "Analógico Esquerdo (L-Stick)",
+          rightStick: "Analógico Direito (R-Stick)",
+          l3Click: "L3 (Clique)",
+          r3Click: "R3 (Clique)",
+          up: "Cima",
+          down: "Baixo",
+          left: "Esquerda",
+          right: "Direita",
+        },
+        buttons: {
+          cross: "Cross (X)",
+          circle: "Circle (O)",
+          square: "Square ([ ])",
+          triangle: "Triangle (/\\)",
+          dpadUp: "D-Pad CIMA",
+          dpadDown: "D-Pad BAIXO",
+          dpadLeft: "D-Pad ESQUERDA",
+          dpadRight: "D-Pad DIREITA",
+          ps: "Botão PS",
+          share: "Create/Share",
+          options: "Options/Start",
+          touchClick: "Clique Touch",
+          mute: "Botão Mute",
+          phone: "Fone Conectado",
+          fn1: "Fn 1",
+          fn2: "Fn 2",
+          paddleL: "Paddle L",
+          paddleR: "Paddle R",
+        },
+        motion: {
+          gyroscope: "Giroscópio (Rotational Velocity)",
+          accelerometer: "Acelerômetro (Linear Acceleration)",
+          gravity: "Gravidade (Gravity Vector)",
+          tilt: "Tilt / Inclinação (Pitch, Roll, Yaw)",
+        },
+        touchpad: {
+          status: "Estado do Toque",
+          touching: "Tocando",
+          notTouching: "Sem Toque",
+          touchId: "Touch ID",
+          fingers: "Dedos",
+          direction: "Direção",
+          coordinates: "Coordenadas",
+          position: "Posição (X, Y)",
+          relative: "Relativo (X, Y)",
+          radius: "Raio (X, Y)",
+          touchingHint: "Toque na superfície do DualSense para visualizar",
+        },
+        logs: {
+          wasmLoading: "Aguardando inicialização do módulo WASM...",
+          wasmLoaded: "✅ WASM GamepadCoreHost inicializado com sucesso.",
+          wasmFailed: "❌ Erro ao carregar WASM: {{error}}",
+          webHidPrompt: "Abrindo diálogo de seleção de dispositivo WebHID...",
+          webHidConnected: "✅ Dispositivo(s) autorizado(s): {{name}}",
+          webHidNotSupported: "❌ WebHID não suportado neste navegador.",
+          webHidFailed: "❌ Falha ao solicitar dispositivo: {{error}}",
+          loopStarted: "▶️ Loop de leitura e telemetria iniciado.",
+          loopStopped: "⏹️ Loop pausado.",
+          bridgeConnected: "✅ PlatformBridge e DeviceRegistryPolicy Wasm conectadas.",
+          devicesReady: "ℹ️ Dispositivos autorizados prontos: {{count}}",
+          deviceDispatched: "✅ Device conectado e despachado: ID = {{id}}",
+          gyroActive: "🧭 Device {{id}}: Giroscópio ativado com sucesso.",
+          touchActive: "👆 Device {{id}}: Touchpad ativado com sucesso.",
+          deviceDisconnected: "❌ Device desconectado: ID = {{id}}",
+          triggerSuccess: "⚙️ Device {{id}}: {{msg}} [Sucesso]",
+          triggerFailed: "⚙️ Device {{id}}: {{msg}} [Falha]",
+          triggersReset: "🛑 Device {{id}}: Todos os triggers resetados.",
+        },
+      },
+      es: {
+        header: {
+          title: "DualSense Integration Test",
+          subtitle: "Suite de Diagnóstico GamepadCoreHost WebHID & WASM",
+          btnLoadWasm: "1) Cargar WASM",
+          btnConnectHid: "2) Conectar DualSense (WebHID)",
+          btnStartLoop: "3) Iniciar Bucle",
+          btnStopLoop: "4) Detener Bucle",
+          btnClearLogs: "Limpiar Registros",
+          language: "Idioma",
+        },
+        status: {
+          wasm: "WASM",
+          notLoaded: "No cargado",
+          ready: "Listo",
+          error: "Error",
+          device: "Dispositivo",
+          none: "Ninguno",
+          connected: "Conectado",
+          gyro: "Giroscopio",
+          touch: "Panel táctil",
+          active: "Activo",
+          inactive: "Inactivo",
+          battery: "Batería",
+          rate: "Frecuencia",
+        },
+        cards: {
+          commands: {
+            title: "🎮 Mapa de Funciones (DUALSENSE INTEGRATION TEST)",
+            subtitle: "Presione los botones del mando para activar los efectos correspondientes o haga clic para probar",
+          },
+          analogs: {
+            title: "🕹️ Analógicos y Gatillos (Sticks & Triggers)",
+            subtitle: "Valores analógicos continuos y umbrales de los gatillos L2 y R2",
+          },
+          buttons: {
+            title: "🔘 Botones Digitales y Sistema",
+            subtitle: "Botones frontales, D-Pad, botones de sistema y palancas traseras (DualSense Edge)",
+          },
+          motion: {
+            title: "🧭 Giroscopio y Movimiento (IMU 6-Axis)",
+            subtitle: "Sensores habilitados mediante GCH_EnableGyroscopeValues",
+          },
+          touchpad: {
+            title: "👆 Panel Táctil (Capacitive Touch)",
+            subtitle: "Habilitado mediante GCH_EnableTouch",
+            touchingHint: "Toque la superficie del DualSense para visualizar",
+          },
+          logs: {
+            title: "📜 Diagnóstico en Tiempo Real y Registro",
+            subtitle: "Lecturas en tiempo real del buffer de 148 bytes y comandos ejecutados",
+          },
+        },
+        commands: {
+          cross: "Heavy Rumble + Luz ROJA",
+          circle: "Soft Rumble + Luz AMARILLA",
+          square: "Efecto de Gatillo: GAMECUBE (R2)",
+          triangle: "Detener Todo (Gatillos y Luces)",
+          l1: "Efecto de Gatillo: Gallop (L2)",
+          r1: "Efecto de Gatillo: Machine (R2)",
+          up: "Efecto de Gatillo: Feedback (Rigid)",
+          down: "Efecto de Gatillo: Bow (Tension)",
+          left: "Efecto de Gatillo: Weapon (Semi)",
+          right: "Efecto de Gatillo: Automatic Gun (Buzz)",
+        },
+        analogs: {
+          l1: "L1",
+          l2: "L2 (Gatillo)",
+          r1: "R1",
+          r2: "R2 (Gatillo)",
+          threshold: "Umbral",
+          deadzone: "Zona muerta",
+          active: "Activo",
+          leftStick: "Analógico Izquierdo (L-Stick)",
+          rightStick: "Analógico Derecho (R-Stick)",
+          l3Click: "L3 (Clic)",
+          r3Click: "R3 (Clic)",
+          up: "Arriba",
+          down: "Abajo",
+          left: "Izquierda",
+          right: "Derecha",
+        },
+        buttons: {
+          cross: "Cross (X)",
+          circle: "Circle (O)",
+          square: "Square ([ ])",
+          triangle: "Triangle (/\\)",
+          dpadUp: "D-Pad ARRIBA",
+          dpadDown: "D-Pad ABAJO",
+          dpadLeft: "D-Pad IZQUIERDA",
+          dpadRight: "D-Pad DERECHA",
+          ps: "Botón PS",
+          share: "Create/Share",
+          options: "Options/Start",
+          touchClick: "Clic Táctil",
+          mute: "Botón Silenciar",
+          phone: "Auriculares Conectados",
+          fn1: "Fn 1",
+          fn2: "Fn 2",
+          paddleL: "Palanca L",
+          paddleR: "Palanca R",
+        },
+        motion: {
+          gyroscope: "Giroscopio (Rotational Velocity)",
+          accelerometer: "Acelerómetro (Linear Acceleration)",
+          gravity: "Vector Gravedad (Gravity Vector)",
+          tilt: "Inclinación (Pitch, Roll, Yaw)",
+        },
+        touchpad: {
+          status: "Estado del Toque",
+          touching: "Tocando",
+          notTouching: "Sin Toque",
+          touchId: "ID del Toque",
+          fingers: "Dedos",
+          direction: "Dirección",
+          coordinates: "Coordenadas",
+          position: "Posición (X, Y)",
+          relative: "Relativo (X, Y)",
+          radius: "Radio (X, Y)",
+          touchingHint: "Toque la superficie del DualSense para visualizar",
+        },
+        logs: {
+          wasmLoading: "Esperando inicialización del módulo WASM...",
+          wasmLoaded: "✅ WASM GamepadCoreHost cargado con éxito.",
+          wasmFailed: "❌ Error al cargar WASM: {{error}}",
+          webHidPrompt: "Abriendo cuadro de diálogo de selección de dispositivo WebHID...",
+          webHidConnected: "✅ Dispositivo(s) autorizado(s): {{name}}",
+          webHidNotSupported: "❌ WebHID no es compatible con este navegador.",
+          webHidFailed: "❌ Error al solicitar dispositivo: {{error}}",
+          loopStarted: "▶️ Bucle de lectura y telemetría iniciado.",
+          loopStopped: "⏹️ Bucle detenido.",
+          bridgeConnected: "✅ PlatformBridge y DeviceRegistryPolicy conectadas a WASM.",
+          devicesReady: "ℹ️ Dispositivos autorizados listos: {{count}}",
+          deviceDispatched: "✅ Dispositivo conectado y despachado: ID = {{id}}",
+          gyroActive: "🧭 Dispositivo {{id}}: Giroscopio habilitado con éxito.",
+          touchActive: "👆 Dispositivo {{id}}: Panel táctil habilitado con éxito.",
+          deviceDisconnected: "❌ Dispositivo desconectado: ID = {{id}}",
+          triggerSuccess: "⚙️ Dispositivo {{id}}: {{msg}} [Éxito]",
+          triggerFailed: "⚙️ Dispositivo {{id}}: {{msg}} [Fallo]",
+          triggersReset: "🛑 Dispositivo {{id}}: Todos los efectos de gatillo reiniciados.",
+        },
+      },
+    };
+
+    let currentLocale = localStorage.getItem("dualsense_i18n_lang") || "en";
+    if (!translations[currentLocale]) currentLocale = "en";
+
+    function t(keyPath, params, locale = currentLocale) {
+      const dict = translations[locale] || translations.en;
+      const keys = keyPath.split(".");
+      let current = dict;
+      for (const k of keys) {
+        if (current && typeof current === "object" && k in current) {
+          current = current[k];
+        } else {
+          current = undefined;
+          break;
+        }
+      }
+      if (current === undefined && locale !== "en") {
+        let fallback = translations.en;
+        for (const k of keys) {
+          if (fallback && typeof fallback === "object" && k in fallback) {
+            fallback = fallback[k];
+          } else {
+            fallback = undefined;
+            break;
+          }
+        }
+        current = fallback;
+      }
+      if (typeof current !== "string") return keyPath;
+      if (params) {
+        return current.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, varName) => {
+          return varName in params ? String(params[varName]) : `{{${varName}}}`;
+        });
+      }
+      return current;
+    }
+
+    function applyTranslations(locale = currentLocale) {
+      currentLocale = locale;
+      document.documentElement.lang = locale;
+      localStorage.setItem("dualsense_i18n_lang", locale);
+      if (langSelect) langSelect.value = locale;
+
+      document.querySelectorAll("[data-i18n]").forEach((el) => {
+        const key = el.getAttribute("data-i18n");
+        if (key) el.textContent = t(key);
+      });
+
+      // Update dynamic badges based on state
+      lblWasm.textContent = hostModule ? t("status.ready") : t("status.notLoaded");
+      lblDevice.textContent = deviceIds.size > 0 ? (cachedDevices[0]?.productName || t("status.connected")) : t("status.none");
+      lblGyro.textContent = isGyroActive ? t("status.active") : t("status.inactive");
+      lblTouch.textContent = isTouchActive ? t("status.active") : t("status.inactive");
+      lblTouchStatus.textContent = `${t("touchpad.fingers")}: ${lastFingerCount}`;
+      touchHint.textContent = t("touchpad.touchingHint");
+    }
+
+    // UI Elements
+    const langSelect = document.getElementById("lang-select");
+    const logBox = document.getElementById("log-box");
+    const btnLoad = document.getElementById("btn-load");
+    const btnRequest = document.getElementById("btn-request");
+    const btnStart = document.getElementById("btn-start");
+    const btnStop = document.getElementById("btn-stop");
+    const btnClearLogs = document.getElementById("btn-clear-logs");
+
+    // Status Badges
+    const dotWasm = document.getElementById("dot-wasm");
+    const lblWasm = document.getElementById("lbl-wasm");
+    const dotHid = document.getElementById("dot-hid");
+    const lblDevice = document.getElementById("lbl-device");
+    const dotGyro = document.getElementById("dot-gyro");
+    const lblGyro = document.getElementById("lbl-gyro");
+    const dotTouch = document.getElementById("dot-touch");
+    const lblTouch = document.getElementById("lbl-touch");
+    const lblBattery = document.getElementById("lbl-battery");
+
+    // Analogs & Triggers
+    const lblL1 = document.getElementById("lbl-l1");
+    const lblL2 = document.getElementById("lbl-l2");
+    const barL2 = document.getElementById("bar-l2");
+    const lblL2Th = document.getElementById("lbl-l2-th");
+    const lblR1 = document.getElementById("lbl-r1");
+    const lblR2 = document.getElementById("lbl-r2");
+    const barR2 = document.getElementById("bar-r2");
+    const lblR2Th = document.getElementById("lbl-r2-th");
+    const lblR2Active = document.getElementById("lbl-r2-active");
+    const lblDeadzone = document.getElementById("lbl-deadzone");
+
+    // 2D Sticks
+    const lblLstickCoords = document.getElementById("lbl-lstick-coords");
+    const stickLeftDot = document.getElementById("stick-left-dot");
+    const lblL3 = document.getElementById("lbl-l3");
+    const lblLaUp = document.getElementById("lbl-la-up");
+    const lblLaDown = document.getElementById("lbl-la-down");
+    const lblLaLeft = document.getElementById("lbl-la-left");
+    const lblLaRight = document.getElementById("lbl-la-right");
+
+    const lblRstickCoords = document.getElementById("lbl-rstick-coords");
+    const stickRightDot = document.getElementById("stick-right-dot");
+    const lblR3 = document.getElementById("lbl-r3");
+    const lblRaUp = document.getElementById("lbl-ra-up");
+    const lblRaDown = document.getElementById("lbl-ra-down");
+    const lblRaLeft = document.getElementById("lbl-ra-left");
+    const lblRaRight = document.getElementById("lbl-ra-right");
+
+    // Buttons
+    const pillCross = document.getElementById("pill-cross");
+    const vCross = document.getElementById("v-cross");
+    const pillCircle = document.getElementById("pill-circle");
+    const vCircle = document.getElementById("v-circle");
+    const pillSquare = document.getElementById("pill-square");
+    const vSquare = document.getElementById("v-square");
+    const pillTriangle = document.getElementById("pill-triangle");
+    const vTriangle = document.getElementById("v-triangle");
+
+    const pillUp = document.getElementById("pill-up");
+    const vUp = document.getElementById("v-up");
+    const pillDown = document.getElementById("pill-down");
+    const vDown = document.getElementById("v-down");
+    const pillLeft = document.getElementById("pill-left");
+    const vLeft = document.getElementById("v-left");
+    const pillRight = document.getElementById("pill-right");
+    const vRight = document.getElementById("v-right");
+
+    const pillPs = document.getElementById("pill-ps");
+    const vPs = document.getElementById("v-ps");
+    const pillShare = document.getElementById("pill-share");
+    const vShare = document.getElementById("v-share");
+    const pillOptions = document.getElementById("pill-options");
+    const vOptions = document.getElementById("v-options");
+    const pillTouchBtn = document.getElementById("pill-touch-btn");
+    const vTouchBtn = document.getElementById("v-touch-btn");
+    const pillMute = document.getElementById("pill-mute");
+    const vMute = document.getElementById("v-mute");
+    const pillPhone = document.getElementById("pill-phone");
+    const vPhone = document.getElementById("v-phone");
+
+    const pillFn1 = document.getElementById("pill-fn1");
+    const vFn1 = document.getElementById("v-fn1");
+    const pillFn2 = document.getElementById("pill-fn2");
+    const vFn2 = document.getElementById("v-fn2");
+    const pillPaddL = document.getElementById("pill-padd-l");
+    const vPaddL = document.getElementById("v-padd-l");
+    const pillPaddR = document.getElementById("pill-padd-r");
+    const vPaddR = document.getElementById("v-padd-r");
+
+    // Sensors
+    const lblGyroX = document.getElementById("lbl-gyro-x");
+    const lblGyroY = document.getElementById("lbl-gyro-y");
+    const lblGyroZ = document.getElementById("lbl-gyro-z");
+    const lblAccX = document.getElementById("lbl-acc-x");
+    const lblAccY = document.getElementById("lbl-acc-y");
+    const lblAccZ = document.getElementById("lbl-acc-z");
+    const lblGravX = document.getElementById("lbl-grav-x");
+    const lblGravY = document.getElementById("lbl-grav-y");
+    const lblGravZ = document.getElementById("lbl-grav-z");
+    const lblTiltX = document.getElementById("lbl-tilt-x");
+    const lblTiltY = document.getElementById("lbl-tilt-y");
+    const lblTiltZ = document.getElementById("lbl-tilt-z");
+
+    // Touchpad
+    const lblIsTouching = document.getElementById("lbl-is-touching");
+    const lblTouchId = document.getElementById("lbl-touch-id");
+    const lblTouchDir = document.getElementById("lbl-touch-dir");
+    const lblTouchPos = document.getElementById("lbl-touch-pos");
+    const lblTouchRel = document.getElementById("lbl-touch-rel");
+    const lblTouchRad = document.getElementById("lbl-touch-rad");
+    const touchDot1 = document.getElementById("touch-dot-1");
+    const touchHint = document.getElementById("touch-hint");
+    const lblTouchStatus = document.getElementById("lbl-touch-status");
+
+    // Command Map Rows
+    const cmdRows = {
+      cross: document.getElementById("cmd-cross"),
+      circle: document.getElementById("cmd-circle"),
+      square: document.getElementById("cmd-square"),
+      triangle: document.getElementById("cmd-triangle"),
+      l1: document.getElementById("cmd-l1"),
+      r1: document.getElementById("cmd-r1"),
+      up: document.getElementById("cmd-up"),
+      down: document.getElementById("cmd-down"),
+      left: document.getElementById("cmd-left"),
+      right: document.getElementById("cmd-right"),
+    };
+
+    // State Variables
+    let hostModule = null;
+    let api = null;
+    let discoveryTimer = null;
+    let inputTimer = null;
+    let bannerPrinted = false;
+    let inputPtr = 0;
+    let triggerBufferPtr = 0;
+    let nextHandle = 1;
+    let nextDeviceId = 1;
+    let bridgesInitialized = false;
+    let isGyroActive = false;
+    let isTouchActive = false;
+    let lastFingerCount = 0;
+    const deviceIds = new Set();
+    const previousInput = new Map();
+    const cachedDevices = [];
+    const byPath = new Map();
+    const byHandle = new Map();
+    const callbackPtrs = [];
+
+    const FRAME_SECONDS = 0.0166;
+    const FRAME_MS = 16.6;
+    const SONY_VENDOR = 0x054c;
+    const DEVICE_TYPE_BY_PRODUCT_ID = {
+      0x0ce6: 1, // DualSense
+      0x0df2: 2, // DualSense Edge
+      0x05c4: 3, // DualShock 4
+      0x09cc: 3, // DualShock 4 (rev)
+    };
+    const CONNECTION_USB = 1;
+    const DESCRIPTOR_SIZE = 532;
+    const PATH_SIZE = 512;
+    const OFF_HANDLE = 0;
+    const OFF_DEVICE_TYPE = 8;
+    const OFF_CONNECTION = 12;
+    const OFF_CONNECTED = 16;
+    const OFF_PATH = 20;
+    const INPUT_DESCRIPTOR_SIZE = 148;
+
+    // Trigger Payloads
+    const TRIGGER_GALLOPING = new Uint8Array([0x23, 0x82, 0x00, 0xf7, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    const TRIGGER_MACHINE = new Uint8Array([0x27, 0x80, 0x02, 0x3a, 0x0a, 0x04, 0x00, 0x00, 0x00, 0x00]);
+    const TRIGGER_FEEDBACK = new Uint8Array([0x21, 0xfe, 0x03, 0xf8, 0xff, 0xff, 0x3f, 0x00, 0x00, 0x00]);
+    const TRIGGER_WEAPON = new Uint8Array([0x25, 0x08, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    const TRIGGER_BOW = new Uint8Array([0x22, 0x02, 0x01, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    const TRIGGER_AUTOMATIC_GUN = new Uint8Array([0x26, 0x00, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x0a]);
+    const TRIGGER_GAMECUBE = new Uint8Array([0x25, 0x90, 0x02, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+    function log(message) {
+      const time = new Date().toLocaleTimeString();
+      logBox.textContent += `[${time}] ${message}\n`;
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
+    langSelect.addEventListener("change", (e) => {
+      applyTranslations(e.target.value);
+    });
+
+    btnClearLogs.addEventListener("click", () => {
+      logBox.textContent = "";
+    });
+
+    // 1) Load WASM
+    btnLoad.addEventListener("click", async () => {
+      try {
+        const initFactory = window.InitGamepadCoreHost;
+        if (typeof initFactory !== "function") {
+          throw new Error("InitGamepadCoreHost not found on window.");
+        }
+
+        hostModule = await initFactory({
+          locateFile: (path) => `../src/lib/${path}`,
+          print: (text) => log(`[WASM:stdout] ${text}`),
+          printErr: (text) => log(`[WASM:stderr] ${text}`),
+        });
+
+        api = bindNativeApi(hostModule);
+        inputPtr = hostModule._malloc(INPUT_DESCRIPTOR_SIZE);
+        triggerBufferPtr = hostModule._malloc(64);
+
+        dotWasm.classList.add("active");
+        lblWasm.textContent = t("status.ready");
+        btnLoad.disabled = true;
+        btnRequest.disabled = false;
+        btnStart.disabled = false;
+
+        log(t("logs.wasmLoaded"));
+      } catch (err) {
+        log(t("logs.wasmFailed", { error: String(err) }));
+      }
+    });
+
+    // 2) Request WebHID
+    btnRequest.addEventListener("click", async () => {
+      if (!("hid" in navigator)) {
+        log(t("logs.webHidNotSupported"));
+        return;
+      }
+      try {
+        const devices = await navigator.hid.requestDevice({
+          filters: [{ vendorId: SONY_VENDOR }],
+        });
+        for (const d of devices) cacheDevice(d);
+        lblDevice.textContent = cachedDevices.length > 0 ? (cachedDevices[0].productName || t("status.connected")) : t("status.none");
+        dotHid.classList.add("active");
+        log(t("logs.webHidConnected", { name: devices.map(d => d.productName).join(", ") }));
+      } catch (err) {
+        log(t("logs.webHidFailed", { error: String(err) }));
+      }
+    });
+
+    // 3) Start Loop
+    btnStart.addEventListener("click", async () => {
+      try {
+        await refreshAuthorizedDevices();
+        await initializeBridges();
+        startLoops();
+        btnStart.disabled = true;
+        btnStop.disabled = false;
+        log(t("logs.loopStarted"));
+      } catch (err) {
+        log(`❌ Error starting loop: ${String(err)}`);
+      }
+    });
+
+    // 4) Stop Loop
+    btnStop.addEventListener("click", () => {
+      stopLoops();
+      btnStart.disabled = false;
+      btnStop.disabled = true;
+      log(t("logs.loopStopped"));
+    });
+
+    async function refreshAuthorizedDevices() {
+      if (!("hid" in navigator)) return;
+      const devices = await navigator.hid.getDevices();
+      cachedDevices.length = 0;
+      for (const d of devices) cacheDevice(d);
+      if (cachedDevices.length > 0) {
+        dotHid.classList.add("active");
+        lblDevice.textContent = cachedDevices[0].productName || "DualSense";
+      }
+    }
+
+    function bindNativeApi(mod) {
+      const tryWrap = (name, ret, args) => {
+        try { return mod.cwrap(name, ret, args); } catch { return null; }
+      };
+      return {
+        setLogCallback: tryWrap("GCH_SetLogCallback", null, ["number"]),
+        initializePlatformBridgeWasm: tryWrap("GCH_InitializePlatformBridgeWasm", null, ["number","number","number","number","number","number","number"]),
+        initializeRegistryPolicyWasm: tryWrap("GCH_InitializeDeviceRegistryPolicyWasm", null, ["number","number","number","number"]),
+        createDevice: tryWrap("GCH_CreateDevice", null, ["number"]),
+        discoverDevices: tryWrap("GCH_DiscoverDevices", null, ["number"]),
+        updateInput: tryWrap("GCH_UpdateInput", null, ["number", "number"]),
+        getInputState: tryWrap("GCH_GetInputState", null, ["number", "number"]),
+        enableGyroscopeValues: tryWrap("GCH_EnableGyroscopeValues", null, ["number", "number"]),
+        enableTouch: tryWrap("GCH_EnableTouch", null, ["number", "number"]),
+        resetGyroOrientation: tryWrap("GCH_ResetGyroOrientation", null, ["number"]),
+        batteryLevelDevice: tryWrap("GCH_BatteryLevelDevice", "number", ["number"]),
+        setVibration: tryWrap("GCH_SetVibration", null, ["number", "number", "number"]),
+        lightbar: tryWrap("GCH_Lightbar", null, ["number", "number", "number", "number"]),
+        resetLights: tryWrap("GCH_ResetLights", null, ["number"]),
+        updateOutput: tryWrap("GCH_UpdateOutput", null, ["number"]),
+        customTrigger: tryWrap("GCH_CustomTrigger", "number", ["number", "number", "number", "number"]),
+        stopTrigger: tryWrap("GCH_StopTrigger", null, ["number", "number"]),
+      };
+    }
+
+    async function initializeBridges() {
+      if (bridgesInitialized) return;
+
+      const readPtr = hostModule.addFunction(onRead, "ijiii");
+      const writePtr = hostModule.addFunction(onWrite, "ijiii");
+      const detectPtr = hostModule.addFunction(() => 0, "iii");
+      const createPtr = hostModule.addFunction(onCreateHandle, "ii");
+      const invalidatePtr = hostModule.addFunction(onInvalidateHandle, "vj");
+      const configPtr = hostModule.addFunction(() => {}, "vjiii");
+      const hapticsPtr = hostModule.addFunction(() => {}, "vjiii");
+      callbackPtrs.push(readPtr, writePtr, detectPtr, createPtr, invalidatePtr, configPtr, hapticsPtr);
+
+      const allocPtr = hostModule.addFunction(onAllocDevice, "i");
+      const dispatchPtr = hostModule.addFunction(onDispatchDevice, "vi");
+      const disconnectPtr = hostModule.addFunction(onDisconnectDevice, "vi");
+      callbackPtrs.push(allocPtr, dispatchPtr, disconnectPtr);
+
+      api.initializePlatformBridgeWasm(readPtr, writePtr, detectPtr, createPtr, invalidatePtr, configPtr, hapticsPtr);
+      api.initializeRegistryPolicyWasm(0, allocPtr, dispatchPtr, disconnectPtr);
+      bridgesInitialized = true;
+      log(t("logs.bridgeConnected"));
+    }
+
+    function startLoops() {
+      stopLoops();
+
+      createAllAuthorizedDevices().then(() => {
+        log(t("logs.devicesReady", { count: deviceIds.size }));
+      });
+
+      let frameCounter = 0;
+      inputTimer = setInterval(() => {
+        const ids = Array.from(deviceIds);
+        for (const id of ids) {
+          try {
+            api.updateInput?.(id, FRAME_SECONDS);
+          } catch (e) {
+            log(`❌ GCH_UpdateInput error: ${String(e)}`);
+          }
+        }
+        for (const id of ids) {
+          try {
+            const state = readInputState(id);
+            handleInput(id, state);
+            updateUI(state);
+
+            // Log periodical summary of inputs
+            frameCounter++;
+            if (frameCounter % 60 === 0) {
+              log(
+                `📊 [Dev ${id}] L1:${state.bLeftShoulder ? 1 : 0} L2:${state.leftTriggerAnalog.toFixed(2)} R1:${state.bRightShoulder ? 1 : 0} R2:${state.rightTriggerAnalog.toFixed(2)} | ` +
+                `LStick:(${state.leftAnalogX.toFixed(2)},${state.leftAnalogY.toFixed(2)}) RStick:(${state.rightAnalogX.toFixed(2)},${state.rightAnalogY.toFixed(2)}) | ` +
+                `Gyro:(${state.gyroscopeX.toFixed(2)},${state.gyroscopeY.toFixed(2)},${state.gyroscopeZ.toFixed(2)}) | ` +
+                `Touch:(${state.touchPositionX.toFixed(2)},${state.touchPositionY.toFixed(2)}) | Bat:${state.batteryLevel.toFixed(0)}%`
+              );
+            }
+          } catch (e) {
+            log(`❌ Input error: ${String(e)}`);
+          }
+        }
+      }, FRAME_MS);
+    }
+
+    function stopLoops() {
+      if (inputTimer) {
+        clearInterval(inputTimer);
+        inputTimer = null;
+      }
+    }
+
+    async function createAllAuthorizedDevices() {
+      if (!api.createDevice) return;
+      let created = 0;
+      const descPtr = hostModule._malloc(DESCRIPTOR_SIZE);
+
+      try {
+        for (const device of cachedDevices) {
+          if (device.vendorId !== SONY_VENDOR) continue;
+          const path = makePath(device, created);
+
+          if (!device.opened) {
+            try {
+              await device.open();
+              log(`✅ Device opened: ${device.productName || path}`);
+            } catch (e) {
+              log(`❌ Failed to open ${path}: ${String(e)}`);
+              continue;
+            }
+          }
+
+          if (!byPath.has(path)) {
+            const entry = { device, path, handle: 0, packet: new Uint8Array(0), listener: null };
+            byPath.set(path, entry);
+            entry.listener = (event) => {
+              const body = new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength);
+              const packet = new Uint8Array(body.length + 1);
+              packet[0] = event.reportId;
+              packet.set(body, 1);
+              entry.packet = packet;
+            };
+            device.addEventListener("inputreport", entry.listener);
+          }
+
+          const entry = byPath.get(path);
+          if (!entry.handle) {
+            entry.handle = nextHandle++;
+            byHandle.set(entry.handle, entry);
+          }
+
+          const deviceType = DEVICE_TYPE_BY_PRODUCT_ID[device.productId] ?? 1;
+          writeU64(descPtr + OFF_HANDLE, entry.handle);
+          hostModule.setValue(descPtr + OFF_DEVICE_TYPE, deviceType, 'i32'); // 1 = DualSense, 2 = DualSense Edge
+          hostModule.setValue(descPtr + OFF_CONNECTION, CONNECTION_USB, 'i32');  // 1 = USB
+          hostModule.setValue(descPtr + OFF_CONNECTED, 1, 'i32');
+
+          const pathBytes = pathToBytes(path);
+          for (let i = 0; i < PATH_SIZE; i++) {
+            hostModule.setValue(descPtr + OFF_PATH + i, pathBytes[i] || 0, 'i8');
+          }
+
+          api.createDevice(descPtr);
+          created++;
+        }
+      } finally {
+        hostModule._free(descPtr);
+      }
+    }
+
+    function onAllocDevice() {
+      return nextDeviceId++;
+    }
+
+    function onDispatchDevice(deviceId) {
+      if (!deviceIds.has(deviceId)) {
+        deviceIds.add(deviceId);
+        printStartupBanner();
+        log(t("logs.deviceDispatched", { id: deviceId }));
+
+        // Enable Gyroscope
+        if (api.enableGyroscopeValues) {
+          api.enableGyroscopeValues(deviceId, 1);
+          isGyroActive = true;
+          dotGyro.classList.add("active");
+          lblGyro.textContent = t("status.active");
+          log(t("logs.gyroActive", { id: deviceId }));
+        }
+
+        // Enable Touchpad
+        if (api.enableTouch) {
+          api.enableTouch(deviceId, 1);
+          isTouchActive = true;
+          dotTouch.classList.add("active");
+          lblTouch.textContent = t("status.active");
+          log(t("logs.touchActive", { id: deviceId }));
+        }
+      }
+    }
+
+    function onDisconnectDevice(deviceId) {
+      deviceIds.delete(deviceId);
+      previousInput.delete(deviceId);
+      log(t("logs.deviceDisconnected", { id: deviceId }));
+    }
+
+    function onCreateHandle(descPtr) {
+      if (!descPtr) return 0;
+      const path = readPath(descPtr + OFF_PATH);
+      const entry = byPath.get(path);
+      if (!entry) return 0;
+      if (!entry.device.opened) {
+        entry.device.open().catch(console.error);
+      }
+      hostModule.setValue(descPtr + OFF_CONNECTED, 1, 'i32');
+      return 1;
+    }
+
+    function onRead(handle, bufferPtr, length, bytesReadPtr) {
+      const h = typeof handle === "bigint" ? Number(handle) : handle;
+      const entry = byHandle.get(h);
+      if (!entry || !bufferPtr || length <= 0 || !entry.packet || entry.packet.length === 0) {
+        writeI32(bytesReadPtr, 0);
+        return 0;
+      }
+      const bytes = Math.min(length, entry.packet.length);
+      for (let i = 0; i < bytes; i++) {
+        hostModule.setValue(bufferPtr + i, entry.packet[i], 'i8');
+      }
+      writeI32(bytesReadPtr, bytes);
+      return bytes > 0 ? 1 : 0;
+    }
+
+    function onWrite(handle, bufferPtr, length, bytesWrittenPtr) {
+      const h = typeof handle === "bigint" ? Number(handle) : handle;
+      const entry = byHandle.get(h);
+      if (!entry || !bufferPtr || length <= 0 || !entry.device.opened) {
+        writeI32(bytesWrittenPtr, 0);
+        return 0;
+      }
+      const data = new Uint8Array(length);
+      for (let i = 0; i < length; i++) {
+        data[i] = hostModule.getValue(bufferPtr + i, 'i8') & 0xff;
+      }
+      const reportId = data[0] || 0;
+      const payload = data.subarray(1);
+      entry.device.sendReport(reportId, payload).catch((e) => log(`sendReport failed: ${String(e)}`));
+      writeI32(bytesWrittenPtr, length);
+      return 1;
+    }
+
+    function onInvalidateHandle(handle) {
+      const h = typeof handle === "bigint" ? Number(handle) : handle;
+      const entry = byHandle.get(h);
+      if (!entry) return;
+      byHandle.delete(h);
+      entry.handle = 0;
+      if (entry.listener) {
+        entry.device.removeEventListener("inputreport", entry.listener);
+      }
+    }
+
+    // Leitura completa de FInputContext (148 bytes)
+    function readInputState(deviceId) {
+      api.getInputState?.(deviceId, inputPtr);
+      const b = inputPtr;
+      const rf = (o) => hostModule.getValue(b + o, 'float');
+      const ri32 = (o) => hostModule.getValue(b + o, 'i32');
+      const rb = (o) => (hostModule.getValue(b + o, 'i8') & 0xff) !== 0;
+      const ru8 = (o) => hostModule.getValue(b + o, 'i8') & 0xff;
+
+      return {
+        analogDeadZone: rf(0),
+
+        leftAnalogX: rf(4),
+        leftAnalogY: rf(8),
+        rightAnalogX: rf(12),
+        rightAnalogY: rf(16),
+        leftTriggerAnalog: rf(20),
+        rightTriggerAnalog: rf(24),
+
+        gyroscopeX: rf(28),
+        gyroscopeY: rf(32),
+        gyroscopeZ: rf(36),
+
+        accelerometerX: rf(40),
+        accelerometerY: rf(44),
+        accelerometerZ: rf(48),
+
+        gravityX: rf(52),
+        gravityY: rf(56),
+        gravityZ: rf(60),
+
+        tiltX: rf(64),
+        tiltY: rf(68),
+        tiltZ: rf(72),
+
+        touchId: ri32(76),
+        touchFingerCount: ri32(80),
+        directionRaw: ru8(84),
+        bIsTouching: rb(85),
+
+        touchRadiusX: rf(88),
+        touchRadiusY: rf(92),
+        touchPositionX: rf(96),
+        touchPositionY: rf(100),
+        touchRelativeX: rf(104),
+        touchRelativeY: rf(108),
+
+        bCross: rb(112),
+        bSquare: rb(113),
+        bTriangle: rb(114),
+        bCircle: rb(115),
+        bDpadUp: rb(116),
+        bDpadDown: rb(117),
+        bDpadLeft: rb(118),
+        bDpadRight: rb(119),
+
+        bLeftAnalogRight: rb(120),
+        bLeftAnalogUp: rb(121),
+        bLeftAnalogDown: rb(122),
+        bLeftAnalogLeft: rb(123),
+        bRightAnalogLeft: rb(124),
+        bRightAnalogDown: rb(125),
+        bRightAnalogUp: rb(126),
+        bRightAnalogRight: rb(127),
+
+        bLeftTriggerThreshold: rb(128),
+        bRightTriggerThreshold: rb(129),
+        bLeftShoulder: rb(130),
+        bRightShoulder: rb(131),
+        bLeftStick: rb(132),
+        bRightStick: rb(133),
+        bPSButton: rb(134),
+        bShare: rb(135),
+        bStart: rb(136),
+        bTouch: rb(137),
+        bMute: rb(138),
+        bHasPhoneConnected: rb(139),
+
+        bFn1: rb(140),
+        bFn2: rb(141),
+        bPaddleLeft: rb(142),
+        bPaddleRight: rb(143),
+
+        batteryLevel: rf(144),
+      };
+    }
+
+    function handleInput(deviceId, state) {
+      const prev = previousInput.get(deviceId) || {};
+
+      // [ FACE BUTTONS ]
+      if (isPressed(state.bCross, prev.bCross)) {
+        setBasicOutput(deviceId, 64, 0, 255, 0, 0, "(X) Cross -> Heavy Rumble + RED Light");
+        highlightCmd("cross");
+      }
+      if (isPressed(state.bCircle, prev.bCircle)) {
+        setBasicOutput(deviceId, 0, 64, 255, 255, 0, "(O) Circle -> Soft Rumble + YELLOW Light");
+        highlightCmd("circle");
+      }
+      if (isPressed(state.bSquare, prev.bSquare)) {
+        setTriggerEffect(deviceId, TRIGGER_GAMECUBE, 1, "[ ] Square -> Trigger Effect: GAMECUBE (R2)");
+        highlightCmd("square");
+      }
+      if (isPressed(state.bTriangle, prev.bTriangle)) {
+        stopTriggers(deviceId);
+        setBasicOutput(deviceId, 0, 0, 0, 0, 0, "/\\ Triangle -> Stop All");
+        api.resetLights?.(deviceId);
+        highlightCmd("triangle");
+      }
+
+      // [ D-PADS & SHOULDERS ]
+      if (isPressed(state.bLeftShoulder, prev.bLeftShoulder)) {
+        setTriggerEffect(deviceId, TRIGGER_GALLOPING, 0, "[L1] -> Trigger Effect: Gallop (L2)");
+        highlightCmd("l1");
+      }
+      if (isPressed(state.bRightShoulder, prev.bRightShoulder)) {
+        setTriggerEffect(deviceId, TRIGGER_MACHINE, 1, "[R1] -> Trigger Effect: Machine (R2)");
+        highlightCmd("r1");
+      }
+      if (isPressed(state.bDpadUp, prev.bDpadUp)) {
+        setTriggerEffect(deviceId, TRIGGER_FEEDBACK, 1, "[UP] -> Trigger Effect: Feedback (Rigid) (R2)");
+        highlightCmd("up");
+      }
+      if (isPressed(state.bDpadDown, prev.bDpadDown)) {
+        setTriggerEffect(deviceId, TRIGGER_BOW, 1, "[DOWN] -> Trigger Effect: Bow (Tension) (R2)");
+        highlightCmd("down");
+      }
+      if (isPressed(state.bDpadLeft, prev.bDpadLeft)) {
+        setTriggerEffect(deviceId, TRIGGER_WEAPON, 1, "[LEFT] -> Trigger Effect: Weapon (Semi) (R2)");
+        highlightCmd("left");
+      }
+      if (isPressed(state.bDpadRight, prev.bDpadRight)) {
+        setTriggerEffect(deviceId, TRIGGER_AUTOMATIC_GUN, 1, "[RIGHT] -> Trigger Effect: Automatic Gun (Buzz) (R2)");
+        highlightCmd("right");
+      }
+
+      previousInput.set(deviceId, state);
+    }
+
+    function highlightCmd(name) {
+      const el = cmdRows[name];
+      if (!el) return;
+      el.classList.add("active");
+      setTimeout(() => el.classList.remove("active"), 400);
+    }
+
+    function getActiveDeviceId() {
+      const ids = Array.from(deviceIds);
+      return ids.length > 0 ? ids[0] : 1;
+    }
+
+    // Permite testar comandos clicando diretamente nas linhas do mapa
+    cmdRows.cross?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setBasicOutput(id, 64, 0, 255, 0, 0, "(X) Cross -> Heavy Rumble + RED Light");
+      highlightCmd("cross");
+    });
+    cmdRows.circle?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setBasicOutput(id, 0, 64, 255, 255, 0, "(O) Circle -> Soft Rumble + YELLOW Light");
+      highlightCmd("circle");
+    });
+    cmdRows.square?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setTriggerEffect(id, TRIGGER_GAMECUBE, 1, "[ ] Square -> Trigger Effect: GAMECUBE (R2)");
+      highlightCmd("square");
+    });
+    cmdRows.triangle?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      stopTriggers(id);
+      setBasicOutput(id, 0, 0, 0, 0, 0, "/\\ Triangle -> Stop All");
+      api?.resetLights?.(id);
+      highlightCmd("triangle");
+    });
+    cmdRows.l1?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setTriggerEffect(id, TRIGGER_GALLOPING, 0, "[L1] -> Trigger Effect: Gallop (L2)");
+      highlightCmd("l1");
+    });
+    cmdRows.r1?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setTriggerEffect(id, TRIGGER_MACHINE, 1, "[R1] -> Trigger Effect: Machine (R2)");
+      highlightCmd("r1");
+    });
+    cmdRows.up?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setTriggerEffect(id, TRIGGER_FEEDBACK, 1, "[UP] -> Trigger Effect: Feedback (Rigid) (R2)");
+      highlightCmd("up");
+    });
+    cmdRows.down?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setTriggerEffect(id, TRIGGER_BOW, 1, "[DOWN] -> Trigger Effect: Bow (Tension) (R2)");
+      highlightCmd("down");
+    });
+    cmdRows.left?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setTriggerEffect(id, TRIGGER_WEAPON, 1, "[LEFT] -> Trigger Effect: Weapon (Semi) (R2)");
+      highlightCmd("left");
+    });
+    cmdRows.right?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      setTriggerEffect(id, TRIGGER_AUTOMATIC_GUN, 1, "[RIGHT] -> Trigger Effect: Automatic Gun (Buzz) (R2)");
+      highlightCmd("right");
+    });
+
+    function setTriggerEffect(deviceId, payload, hand, msg) {
+      if (!api.customTrigger || !api.updateOutput) {
+        log(`⚠️ ${msg} (GCH_CustomTrigger not available)`);
+        return;
+      }
+      for (let i = 0; i < payload.length; i++) {
+        hostModule.setValue(triggerBufferPtr + i, payload[i], 'i8');
+      }
+      const ok = api.customTrigger(deviceId, triggerBufferPtr, payload.length, hand);
+      api.updateOutput(deviceId);
+      log(ok ? t("logs.triggerSuccess", { id: deviceId, msg }) : t("logs.triggerFailed", { id: deviceId, msg }));
+    }
+
+    function stopTriggers(deviceId) {
+      api.stopTrigger?.(deviceId, 0);
+      api.stopTrigger?.(deviceId, 1);
+      api.updateOutput?.(deviceId);
+      log(t("logs.triggersReset", { id: deviceId }));
+    }
+
+    function setBasicOutput(deviceId, left, right, r, g, b, msg) {
+      api.setVibration?.(deviceId, left, right);
+      api.lightbar?.(deviceId, r, g, b);
+      api.updateOutput?.(deviceId);
+      log(`✨ Device ${deviceId}: ${msg}`);
+    }
+
+    function isPressed(cur, prev) {
+      return cur && !prev;
+    }
+
+    // UI Updates
+    function updateUI(s) {
+      // Gatilhos
+      lblL1.textContent = s.bLeftShoulder ? "1" : "0";
+      lblL1.style.color = s.bLeftShoulder ? "var(--ok)" : "inherit";
+      lblL2.textContent = s.leftTriggerAnalog.toFixed(3);
+      barL2.style.width = `${Math.min(100, Math.max(0, s.leftTriggerAnalog * 100))}%`;
+      lblL2Th.textContent = String(s.bLeftTriggerThreshold);
+      lblL2Th.style.color = s.bLeftTriggerThreshold ? "var(--ok)" : "inherit";
+
+      lblR1.textContent = s.bRightShoulder ? "1" : "0";
+      lblR1.style.color = s.bRightShoulder ? "var(--ok)" : "inherit";
+      lblR2.textContent = s.rightTriggerAnalog.toFixed(3);
+      barR2.style.width = `${Math.min(100, Math.max(0, s.rightTriggerAnalog * 100))}%`;
+      lblR2Th.textContent = String(s.bRightTriggerThreshold);
+      lblR2Th.style.color = s.bRightTriggerThreshold ? "var(--ok)" : "inherit";
+      lblR2Active.textContent = s.rightTriggerAnalog.toFixed(2);
+      lblDeadzone.textContent = s.analogDeadZone.toFixed(2);
+
+      // Left Stick
+      lblLstickCoords.textContent = `(${s.leftAnalogX.toFixed(2)}, ${s.leftAnalogY.toFixed(2)})`;
+      stickLeftDot.style.transform = `translate(${s.leftAnalogX * 32}px, ${-s.leftAnalogY * 32}px)`;
+      stickLeftDot.classList.toggle("pressed", s.bLeftStick);
+      lblL3.textContent = s.bLeftStick ? "1" : "0";
+      lblL3.style.color = s.bLeftStick ? "var(--ok)" : "inherit";
+      lblLaUp.textContent = s.bLeftAnalogUp ? "1" : "0";
+      lblLaUp.style.color = s.bLeftAnalogUp ? "var(--ok)" : "inherit";
+      lblLaDown.textContent = s.bLeftAnalogDown ? "1" : "0";
+      lblLaDown.style.color = s.bLeftAnalogDown ? "var(--ok)" : "inherit";
+      lblLaLeft.textContent = s.bLeftAnalogLeft ? "1" : "0";
+      lblLaLeft.style.color = s.bLeftAnalogLeft ? "var(--ok)" : "inherit";
+      lblLaRight.textContent = s.bLeftAnalogRight ? "1" : "0";
+      lblLaRight.style.color = s.bLeftAnalogRight ? "var(--ok)" : "inherit";
+
+      // Right Stick
+      lblRstickCoords.textContent = `(${s.rightAnalogX.toFixed(2)}, ${s.rightAnalogY.toFixed(2)})`;
+      stickRightDot.style.transform = `translate(${s.rightAnalogX * 32}px, ${-s.rightAnalogY * 32}px)`;
+      stickRightDot.classList.toggle("pressed", s.bRightStick);
+      lblR3.textContent = s.bRightStick ? "1" : "0";
+      lblR3.style.color = s.bRightStick ? "var(--ok)" : "inherit";
+      lblRaUp.textContent = s.bRightAnalogUp ? "1" : "0";
+      lblRaUp.style.color = s.bRightAnalogUp ? "var(--ok)" : "inherit";
+      lblRaDown.textContent = s.bRightAnalogDown ? "1" : "0";
+      lblRaDown.style.color = s.bRightAnalogDown ? "var(--ok)" : "inherit";
+      lblRaLeft.textContent = s.bRightAnalogLeft ? "1" : "0";
+      lblRaLeft.style.color = s.bRightAnalogLeft ? "var(--ok)" : "inherit";
+      lblRaRight.textContent = s.bRightAnalogRight ? "1" : "0";
+      lblRaRight.style.color = s.bRightAnalogRight ? "var(--ok)" : "inherit";
+
+      // Digital Buttons
+      updatePill(pillCross, vCross, s.bCross);
+      updatePill(pillCircle, vCircle, s.bCircle);
+      updatePill(pillSquare, vSquare, s.bSquare);
+      updatePill(pillTriangle, vTriangle, s.bTriangle);
+
+      updatePill(pillUp, vUp, s.bDpadUp);
+      updatePill(pillDown, vDown, s.bDpadDown);
+      updatePill(pillLeft, vLeft, s.bDpadLeft);
+      updatePill(pillRight, vRight, s.bDpadRight);
+
+      updatePill(pillPs, vPs, s.bPSButton);
+      updatePill(pillShare, vShare, s.bShare);
+      updatePill(pillOptions, vOptions, s.bStart);
+      updatePill(pillTouchBtn, vTouchBtn, s.bTouch);
+      updatePill(pillMute, vMute, s.bMute);
+      updatePill(pillPhone, vPhone, s.bHasPhoneConnected);
+
+      updatePill(pillFn1, vFn1, s.bFn1);
+      updatePill(pillFn2, vFn2, s.bFn2);
+      updatePill(pillPaddL, vPaddL, s.bPaddleLeft);
+      updatePill(pillPaddR, vPaddR, s.bPaddleRight);
+
+      // Sensors
+      lblGyroX.textContent = s.gyroscopeX.toFixed(4);
+      lblGyroY.textContent = s.gyroscopeY.toFixed(4);
+      lblGyroZ.textContent = s.gyroscopeZ.toFixed(4);
+
+      lblAccX.textContent = s.accelerometerX.toFixed(4);
+      lblAccY.textContent = s.accelerometerY.toFixed(4);
+      lblAccZ.textContent = s.accelerometerZ.toFixed(4);
+
+      lblGravX.textContent = s.gravityX.toFixed(4);
+      lblGravY.textContent = s.gravityY.toFixed(4);
+      lblGravZ.textContent = s.gravityZ.toFixed(4);
+
+      lblTiltX.textContent = s.tiltX.toFixed(4);
+      lblTiltY.textContent = s.tiltY.toFixed(4);
+      lblTiltZ.textContent = s.tiltZ.toFixed(4);
+
+      // Touchpad
+      lblIsTouching.textContent = String(s.bIsTouching);
+      lblTouchId.textContent = String(s.touchId);
+      lblTouchDir.textContent = String(s.directionRaw);
+      lblTouchPos.textContent = `(${s.touchPositionX.toFixed(2)}, ${s.touchPositionY.toFixed(2)})`;
+      lblTouchRel.textContent = `(${s.touchRelativeX.toFixed(2)}, ${s.touchRelativeY.toFixed(2)})`;
+      lblTouchRad.textContent = `(${s.touchRadiusX.toFixed(2)}, ${s.touchRadiusY.toFixed(2)})`;
+      lastFingerCount = s.touchFingerCount;
+      lblTouchStatus.textContent = `${t("touchpad.fingers")}: ${s.touchFingerCount}`;
+
+      if (s.bIsTouching) {
+        touchDot1.style.display = "block";
+        // Pos normalizada para a superfície
+        const nx = Math.min(1, Math.max(0, (s.touchPositionX + 1) / 2));
+        const ny = Math.min(1, Math.max(0, (s.touchPositionY + 1) / 2));
+        touchDot1.style.left = `${nx * 100}%`;
+        touchDot1.style.top = `${ny * 100}%`;
+        touchHint.style.display = "none";
+      } else {
+        touchDot1.style.display = "none";
+        touchHint.style.display = "block";
+      }
+
+      // Bateria
+      lblBattery.textContent = `${s.batteryLevel.toFixed(0)}%`;
+    }
+
+    function updatePill(pill, valEl, isPressed) {
+      valEl.textContent = isPressed ? "1" : "0";
+      pill.classList.toggle("active", isPressed);
+    }
+
+    function makePath(d, idx) {
+      return `webhid:${d.vendorId.toString(16)}:${d.productId.toString(16)}:${d.serialNumber || "noserial"}:${idx}`;
+    }
+
+    function pathToBytes(p) {
+      const raw = new TextEncoder().encode(p);
+      const fixed = new Uint8Array(PATH_SIZE);
+      fixed.set(raw.subarray(0, PATH_SIZE - 1));
+      return fixed;
+    }
+
+    function readPath(ptr) {
+      let str = '';
+      for (let i = 0; i < PATH_SIZE; i++) {
+        const c = hostModule.getValue(ptr + i, 'i8') & 0xff;
+        if (c === 0) break;
+        str += String.fromCharCode(c);
+      }
+      return str.trim();
+    }
+
+    function writeU64(ptr, value) {
+      hostModule.setValue(ptr, value >>> 0, 'i32');
+      hostModule.setValue(ptr + 4, 0, 'i32');
+    }
+
+    function writeI32(ptr, value) {
+      if (!ptr) return;
+      hostModule.setValue(ptr, value, 'i32');
+    }
+
+    function cacheDevice(device) {
+      if (device.vendorId !== SONY_VENDOR) return;
+      const key = `${device.vendorId}:${device.productId}:${device.serialNumber || ""}`;
+      if (cachedDevices.some((d) => `${d.vendorId}:${d.productId}:${d.serialNumber || ""}` === key)) {
+        return;
+      }
+      cachedDevices.push(device);
+    }
+
+    function printStartupBanner() {
+      if (bannerPrinted) return;
+      bannerPrinted = true;
+      log("=======================================================");
+      log("           DUALSENSE INTEGRATION TEST");
+      log("=======================================================");
+    }
+
+    // Inicializar traduções na interface
+    applyTranslations(currentLocale);
+  </script>
+</body>
+</html>
