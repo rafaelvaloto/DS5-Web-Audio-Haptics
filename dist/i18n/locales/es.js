@@ -3,14 +3,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.es = void 0;
 exports.es = {
     header: {
-        title: "DualSense Integration Test",
-        subtitle: "Suite de Diagnóstico GamepadCoreHost WebHID & WASM",
+        title: "DS5 Web Audio Haptics Bluetooth",
+        subtitle: "Audio y hápticos de alta fidelidad vía Bluetooth para controles PlayStation DualSense mediante WebHID y WebAssembly",
         btnLoadWasm: "1) Cargar WASM",
         btnConnectHid: "2) Conectar DualSense (WebHID)",
         btnStartLoop: "3) Iniciar Bucle",
         btnStopLoop: "4) Detener Bucle",
         btnAudioHaptics: "🎵 Audio Háptico (Apagado)",
         btnAudioHapticsOn: "🎵 Audio Háptico (Encendido)",
+        btnPip: "🪟 Picture-in-Picture",
         btnClearLogs: "Limpiar Registros",
         language: "Idioma",
     },
@@ -32,8 +33,8 @@ exports.es = {
     },
     cards: {
         commands: {
-            title: "🎮 Mapa de Funciones (DUALSENSE INTEGRATION TEST)",
-            subtitle: "Presione los botones del mando para activar los efectos correspondientes o haga clic para probar",
+            title: "🎮 Controles de Acción y Gatillos",
+            subtitle: "Pruebas interactivas de Gatillos Adaptativos, LED de Barra de Luz y Vibración",
         },
         analogs: {
             title: "🕹️ Analógicos y Gatillos (Sticks & Triggers)",
@@ -41,7 +42,7 @@ exports.es = {
         },
         buttons: {
             title: "🔘 Botones Digitales y Sistema",
-            subtitle: "Botones frontales, D-Pad, botones de sistema y palancas traseras (DualSense Edge)",
+            subtitle: "Botones frontales, D-Pad, botones de sistema e palancas traseras (DualSense Edge)",
         },
         motion: {
             title: "🧭 Giroscopio y Movimiento (IMU 6-Axis)",
@@ -55,6 +56,33 @@ exports.es = {
             title: "📋 Diagnóstico en Tiempo Real y Registro de Eventos",
             subtitle: "Lecturas en tiempo real, telemetría WASM y comandos de gatillo",
         },
+    },
+    controls: {
+        triggerEffectsTitle: "Efectos de Gatillos Adaptativos",
+        selectTriggerEffect: "Elija el Efecto del Gatillo",
+        targetTrigger: "Gatillo Objetivo",
+        applyTrigger: "Aplicar Efecto",
+        resetTriggers: "Desactivar Gatillos",
+        lightbarTitle: "Color de la Barra de Luz (LED)",
+        selectColor: "Elija el Color",
+        applyColor: "Aplicar Color del LED",
+        vibrationTitle: "Prueba de Vibración (Rumble)",
+        testSoft: "Probar Vibración Suave",
+        testHeavy: "Probar Vibración Fuerte",
+        testBoth: "Probar Ambos Motores",
+        stopVibration: "Detener Vibración",
+        stopAll: "🛑 Detener Todo (Motores, Gatillos y Luces)",
+        leftTrigger: "Izquierdo (L2)",
+        rightTrigger: "Derecho (R2)",
+        bothTriggers: "Ambos (L2 + R2)",
+        effectNone: "Ninguno / Desactivado",
+        effectGameCube: "GameCube (R2)",
+        effectGallop: "Gallop (L2)",
+        effectMachine: "Ametralladora (R2)",
+        effectFeedback: "Retroalimentación Rígida (R2)",
+        effectBow: "Tensión de Arco (R2)",
+        effectWeapon: "Arma Semi-Automática (R2)",
+        effectAutoGun: "Disparo Automático / Buzz (R2)",
     },
     commands: {
         cross: "Heavy Rumble + Luz ROJA",

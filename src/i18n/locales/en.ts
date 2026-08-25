@@ -2,8 +2,8 @@ import type { TranslationDictionary } from "../types.ts";
 
 export const en: TranslationDictionary = {
   header: {
-    title: "DualSense Integration Test",
-    subtitle: "GamepadCoreHost WebHID & WASM Diagnostic Suite",
+    title: "DS5 Web Audio Haptics Bluetooth",
+    subtitle: "High-fidelity audio and haptics via Bluetooth for PlayStation DualSense controllers using WebHID and WebAssembly",
     btnLoadWasm: "1) Load WASM",
     btnConnectHid: "2) Connect DualSense (WebHID)",
     btnStartLoop: "3) Start Loop",

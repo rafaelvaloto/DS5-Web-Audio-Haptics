@@ -1,165 +1,54 @@
-﻿# 🎮 Gamepad-Core Web (DualSense WebHID & WebAssembly Suite)
+﻿# 🔊 DS5 Web Audio Haptics Bluetooth
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![WebAssembly](https://img.shields.io/badge/WebAssembly-Emscripten-654FF0?logo=webassembly&logoColor=white)](https://webassembly.org/)
-[![WebHID](https://img.shields.io/badge/WebHID-API-00C7B7?logo=w3c&logoColor=white)](https://wicg.github.io/webhid/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live%20Demo-2ea44f?logo=github)](https://rafaelvaloto.github.io/Gamepad-Core-Web/)
-
-> High-performance WebHID and WebAssembly integration for PlayStation **DualSense** and **DualSense Edge** controllers in the browser, powered by the native **Gamepad-Core** engine.
+Transform your browser into a real-time haptic feedback router. This tool captures live game audio via Screen Share and translates it into high-fidelity haptics via Bluetooth for PlayStation **DualSense** controllers—no cables or custom dongles required!
 
 ---
 
-## 🚀 Live Demo & Testing
+## 🚀 Live Haptic Router
 
-Experience the live interactive diagnostic suite and hardware integration test in any Chromium-based browser with WebHID support (Chrome, Edge, Opera, Brave):
+Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge, Opera, Brave):
 
-👉 **[Launch DualSense Integration Test Online](https://rafaelvaloto.github.io/Gamepad-Core-Web/)**
-
----
-
-## 🌟 Overview & Parent Projects
-
-**Gamepad-Core Web** bridges the native C++ hardware communication capabilities of **Gamepad-Core** with modern web standards using **WebAssembly** and the **WebHID API**.
-
-### 🎮 DualSense-Multiplatform / Gamepad-Core
-> **The Ultimate Cross-Platform DualSense & DualShock API**  
-> *Pure C++ • Zero Dependencies • Engine Agnostic*  
-The foundational native library designed for high-precision, low-latency communication with PlayStation controllers across Windows, Linux, macOS, Android, and embedded targets.
-
-### 🎮 Gamepad-Core Host Bridge
-> **Native C++ High-Level API (v1.0.6)**  
-A C-compatible host bridge library exposing the full feature set of `Gamepad-Core` through clean, exported FFI symbols (`GCH_*`), enabling seamless integration into any language or runtime.
-
-### 🌐 JavaScript, TypeScript & WebAssembly
-The C-compatible API is compiled with **Emscripten** into high-efficiency **WebAssembly (`GamepadCoreHost.wasm`)**, allowing browser applications and Node.js environments to access raw hardware buffers, adaptive trigger profiles, IMU sensor fusion, and multi-touch tracking at ~60 Hz without performance compromises.
+👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/Gamepad-Core-Web/testes/index.html)**
 
 ---
 
-## ✨ Features
+## 🎧 How to Use (Step-by-Step)
 
-- 🎯 **Direct WebHID Communication**: Native bidirectional communication with Sony DualSense (VID `0x054C`, PID `0x0CE6`) and DualSense Edge (PID `0x0DF2`).
-- ⚡ **Zero-Copy WebAssembly Telemetry**: Direct 148-byte memory layout decoding (`FInputContext` / `InputDescriptor`) for real-time input status.
-- 🏎️ **Adaptive Triggers**: Real-time programmatic triggers (Feedback, Weapon Semi-Auto, Automatic Gun Buzz, Bow Resistance, Gallop, GameCube click, Machine Gun).
-- 📳 **Haptics & Dual Rumble**: Heavy and soft rumble motor control with synchronized RGB Lightbar feedback.
-- 📱 **Multi-Touch Capacitive Touchpad**: Multi-finger touch tracking, normalized position, relative deltas, and radius.
-- 🎮 **DualSense Edge Support**: Dedicated telemetry for Function buttons (`Fn1`, `Fn2`) and Back Paddles (`PaddleLeft`, `PaddleRight`).
-- 🌐 **Built-in Internationalization (i18n)**: Multi-language interface supporting **English (`en`)**, **Portuguese (`pt-BR`)**, and **Spanish (`es`)**.
+1. **Connect your Controller:** Pair your DualSense controller to your PC via Bluetooth.
+2. **Open the Router:** Go to the [Live Link](https://rafaelvaloto.github.io/Gamepad-Core-Web/testes/index.html).
+3. **Connect Device:** Click the connect button and select your DualSense controller from the browser prompt.
+4. **Enable Haptics:** Click **"Audio Haptics (On)"** and select your game's window in the Screen Share prompt. **Important:** Make sure to check the "Share audio" option in the browser prompt.
+5. **Play:** Use the Picture-in-Picture mode to keep the app running in a small floating window while you play.
 
 ---
 
-## 🕹️ DualSense Integration Test Function Map
+## 🕹️ Game Compatibility
 
-The diagnostic interface includes the official DualSense integration test suite:
+**Note:** This routing method relies on the game engine natively reading PlayStation hardware inputs (Raw Input / Direct HID). **It should work on any game that natively supports the DualSense controller via Bluetooth.** Games that strictly require Microsoft's XInput API (Xbox controller format) will not register commands without an external wrapper.
 
-```
-=======================================================
-           DUALSENSE INTEGRATION TEST
-=======================================================
+**Tested & Confirmed Games:**
 
- [ FACE BUTTONS ]
-   (X) Cross    : Heavy Rumble + RED Light
-   (O) Circle   : Soft Rumble  + YELLOW Light
-   [ ] Square   : Trigger Effect: GAMECUBE (R2)
-   /\ Triangle  : Stop All (Rumble, Triggers & Lights)
+**Free Games:**
+- [GOALS](https://store.epicgames.com/p/goals-a271d5)
+- [Atlas Wars](https://store.epicgames.com/p/atlas-wars-5b83bd)
+- [Pixel Gun 3D](https://store.epicgames.com/p/pixel-gun-3d-812855)
+- [Armor of God](https://store.epicgames.com/p/armor-of-god-d55d93)
 
--------------------------------------------------------
-
- [ D-PADS & SHOULDERS ]
-   [L1]    : Trigger Effect: Gallop (L2)
-   [R1]    : Trigger Effect: Machine (R2)
-   [UP]    : Trigger Effect: Feedback (Rigid)
-   [DOWN]  : Trigger Effect: Bow (Tension)
-   [LEFT]  : Trigger Effect: Weapon (Semi)
-   [RIGHT] : Trigger Effect: Automatic Gun (Buzz)
-
-=======================================================
-```
+**Paid Games:**
+- [NBA THE RUN](https://store.steampowered.com/app/2866670/NBA_THE_RUN/)
 
 ---
 
-## 🧠 Memory Layout & Architecture
+## ✨ Key Features
 
-The WebAssembly engine interfaces with the browser via standardized descriptor structs:
-
-### 1. `GamepadDeviceDescriptor` (Platform Handle & Metadata)
-```cpp
-struct GamepadDeviceDescriptor
-{
-    std::uint64_t Handle;          // Unique platform handle
-    std::int32_t DeviceType;       // 1 = DualSense, 2 = DualSenseEdge, 3 = DualShock4
-    std::int32_t ConnectionType;   // 1 = USB, 2 = Bluetooth
-    std::int32_t IsConnected;      // Connection status flag
-    char Path[512];                // Platform device path identifier
-};
-```
-
-### 2. `FInputContext` / `InputDescriptor` (148-Byte Input State Buffer)
-| Offset | Field | Type | Description |
-|---|---|---|---|
-| `0` | `AnalogDeadZone` | `float` | Analog stick deadzone threshold |
-| `4, 8` | `LeftAnalog (X, Y)` | `float[2]` | Left stick normalized coordinates [-1.0, 1.0] |
-| `12, 16` | `RightAnalog (X, Y)` | `float[2]` | Right stick normalized coordinates [-1.0, 1.0] |
-| `20, 24` | `LeftTrigger / RightTrigger` | `float[2]` | L2 / R2 continuous analog pull [0.0, 1.0] |
-| `28..39` | `Gyroscope (X, Y, Z)` | `float[3]` | Gyroscopic angular velocity (rad/s) |
-| `40..51` | `Accelerometer (X, Y, Z)` | `float[3]` | 3-Axis linear acceleration (g) |
-| `52..63` | `Gravity (X, Y, Z)` | `float[3]` | Filtered gravity vector |
-| `64..75` | `Tilt (X, Y, Z)` | `float[3]` | Orientation tilt angles (deg) |
-| `76..85` | `Touchpad State` | `int/byte` | `TouchId`, `TouchFingerCount`, `DirectionRaw`, `IsTouching` |
-| `88..111`| `Touch Vectors` | `float[6]` | `TouchRadius`, `TouchPosition`, `TouchRelative` |
-| `112..119`| `Face & D-Pad Buttons` | `byte[8]` | Cross, Square, Triangle, Circle, Dpad Up/Down/Left/Right |
-| `120..127`| `Analog Directions` | `byte[8]` | Digital threshold booleans for L/R sticks |
-| `128..139`| `Special & System` | `byte[12]` | Triggers thresholds, L1, R1, L3, R3, PS, Share, Options, Touch, Mute, Headphone |
-| `140..143`| `DualSense Edge` | `byte[4]` | `Fn1`, `Fn2`, `PaddleLeft`, `PaddleRight` |
-| `144` | `BatteryLevel` | `float` | Controller battery percentage [0.0 - 100.0] |
-
----
-
-## 🛠️ Local Development & Build
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or newer)
-- npm
-
-### Installation & Run
-```bash
-# Clone the repository
-git clone https://github.com/rafaelvaloto/Gamepad-Core-Web.git
-cd Gamepad-Core-Web
-
-# Install dependencies
-npm install
-
-# Compile TypeScript
-npm run build
-
-# Start a local static server (using any local HTTP server)
-npx serve .
-```
-
-Navigate to `http://localhost:3000/testes/index.html` in Chrome/Edge to test with your DualSense controller.
-
----
-
-## 📦 Repository & GitHub Setup
-
-To initialize and push changes to the official repository:
-
-```bash
-git branch -M main
-git remote add origin https://github.com/rafaelvaloto/Gamepad-Core-Web.git
-git push -u origin main
-```
-
-The included GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically builds TypeScript sources and deploys the diagnostic web application to **GitHub Pages** upon every push to `main`.
+- 🔊 **Audio-to-Haptic:** Turn on-screen game audio into synchronized controller vibrations.
+- 🛜 **100% Wireless:** Works fully over Bluetooth. No USB cables needed.
+- 🚫 **No Installs Required:** Runs entirely in your web browser.
+- 🏎️ **Trigger Testing:** Manually test Adaptive Triggers (Machine Gun, Bow, etc.) directly in the app.
+- 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
 
 ---
 
 ## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-```
-MIT License
-Copyright (c) 2026 Rafael Valoto
-```

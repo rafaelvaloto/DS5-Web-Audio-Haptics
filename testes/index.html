@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DualSense Integration Test - GamepadCoreHost</title>
+  <title>DS5 Web Audio Haptics Bluetooth</title>
   <style>
     :root {
       color-scheme: dark;
@@ -46,6 +46,7 @@
       margin: 0 auto;
       padding: 20px;
       width: 100%;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       gap: 18px;
@@ -711,6 +712,219 @@
       height: 100%;
     }
 
+    /* Main view: compact controller HUD, matching the PiP experience. */
+    .compact-dashboard {
+      width: 100%;
+      margin: 0;
+      background: #0d1322;
+      border: 1px solid rgba(59, 130, 246, 0.22);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: stretch;
+      gap: 18px;
+    }
+
+    .dashboard-grid > .main-grid {
+      display: contents;
+    }
+
+    .dashboard-grid .left-column,
+    .dashboard-grid .right-column {
+      display: contents;
+    }
+
+    .dashboard-grid .compact-dashboard,
+    .dashboard-grid .card {
+      min-width: 0;
+      height: 100%;
+    }
+
+    .app-container > footer {
+      margin-top: auto !important;
+    }
+
+    .dashboard-grid .compact-dashboard { grid-column: 1; grid-row: 2; }
+    .dashboard-grid .left-column > .card:first-child { grid-column: 1; grid-row: 1; }
+    .dashboard-grid .right-column > .card:first-child { grid-column: 2; grid-row: 1; }
+    .dashboard-grid .right-column > .card:last-child { grid-column: 2; grid-row: 2; }
+
+    /* Header keeps only the primary connection controls. */
+    #lang-select,
+    .header-controls .lang-container,
+    #btn-audio-haptics,
+    #btn-pip,
+    #btn-clear-logs {
+      display: none !important;
+    }
+
+    .compact-dashboard #btn-audio-haptics,
+    .card-header #btn-clear-logs {
+      display: inline-flex !important;
+      margin-left: auto;
+      padding: 5px 9px;
+      font-size: 0.72rem;
+    }
+
+    .compact-dashboard .pip-actions-bar {
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1100px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .compact-dashboard #btn-audio-haptics,
+      .compact-dashboard #btn-pip {
+        display: inline-flex !important;
+        flex: 1 1 0;
+        min-width: 0;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .dashboard-grid .compact-dashboard,
+      .dashboard-grid .left-column > .card:first-child,
+      .dashboard-grid .right-column > .card:first-child,
+      .dashboard-grid .right-column > .card:last-child {
+        grid-column: 1;
+        grid-row: auto;
+        height: auto;
+      }
+    }
+
+    /* Keep the footer quiet while the complete responsive card grid remains available. */
+    .main-grid .left-column > .card:nth-child(2),
+    .main-grid .left-column > .card:nth-child(3) {
+      display: none !important;
+    }
+
+
+    .compact-dashboard .pip-container {
+      padding: 12px 14px;
+      gap: 10px;
+    }
+
+    .compact-dashboard .pip-header {
+      padding-bottom: 6px;
+    }
+
+    .compact-dashboard .pip-close-btn {
+      display: none;
+    }
+
+    .compact-dashboard .pip-actions-bar {
+      padding-top: 4px;
+      justify-content: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      margin-top: 10px;
+      gap: 10px;
+    }
+
+    .pip-control-btn {
+      min-width: 92px;
+      justify-content: center;
+      padding: 10px 20px;
+      font-size: 0.78rem;
+    }
+
+    .pip-control-btn.pip-control-play {
+      background: #075985;
+      border-color: #38bdf8;
+    }
+
+    .pip-control-btn.pip-control-stop {
+      background: #7f1d1d;
+      border-color: #f87171;
+    }
+
+    .pip-control-btn.pip-control-audio {
+      background: #b45309;
+      border-color: #f59e0b;
+      color: #fff;
+    }
+
+    .pip-control-btn.pip-control-audio.active {
+      background: #065f46;
+      border-color: #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .compact-dashboard #btn-audio-haptics {
+      min-width: 210px;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      letter-spacing: 0.15px;
+      box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.18), 0 5px 16px rgba(245, 158, 11, 0.18);
+    }
+
+    .compact-dashboard #btn-audio-haptics:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.5), 0 7px 20px rgba(245, 158, 11, 0.3);
+    }
+
+    .compact-dashboard #btn-pip {
+      display: inline-flex !important;
+      min-width: 210px;
+      justify-content: center;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 0.88rem;
+      box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.18), 0 5px 16px rgba(59, 130, 246, 0.16);
+    }
+
+    /* Play/Stop are transport controls for the PiP window only. */
+    .compact-dashboard #pip-btn-play,
+    .compact-dashboard #pip-btn-stop-loop {
+      display: none !important;
+    }
+
+    .compact-dashboard .pip-main-body {
+      padding: 9px 7px;
+    }
+
+    .compact-dashboard .pip-stick-radar {
+      width: 52px;
+      height: 52px;
+    }
+
+    .compact-dashboard .pip-btn,
+    .compact-dashboard .pip-face-btn {
+      width: 24px;
+      height: 24px;
+    }
+
+    @media (max-width: 620px) {
+      .app-container { padding: 10px; gap: 10px; }
+      .header-bar { padding: 10px 12px; border-radius: 12px; }
+      .header-title h1 { font-size: 1.05rem; }
+      .header-title p { display: none; }
+      .header-controls { gap: 6px; }
+      .header-controls button, .header-controls a.btn-github { padding: 7px 9px; font-size: 0.72rem; }
+      .lang-container { padding: 4px 7px; font-size: 0.72rem; }
+      .status-ribbon { padding: 6px 8px; gap: 5px; font-size: 0.7rem; }
+      .status-badge { padding: 3px 6px; }
+    }
+
+    @media (min-width: 621px) {
+      .compact-dashboard .pip-container { min-height: 300px; }
+    }
+
     .pip-header {
       display: flex;
       align-items: center;
@@ -1102,8 +1316,8 @@
     <!-- Header Bar -->
     <header class="header-bar">
       <div class="header-title">
-        <h1 data-i18n="header.title">DualSense Integration Test</h1>
-        <p data-i18n="header.subtitle">GamepadCoreHost WebHID & WASM Diagnostic Suite</p>
+        <h1 data-i18n="header.title">DS5 Web Audio Haptics Bluetooth</h1>
+        <p data-i18n="header.subtitle">High-fidelity audio and haptics via Bluetooth for PlayStation DualSense controllers using WebHID and WebAssembly</p>
       </div>
       <div class="header-controls">
         <div class="lang-container">
@@ -1116,8 +1330,8 @@
         </div>
         <button id="btn-load" class="btn-primary" data-i18n="header.btnLoadWasm">1) Load WASM</button>
         <button id="btn-request" disabled data-i18n="header.btnConnectHid">2) Connect DualSense (WebHID)</button>
-        <button id="btn-start" disabled data-i18n="header.btnStartLoop">3) Start Loop</button>
-        <button id="btn-stop" class="btn-danger" disabled data-i18n="header.btnStopLoop">4) Stop Loop</button>
+        <button id="btn-start" disabled data-i18n="header.btnStartLoop">3) Play</button>
+        <button id="btn-stop" class="btn-danger" disabled data-i18n="header.btnStopLoop">4) Stop</button>
         <button id="btn-audio-haptics" class="btn-warn" disabled data-i18n="header.btnAudioHaptics">🎵 Audio Haptics (Off)</button>
         <button id="btn-pip" class="btn-pip" data-i18n="header.btnPip">🪟 Picture-in-Picture</button>
         <button id="btn-clear-logs" data-i18n="header.btnClearLogs">Clear Logs</button>
@@ -1156,8 +1370,14 @@
       </div>
     </div>
 
-    <!-- Main Grid -->
-    <main class="main-grid">
+    <div class="dashboard-grid">
+      <!-- Compact default dashboard -->
+      <section class="compact-dashboard" aria-label="DualSense compact dashboard">
+        <div id="compact-hud" class="pip-container"></div>
+      </section>
+
+      <!-- Main Grid -->
+      <main class="main-grid">
 
       <!-- LEFT COLUMN -->
       <div class="left-column">
@@ -1221,20 +1441,7 @@
                 </div>
               </div>
 
-              <!-- 3. Botão de Teste a Vibração -->
-              <div class="control-row">
-                <div class="control-row-title">
-                  <span>📳 <span data-i18n="controls.vibrationTitle">Vibration (Rumble)</span></span>
-                </div>
-                <div class="control-inputs">
-                  <button id="btn-test-soft" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.testSoft">Soft Rumble</button>
-                  <button id="btn-test-heavy" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.testHeavy">Heavy Rumble</button>
-                  <button id="btn-test-both" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.testBoth">Both Motors</button>
-                  <button id="btn-stop-vibe" style="padding: 5px 12px; font-size: 0.8rem; background: #232c48;" data-i18n="controls.stopVibration">Stop</button>
-                </div>
-              </div>
-
-              <!-- 4. Stop All General -->
+              <!-- Stop All General -->
               <div style="display: flex; justify-content: flex-end;">
                 <button id="btn-stop-all" class="btn-danger" style="padding: 6px 14px; font-size: 0.82rem;" data-i18n="controls.stopAll">🛑 Stop All (Motors, Triggers &amp; Lights)</button>
               </div>
@@ -1422,7 +1629,8 @@
         </section>
 
       </div>
-    </main>
+      </main>
+    </div>
 
     <!-- Footer -->
     <footer style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; font-size: 0.82rem; color: var(--muted); border: 1px solid var(--border); background: var(--card-soft); border-radius: 12px; margin-top: 4px; flex-wrap: wrap; gap: 10px;">
@@ -1452,12 +1660,12 @@
     const translations = {
       en: {
         header: {
-          title: "DualSense Integration Test",
-          subtitle: "GamepadCoreHost WebHID & WASM Diagnostic Suite",
+          title: "DS5 Web Audio Haptics Bluetooth",
+          subtitle: "High-fidelity audio and haptics via Bluetooth for PlayStation DualSense controllers using WebHID and WebAssembly",
           btnLoadWasm: "1) Load WASM",
           btnConnectHid: "2) Connect DualSense (WebHID)",
-          btnStartLoop: "3) Start Loop",
-          btnStopLoop: "4) Stop Loop",
+          btnStartLoop: "3) Play",
+          btnStopLoop: "4) Stop",
           btnAudioHaptics: "🎵 Audio Haptics (Off)",
           btnAudioHapticsOn: "🎵 Audio Haptics (On)",
           btnPip: "🪟 Picture-in-Picture",
@@ -1613,12 +1821,12 @@
       },
       "pt-BR": {
         header: {
-          title: "DualSense Integration Test",
-          subtitle: "Conjunto de Diagnóstico GamepadCoreHost WebHID & WASM",
+          title: "DS5 Web Audio Haptics Bluetooth",
+          subtitle: "Áudio e hápticos de alta fidelidade via Bluetooth para controles PlayStation DualSense usando WebHID e WebAssembly",
           btnLoadWasm: "1) Carregar WASM",
           btnConnectHid: "2) Conectar DualSense (WebHID)",
-          btnStartLoop: "3) Iniciar Loop",
-          btnStopLoop: "4) Parar Loop",
+          btnStartLoop: "3) Play",
+          btnStopLoop: "4) Stop",
           btnAudioHaptics: "🎵 Áudio Háptico (Desligado)",
           btnAudioHapticsOn: "🎵 Áudio Háptico (Ligado)",
           btnPip: "🪟 Picture-in-Picture",
@@ -1774,12 +1982,12 @@
       },
       es: {
         header: {
-          title: "DualSense Integration Test",
-          subtitle: "Suite de Diagnóstico GamepadCoreHost WebHID & WASM",
+          title: "DS5 Web Audio Haptics Bluetooth",
+          subtitle: "Audio y hápticos de alta fidelidad vía Bluetooth para controles PlayStation DualSense mediante WebHID y WebAssembly",
           btnLoadWasm: "1) Cargar WASM",
           btnConnectHid: "2) Conectar DualSense (WebHID)",
-          btnStartLoop: "3) Iniciar Bucle",
-          btnStopLoop: "4) Detener Bucle",
+          btnStartLoop: "3) Play",
+          btnStopLoop: "4) Stop",
           btnAudioHaptics: "🎵 Audio Háptico (Apagado)",
           btnAudioHapticsOn: "🎵 Audio Háptico (Encendido)",
           btnPip: "🪟 Picture-in-Picture",
@@ -2284,8 +2492,8 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         lblWasm.textContent = t("status.ready");
         btnLoad.disabled = true;
         btnRequest.disabled = false;
-        btnStart.disabled = false;
         btnAudioHaptics.disabled = false;
+        syncTransportButtons();
 
         log(t("logs.wasmLoaded"));
       } catch (err) {
@@ -2306,6 +2514,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         for (const d of devices) cacheDevice(d);
         lblDevice.textContent = cachedDevices.length > 0 ? (cachedDevices[0].productName || t("status.connected")) : t("status.none");
         dotHid.classList.add("active");
+        syncTransportButtons();
         log(t("logs.webHidConnected", { name: devices.map(d => d.productName).join(", ") }));
       } catch (err) {
         log(t("logs.webHidFailed", { error: String(err) }));
@@ -2320,6 +2529,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         startLoops();
         btnStart.disabled = true;
         btnStop.disabled = false;
+        syncTransportButtons();
         log(t("logs.loopStarted"));
       } catch (err) {
         log(`❌ Error starting loop: ${String(err)}`);
@@ -2329,10 +2539,31 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
     // 4) Stop Loop
     btnStop.addEventListener("click", () => {
       stopLoops();
-      btnStart.disabled = false;
-      btnStop.disabled = true;
+      syncTransportButtons();
       log(t("logs.loopStopped"));
     });
+
+    function syncTransportButtons() {
+      const hasController = cachedDevices.length > 0 || deviceIds.size > 0;
+      const loopIsRunning = inputTimer !== null;
+      btnStart.disabled = !hasController || loopIsRunning;
+      btnStop.disabled = !hasController || !loopIsRunning;
+      btnAudioHaptics.disabled = !hasController || !loopIsRunning;
+
+      const targets = [compactHud, pipWindow?.document, inPagePip].filter(Boolean);
+      for (const target of targets) {
+        const play = target.querySelector?.("#pip-btn-play");
+        const stop = target.querySelector?.("#pip-btn-stop-loop");
+        const audio = target.querySelector?.("#pip-btn-audio");
+        if (play) play.disabled = btnStart.disabled;
+        if (stop) stop.disabled = btnStop.disabled;
+        if (audio) {
+          audio.disabled = btnAudioHaptics.disabled;
+          audio.classList.toggle("active", isAudioHapticsEnabled);
+          audio.textContent = isAudioHapticsEnabled ? "🎵 Audio Haptics (On)" : "🎵 Audio Haptics (Off)";
+        }
+      }
+    }
 
     async function enableAudioHaptics() {
       if (isAudioHapticsEnabled) return;
@@ -2455,6 +2686,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         btnAudioHaptics.textContent = t("header.btnAudioHapticsOn");
         btnAudioHaptics.classList.add("btn-success");
         btnAudioHaptics.classList.remove("btn-warn");
+        syncTransportButtons();
         log("🎵 Audio Haptics ativado (RumbleMode=0x0C, mapa de funções desativado).");
       } catch (err) {
         log(`❌ Erro ao ativar Audio Haptics: ${err}`);
@@ -2506,6 +2738,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
       btnAudioHaptics.textContent = t("header.btnAudioHaptics");
       btnAudioHaptics.classList.remove("btn-success");
       btnAudioHaptics.classList.add("btn-warn");
+      syncTransportButtons();
       log("🎵 Audio Haptics desativado (RumbleMode=0xFF, vibração normal restaurada).");
     }
 
@@ -2595,6 +2828,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         const ids = Array.from(deviceIds);
         for (const id of ids) {
           try {
+            api?.updateOutput?.(id);
             api.updateInput?.(id, FRAME_SECONDS);
           } catch (e) {
             log(`❌ GCH_UpdateInput error: ${String(e)}`);
@@ -2707,6 +2941,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
     function onDisconnectDevice(deviceId) {
       deviceIds.delete(deviceId);
       previousInput.delete(deviceId);
+      syncTransportButtons();
       log(t("logs.deviceDisconnected", { id: deviceId }));
     }
 
@@ -3228,17 +3463,9 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         </div>
 
         <div class="pip-actions-bar">
-          <div class="pip-action-group">
-            <button id="pip-btn-soft-vibe" class="pip-act-btn">Soft</button>
-            <button id="pip-btn-heavy-vibe" class="pip-act-btn">Heavy</button>
-            <button id="pip-btn-stop" class="pip-act-btn pip-act-danger">Stop</button>
-          </div>
-          <div class="pip-action-group">
-            <button class="pip-color-dot pip-col-blue" data-color="#0066ff" title="Blue"></button>
-            <button class="pip-color-dot pip-col-red" data-color="#ff0000" title="Red"></button>
-            <button class="pip-color-dot pip-col-green" data-color="#00ff66" title="Green"></button>
-            <button class="pip-color-dot pip-col-purple" data-color="#aa00ff" title="Purple"></button>
-          </div>
+          <button id="pip-btn-play" class="pip-control-btn pip-control-play">▶ Play</button>
+          <button id="pip-btn-stop-loop" class="pip-control-btn pip-control-stop">■ Stop</button>
+          <button id="pip-btn-audio" class="pip-control-btn pip-control-audio">🎵 Audio Haptics</button>
         </div>
       `;
     }
@@ -3246,6 +3473,10 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
     function setupPipEvents(targetDocOrEl, isNativeWindow) {
       const q = (sel) => targetDocOrEl.querySelector(sel);
       const qAll = (sel) => targetDocOrEl.querySelectorAll(sel);
+
+      q("#pip-btn-play")?.addEventListener("click", () => btnStart.click());
+      q("#pip-btn-stop-loop")?.addEventListener("click", () => btnStop.click());
+      q("#pip-btn-audio")?.addEventListener("click", () => btnAudioHaptics.click());
 
       // Close Button
       const closeBtn = q("#pip-close-btn");
@@ -3386,6 +3617,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
           pipWindow.document.body.appendChild(root);
 
           setupPipEvents(pipWindow.document, true);
+          syncTransportButtons();
 
           pipWindow.addEventListener("pagehide", () => {
             pipWindow = null;
@@ -3404,17 +3636,19 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
       inPagePip.innerHTML = `<div class="pip-container">${getPipTemplateHTML()}</div>`;
       inPagePip.style.display = "flex";
       setupPipEvents(inPagePip, false);
+      syncTransportButtons();
       btnPip.classList.add("active");
       log("🪟 Floating Picture-in-Picture HUD activated.");
     }
 
     function updatePipUI(s) {
-      let doc = null;
-      if (pipWindow && pipWindow.document) {
-        doc = pipWindow.document;
-      } else if (inPagePip && inPagePip.style.display !== "none") {
-        doc = inPagePip;
-      }
+      const compactHud = document.getElementById("compact-hud");
+      if (compactHud) updatePipTargetUI(s, compactHud);
+      if (pipWindow && pipWindow.document) updatePipTargetUI(s, pipWindow.document);
+      else if (inPagePip && inPagePip.style.display !== "none") updatePipTargetUI(s, inPagePip);
+    }
+
+    function updatePipTargetUI(s, doc) {
       if (!doc) return;
 
       const q = (id) => doc.getElementById ? doc.getElementById(id) : doc.querySelector(`#${id}`);
@@ -3529,6 +3763,20 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
     }
 
     // Inicializar traduções na interface
+    const compactHud = document.getElementById("compact-hud");
+    if (compactHud) {
+      compactHud.innerHTML = getPipTemplateHTML();
+      const hudActions = compactHud.querySelector(".pip-actions-bar");
+      if (hudActions && btnPip) {
+        hudActions.append(btnPip);
+      }
+      setupPipEvents(compactHud, true);
+    }
+    const logCardHeader = document.getElementById("log-box")?.closest(".card")?.querySelector(".card-header");
+    if (logCardHeader && btnClearLogs) {
+      logCardHeader.append(btnClearLogs);
+    }
+    syncTransportButtons();
     applyTranslations(currentLocale);
   </script>
 </body>

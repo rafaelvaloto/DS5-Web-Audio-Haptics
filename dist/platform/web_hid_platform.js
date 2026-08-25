@@ -172,7 +172,6 @@ class WebHidPlatformBridge {
             return true;
         };
         this.processAudioHaptics = () => {
-            // WebHID não oferece integração direta de áudio/haptics neste nível.
         };
     }
     requestSonyDevices() {
