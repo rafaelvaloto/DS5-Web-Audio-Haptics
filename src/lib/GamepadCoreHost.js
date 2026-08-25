@@ -448,7 +448,7 @@ function updateMemoryViews() {
   var b = wasmMemory.buffer;
   HEAP8 = new Int8Array(b);
   HEAP16 = new Int16Array(b);
-  HEAPU8 = new Uint8Array(b);
+  Module['HEAPU8'] = HEAPU8 = new Uint8Array(b);
   
   HEAP32 = new Int32Array(b);
   HEAPU32 = new Uint32Array(b);
@@ -876,19 +876,6 @@ async function createWasm() {
     ;
   }
 
-  var abortOnCannotGrowMemory = (requestedSize) => {
-      abort(`Cannot enlarge memory arrays to size ${requestedSize} bytes (OOM). Either (1) compile with -sINITIAL_MEMORY=X with X higher than the current value ${HEAP8.length}, (2) compile with -sALLOW_MEMORY_GROWTH which allows increasing the size at runtime, or (3) if you want malloc to return NULL (0) instead of this abort, compile with -sABORTING_MALLOC=0`);
-    };
-  
-  /** @type {!Uint8Array} */
-  var HEAPU8;
-  var _emscripten_resize_heap = (requestedSize) => {
-      var oldSize = HEAPU8.length;
-      // With CAN_ADDRESS_2GB or MEMORY64, pointers are already unsigned.
-      requestedSize >>>= 0;
-      abortOnCannotGrowMemory(requestedSize);
-    };
-
   var UTF8Decoder = globalThis.TextDecoder && new TextDecoder();
   
   
@@ -957,6 +944,8 @@ async function createWasm() {
       return str;
     };
   
+  /** @type {!Uint8Array} */
+  var HEAPU8;
   
     /**
    * Given a pointer 'ptr' to a null-terminated UTF8-encoded string in the
@@ -975,6 +964,19 @@ async function createWasm() {
       assert(typeof ptr == 'number', `UTF8ToString expects a number (got ${typeof ptr})`);
       return ptr ? UTF8ArrayToString(HEAPU8, ptr, maxBytesToRead, ignoreNul) : '';
     };
+  var _emscripten_err = (str) => err(UTF8ToString(str));
+
+  var abortOnCannotGrowMemory = (requestedSize) => {
+      abort(`Cannot enlarge memory arrays to size ${requestedSize} bytes (OOM). Either (1) compile with -sINITIAL_MEMORY=X with X higher than the current value ${HEAP8.length}, (2) compile with -sALLOW_MEMORY_GROWTH which allows increasing the size at runtime, or (3) if you want malloc to return NULL (0) instead of this abort, compile with -sABORTING_MALLOC=0`);
+    };
+  
+  var _emscripten_resize_heap = (requestedSize) => {
+      var oldSize = HEAPU8.length;
+      // With CAN_ADDRESS_2GB or MEMORY64, pointers are already unsigned.
+      requestedSize >>>= 0;
+      abortOnCannotGrowMemory(requestedSize);
+    };
+
   var SYSCALLS = {
   varargs:undefined,
   getStr(ptr) {
@@ -1413,6 +1415,7 @@ async function createWasm() {
       setWasmTableEntry(index, null);
       freeTableIndexes.push(index);
     };
+
 // End JS library code
 
 // include: postlibrary.js
@@ -1661,7 +1664,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'INT53_MIN',
   'bigintToI53Checked',
   'HEAP8',
-  'HEAPU8',
   'HEAP16',
   'HEAPU16',
   'HEAP32',
@@ -1906,6 +1908,8 @@ function checkIncomingModuleAPI() {
 var _GCH_Shutdown = Module['_GCH_Shutdown'] = makeInvalidEarlyAccess('_GCH_Shutdown');
 var _GCH_GetVersion = Module['_GCH_GetVersion'] = makeInvalidEarlyAccess('_GCH_GetVersion');
 var _GCH_SetLogCallback = Module['_GCH_SetLogCallback'] = makeInvalidEarlyAccess('_GCH_SetLogCallback');
+var _GCH_AudioSubmitSamples = Module['_GCH_AudioSubmitSamples'] = makeInvalidEarlyAccess('_GCH_AudioSubmitSamples');
+var _GCH_GetProcessAudioHaptics = Module['_GCH_GetProcessAudioHaptics'] = makeInvalidEarlyAccess('_GCH_GetProcessAudioHaptics');
 var _GCH_DiscoverDevices = Module['_GCH_DiscoverDevices'] = makeInvalidEarlyAccess('_GCH_DiscoverDevices');
 var _GCH_CreateDevice = Module['_GCH_CreateDevice'] = makeInvalidEarlyAccess('_GCH_CreateDevice');
 var _GCH_UpdateInput = Module['_GCH_UpdateInput'] = makeInvalidEarlyAccess('_GCH_UpdateInput');
@@ -1931,12 +1935,12 @@ var _GCH_InitializePlatformBridge = Module['_GCH_InitializePlatformBridge'] = ma
 var _GCH_InitializeDeviceRegistryPolicy = Module['_GCH_InitializeDeviceRegistryPolicy'] = makeInvalidEarlyAccess('_GCH_InitializeDeviceRegistryPolicy');
 var _GCH_InitializePlatformBridgeWasm = Module['_GCH_InitializePlatformBridgeWasm'] = makeInvalidEarlyAccess('_GCH_InitializePlatformBridgeWasm');
 var _GCH_InitializeDeviceRegistryPolicyWasm = Module['_GCH_InitializeDeviceRegistryPolicyWasm'] = makeInvalidEarlyAccess('_GCH_InitializeDeviceRegistryPolicyWasm');
+var _malloc = Module['_malloc'] = makeInvalidEarlyAccess('_malloc');
+var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
 var _fflush = makeInvalidEarlyAccess('_fflush');
 var _emscripten_stack_get_end = makeInvalidEarlyAccess('_emscripten_stack_get_end');
 var _emscripten_stack_get_base = makeInvalidEarlyAccess('_emscripten_stack_get_base');
 var _strerror = makeInvalidEarlyAccess('_strerror');
-var _malloc = Module['_malloc'] = makeInvalidEarlyAccess('_malloc');
-var _free = Module['_free'] = makeInvalidEarlyAccess('_free');
 var _emscripten_stack_init = makeInvalidEarlyAccess('_emscripten_stack_init');
 var _emscripten_stack_get_free = makeInvalidEarlyAccess('_emscripten_stack_get_free');
 var __emscripten_stack_restore = makeInvalidEarlyAccess('__emscripten_stack_restore');
@@ -1951,6 +1955,8 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['GCH_Shutdown'] != 'undefined', 'missing Wasm export: GCH_Shutdown');
   assert(typeof wasmExports['GCH_GetVersion'] != 'undefined', 'missing Wasm export: GCH_GetVersion');
   assert(typeof wasmExports['GCH_SetLogCallback'] != 'undefined', 'missing Wasm export: GCH_SetLogCallback');
+  assert(typeof wasmExports['GCH_AudioSubmitSamples'] != 'undefined', 'missing Wasm export: GCH_AudioSubmitSamples');
+  assert(typeof wasmExports['GCH_GetProcessAudioHaptics'] != 'undefined', 'missing Wasm export: GCH_GetProcessAudioHaptics');
   assert(typeof wasmExports['GCH_DiscoverDevices'] != 'undefined', 'missing Wasm export: GCH_DiscoverDevices');
   assert(typeof wasmExports['GCH_CreateDevice'] != 'undefined', 'missing Wasm export: GCH_CreateDevice');
   assert(typeof wasmExports['GCH_UpdateInput'] != 'undefined', 'missing Wasm export: GCH_UpdateInput');
@@ -1976,12 +1982,12 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['GCH_InitializeDeviceRegistryPolicy'] != 'undefined', 'missing Wasm export: GCH_InitializeDeviceRegistryPolicy');
   assert(typeof wasmExports['GCH_InitializePlatformBridgeWasm'] != 'undefined', 'missing Wasm export: GCH_InitializePlatformBridgeWasm');
   assert(typeof wasmExports['GCH_InitializeDeviceRegistryPolicyWasm'] != 'undefined', 'missing Wasm export: GCH_InitializeDeviceRegistryPolicyWasm');
+  assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
+  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['fflush'] != 'undefined', 'missing Wasm export: fflush');
   assert(typeof wasmExports['emscripten_stack_get_end'] != 'undefined', 'missing Wasm export: emscripten_stack_get_end');
   assert(typeof wasmExports['emscripten_stack_get_base'] != 'undefined', 'missing Wasm export: emscripten_stack_get_base');
   assert(typeof wasmExports['strerror'] != 'undefined', 'missing Wasm export: strerror');
-  assert(typeof wasmExports['malloc'] != 'undefined', 'missing Wasm export: malloc');
-  assert(typeof wasmExports['free'] != 'undefined', 'missing Wasm export: free');
   assert(typeof wasmExports['emscripten_stack_init'] != 'undefined', 'missing Wasm export: emscripten_stack_init');
   assert(typeof wasmExports['emscripten_stack_get_free'] != 'undefined', 'missing Wasm export: emscripten_stack_get_free');
   assert(typeof wasmExports['_emscripten_stack_restore'] != 'undefined', 'missing Wasm export: _emscripten_stack_restore');
@@ -1992,6 +1998,8 @@ function assignWasmExports(wasmExports) {
   _GCH_Shutdown = Module['_GCH_Shutdown'] = createExportWrapper('GCH_Shutdown', wasmExports['GCH_Shutdown'], 0);
   _GCH_GetVersion = Module['_GCH_GetVersion'] = createExportWrapper('GCH_GetVersion', wasmExports['GCH_GetVersion'], 0);
   _GCH_SetLogCallback = Module['_GCH_SetLogCallback'] = createExportWrapper('GCH_SetLogCallback', wasmExports['GCH_SetLogCallback'], 1);
+  _GCH_AudioSubmitSamples = Module['_GCH_AudioSubmitSamples'] = createExportWrapper('GCH_AudioSubmitSamples', wasmExports['GCH_AudioSubmitSamples'], 4);
+  _GCH_GetProcessAudioHaptics = Module['_GCH_GetProcessAudioHaptics'] = createExportWrapper('GCH_GetProcessAudioHaptics', wasmExports['GCH_GetProcessAudioHaptics'], 1);
   _GCH_DiscoverDevices = Module['_GCH_DiscoverDevices'] = createExportWrapper('GCH_DiscoverDevices', wasmExports['GCH_DiscoverDevices'], 1);
   _GCH_CreateDevice = Module['_GCH_CreateDevice'] = createExportWrapper('GCH_CreateDevice', wasmExports['GCH_CreateDevice'], 1);
   _GCH_UpdateInput = Module['_GCH_UpdateInput'] = createExportWrapper('GCH_UpdateInput', wasmExports['GCH_UpdateInput'], 2);
@@ -2017,12 +2025,12 @@ function assignWasmExports(wasmExports) {
   _GCH_InitializeDeviceRegistryPolicy = Module['_GCH_InitializeDeviceRegistryPolicy'] = createExportWrapper('GCH_InitializeDeviceRegistryPolicy', wasmExports['GCH_InitializeDeviceRegistryPolicy'], 4);
   _GCH_InitializePlatformBridgeWasm = Module['_GCH_InitializePlatformBridgeWasm'] = createExportWrapper('GCH_InitializePlatformBridgeWasm', wasmExports['GCH_InitializePlatformBridgeWasm'], 7);
   _GCH_InitializeDeviceRegistryPolicyWasm = Module['_GCH_InitializeDeviceRegistryPolicyWasm'] = createExportWrapper('GCH_InitializeDeviceRegistryPolicyWasm', wasmExports['GCH_InitializeDeviceRegistryPolicyWasm'], 4);
+  _malloc = Module['_malloc'] = createExportWrapper('malloc', wasmExports['malloc'], 1);
+  _free = Module['_free'] = createExportWrapper('free', wasmExports['free'], 1);
   _fflush = createExportWrapper('fflush', wasmExports['fflush'], 1);
   _emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'];
   _emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'];
   _strerror = createExportWrapper('strerror', wasmExports['strerror'], 1);
-  _malloc = Module['_malloc'] = createExportWrapper('malloc', wasmExports['malloc'], 1);
-  _free = Module['_free'] = createExportWrapper('free', wasmExports['free'], 1);
   _emscripten_stack_init = wasmExports['emscripten_stack_init'];
   _emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'];
   __emscripten_stack_restore = wasmExports['_emscripten_stack_restore'];
@@ -2039,6 +2047,8 @@ var wasmImports = {
   _abort_js: __abort_js,
   /** @export */
   clock_time_get: _clock_time_get,
+  /** @export */
+  emscripten_err: _emscripten_err,
   /** @export */
   emscripten_resize_heap: _emscripten_resize_heap,
   /** @export */

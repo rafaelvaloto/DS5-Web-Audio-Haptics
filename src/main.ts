@@ -6,8 +6,8 @@ import {
   type EmscriptenLikeModule,
 } from "./platform/web_hid_platform.ts";
 
-const FRAME_SECONDS = 0.0166;
-const FRAME_MS = 16.6;
+const FRAME_SECONDS = 0.010;
+const FRAME_MS = 10;
 const INPUT_DESCRIPTOR_SIZE = 148;
 let bannerPrinted = false;
 
@@ -19,6 +19,39 @@ const TRIGGER_WEAPON = new Uint8Array([0x25, 0x08, 0x01, 0x07, 0x00, 0x00, 0x00,
 const TRIGGER_BOW = new Uint8Array([0x22, 0x02, 0x01, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 const TRIGGER_AUTOMATIC_GUN = new Uint8Array([0x26, 0x00, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x0a]);
 const TRIGGER_GAMECUBE = new Uint8Array([0x25, 0x90, 0x02, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+
+const AUDIO_HAPTICS_WORKLET_CODE = `
+class AudioHapticsWorkletProcessor extends AudioWorkletProcessor {
+  process(inputs, outputs, parameters) {
+    const input = inputs[0];
+    if (input && input.length > 0) {
+      const ch0 = input[0];
+      const ch1 = input[1];
+      if (ch0 && ch0.length > 0) {
+        const frameCount = ch0.length;
+        const numChannels = ch1 && ch1.length > 0 ? 2 : 1;
+        const totalFloats = frameCount * numChannels;
+        const interleaved = new Float32Array(totalFloats);
+        if (numChannels >= 2 && ch1) {
+          for (let i = 0; i < frameCount; i++) {
+            interleaved[i * 2] = ch0[i];
+            interleaved[i * 2 + 1] = ch1[i];
+          }
+        } else {
+          interleaved.set(ch0);
+        }
+        this.port.postMessage({
+          audioData: interleaved,
+          frameCount,
+          numChannels
+        }, [interleaved.buffer]);
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcessor);
+`;
 
 type NativeModule = EmscriptenLikeModule & {
   _malloc(size: number): number;
@@ -119,6 +152,20 @@ type NativeApi = {
   customTrigger?: (deviceId: number, buffer: number, length: number, hand: number) => number;
   stopTrigger?: (deviceId: number, hand: number) => void;
   shutdown?: () => void;
+  audioSubmitSamples?: (audioDataPtr: number, frameCount: number, numChannels: number, sampleRate: number) => number | boolean;
+  getProcessAudioHaptics?: (deviceId: number) => number | boolean;
+  processAudioHaptics?: (deviceId: number) => number | boolean;
+  dualsenseSettings?: (
+    controllerId: number,
+    bIsMic: number,
+    bIsHeadset: number,
+    bIsSpeaker: number,
+    micVolume: number,
+    audioVolume: number,
+    rumbleMode: number,
+    rumbleReduce: number,
+    triggerReduce: number
+  ) => void;
 };
 
 export class GamepadClientApplication {
@@ -134,6 +181,13 @@ export class GamepadClientApplication {
   private readonly registryCleanup: { dispose(): void };
   private readonly logFnPtr: number | null;
   private isRunning = false;
+  private isAudioHapticsEnabled = false;
+  private audioContext: AudioContext | null = null;
+  private audioStream: MediaStream | null = null;
+  private audioProcessorNode: AudioNode | null = null;
+  private audioSourceNode: MediaStreamAudioSourceNode | null = null;
+  private audioBufferPtr = 0;
+  private audioBufferCapacityBytes = 0;
 
   private constructor(
     module: NativeModule,
@@ -184,7 +238,6 @@ export class GamepadClientApplication {
         dispatch: (deviceId) => {
           appRef.value?.deviceIds.add(deviceId);
           wrappedCallbacks.dispatch(deviceId);
-          printStartupBanner();
           console.log(`Device dispatched: ${deviceId}`);
 
           // Enable Gyroscope and Touchpad
@@ -195,6 +248,11 @@ export class GamepadClientApplication {
           if (appRef.value?.api.enableTouch) {
             appRef.value.api.enableTouch(deviceId, 1);
             console.log(`Device ${deviceId}: Touchpad enabled.`);
+          }
+
+          if (appRef.value?.getIsAudioHapticsEnabled()) {
+            appRef.value.api.dualsenseSettings?.(deviceId, 0, 0, 1, 0, 100, 0x0C, 0, 0);
+            appRef.value.api.updateOutput?.(deviceId);
           }
         },
         disconnect: (deviceId) => {
@@ -235,17 +293,6 @@ export class GamepadClientApplication {
       for (const deviceId of ids) {
         const state = this.readInputState(deviceId);
         this.handleInput(deviceId, state);
-
-        frameCount++;
-        if (frameCount % 60 === 0) {
-          console.log(
-            `[Dev ${deviceId}] L1=${state.bLeftShoulder ? 1 : 0} L2=${state.leftTriggerAnalog.toFixed(2)} R1=${state.bRightShoulder ? 1 : 0} R2=${state.rightTriggerAnalog.toFixed(2)} | ` +
-            `LStick=(${state.leftAnalogX.toFixed(2)}, ${state.leftAnalogY.toFixed(2)}) RStick=(${state.rightAnalogX.toFixed(2)}, ${state.rightAnalogY.toFixed(2)}) | ` +
-            `Gyro=(${state.gyroscopeX.toFixed(2)}, ${state.gyroscopeY.toFixed(2)}, ${state.gyroscopeZ.toFixed(2)}) | ` +
-            `Touch=(${state.touchPositionX.toFixed(2)}, ${state.touchPositionY.toFixed(2)}, touching=${state.bIsTouching}) | ` +
-            `Bat=${state.batteryLevel.toFixed(0)}%`
-          );
-        }
       }
     }, FRAME_MS);
 
@@ -266,6 +313,8 @@ export class GamepadClientApplication {
       clearInterval(this.inputTimer);
     }
 
+    await this.disableAudioHaptics();
+
     this.registryCleanup.dispose();
     await this.platformCleanup.dispose();
     this.api.shutdown?.();
@@ -275,6 +324,208 @@ export class GamepadClientApplication {
     }
     this.module._free(this.inputBufferPtr);
     this.module._free(this.outputBufferPtr);
+  }
+
+  public getIsAudioHapticsEnabled(): boolean {
+    return this.isAudioHapticsEnabled;
+  }
+
+  public async enableAudioHaptics(): Promise<void> {
+    if (this.isAudioHapticsEnabled) {
+      return;
+    }
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getDisplayMedia) {
+      throw new Error("getDisplayMedia não é suportado neste ambiente.");
+    }
+
+    const stream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: true,
+    });
+
+    const audioTracks = stream.getAudioTracks();
+    if (audioTracks.length === 0) {
+      stream.getTracks().forEach((track) => track.stop());
+      throw new Error("Nenhuma faixa de áudio encontrada no compartilhamento de tela. Certifique-se de habilitar o áudio do sistema/aba.");
+    }
+
+    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const ctx = new AudioContextClass();
+    if (ctx.state === "suspended") {
+      await ctx.resume();
+    }
+
+    const source = ctx.createMediaStreamSource(stream);
+    let processorNode: AudioNode;
+
+    if (ctx.audioWorklet && typeof ctx.audioWorklet.addModule === "function") {
+        const blob = new Blob([AUDIO_HAPTICS_WORKLET_CODE], {type: "application/javascript"});
+        const workletUrl = URL.createObjectURL(blob);
+        try {
+            await ctx.audioWorklet.addModule(workletUrl);
+        } finally {
+            URL.revokeObjectURL(workletUrl);
+        }
+
+        const workletNode = new AudioWorkletNode(ctx, "audio-haptics-worklet-processor");
+        workletNode.port.onmessage = (event: MessageEvent) => {
+            if (!this.isAudioHapticsEnabled || !this.api.audioSubmitSamples) {
+                return;
+            }
+
+            const {audioData, frameCount, numChannels} = event.data as {
+                audioData: Float32Array;
+                frameCount: number;
+                numChannels: number;
+            };
+
+            const totalFloats = frameCount * numChannels;
+            const totalBytes = totalFloats * 4;
+
+            if (this.audioBufferCapacityBytes < totalBytes) {
+                if (this.audioBufferPtr !== 0) {
+                    this.module._free(this.audioBufferPtr);
+                }
+                this.audioBufferPtr = this.module._malloc(totalBytes);
+                this.audioBufferCapacityBytes = totalBytes;
+            }
+
+            const heap = this.module.HEAPU8;
+            const floatView = new Float32Array(heap.buffer, heap.byteOffset + this.audioBufferPtr, totalFloats);
+            floatView.set(audioData);
+
+            this.api.audioSubmitSamples(this.audioBufferPtr, frameCount, numChannels, ctx.sampleRate);
+        };
+
+        processorNode = workletNode;
+
+        source.connect(processorNode);
+        processorNode.connect(ctx.destination);
+
+        stream.getVideoTracks().concat(audioTracks).forEach((track) => {
+            track.addEventListener("ended", () => {
+                if (this.isAudioHapticsEnabled) {
+                    this.disableAudioHaptics().catch(console.error);
+                }
+            });
+        });
+
+        this.audioStream = stream;
+        this.audioContext = ctx;
+        this.audioSourceNode = source;
+        this.audioProcessorNode = processorNode;
+        this.isAudioHapticsEnabled = true;
+
+        // RumbleMode = 0x0C, vibracao haptics e audio.
+        const ids = Array.from(this.deviceIds);
+        for (const deviceId of ids) {
+            this.api.dualsenseSettings?.(deviceId, 0, 1, 1, 0, 100, 0xFC, 0, 0);
+            this.api.updateOutput?.(deviceId);
+        }
+    }
+    // } else {
+    //   const bufferSize = 4096;
+    //   const scriptProcessor = ctx.createScriptProcessor(bufferSize, 2, 2);
+    //
+    //   scriptProcessor.onaudioprocess = (e: AudioProcessingEvent) => {
+    //     if (!this.isAudioHapticsEnabled || !this.api.audioSubmitSamples) {
+    //       return;
+    //     }
+    //
+    //     const inputBuffer = e.inputBuffer;
+    //     const numChannels = inputBuffer.numberOfChannels;
+    //     const frameCount = inputBuffer.length;
+    //     const sampleRate = inputBuffer.sampleRate;
+    //     const totalFloats = frameCount * numChannels;
+    //     const totalBytes = totalFloats * 4;
+    //
+    //     if (this.audioBufferCapacityBytes < totalBytes) {
+    //       if (this.audioBufferPtr !== 0) {
+    //         this.module._free(this.audioBufferPtr);
+    //       }
+    //       this.audioBufferPtr = this.module._malloc(totalBytes);
+    //       this.audioBufferCapacityBytes = totalBytes;
+    //     }
+    //
+    //     const heap = this.module.HEAPU8;
+    //     const floatView = new Float32Array(heap.buffer, heap.byteOffset + this.audioBufferPtr, totalFloats);
+    //
+    //     const ch0 = inputBuffer.getChannelData(0);
+    //     if (numChannels >= 2) {
+    //       const ch1 = inputBuffer.getChannelData(1);
+    //       for (let i = 0; i < frameCount; i++) {
+    //         floatView[i * 2] = ch0[i];
+    //         floatView[i * 2 + 1] = ch1[i];
+    //       }
+    //     } else {
+    //       floatView.set(ch0);
+    //     }
+    //
+    //     // this.api.audioSubmitSamples(this.audioBufferPtr, frameCount, numChannels, sampleRate);
+    //     // const ids = Array.from(this.deviceIds);
+    //     // for (const deviceId of ids) {
+    //     //   (this.api.getProcessAudioHaptics || this.api.processAudioHaptics)?.(deviceId);
+    //     // }
+    //   };
+
+
+
+  }
+
+  public async disableAudioHaptics(): Promise<void> {
+    if (!this.isAudioHapticsEnabled) {
+      return;
+    }
+
+    this.isAudioHapticsEnabled = false;
+
+    if (this.audioProcessorNode) {
+      this.audioProcessorNode.disconnect();
+      if ("onaudioprocess" in this.audioProcessorNode) {
+        (this.audioProcessorNode as ScriptProcessorNode).onaudioprocess = null;
+      }
+      if ("port" in this.audioProcessorNode) {
+        const port = (this.audioProcessorNode as AudioWorkletNode).port;
+        port.onmessage = null;
+        port.close();
+      }
+      this.audioProcessorNode = null;
+    }
+    if (this.audioSourceNode) {
+      this.audioSourceNode.disconnect();
+      this.audioSourceNode = null;
+    }
+    if (this.audioContext) {
+      await this.audioContext.close().catch(() => {});
+      this.audioContext = null;
+    }
+    if (this.audioStream) {
+      this.audioStream.getTracks().forEach((track) => track.stop());
+      this.audioStream = null;
+    }
+    if (this.audioBufferPtr !== 0) {
+      this.module._free(this.audioBufferPtr);
+      this.audioBufferPtr = 0;
+      this.audioBufferCapacityBytes = 0;
+    }
+
+    // RumbleMode = 0xff, vibracao normal.
+    const ids = Array.from(this.deviceIds);
+    for (const deviceId of ids) {
+      this.api.dualsenseSettings?.(deviceId, 0, 0, 0, 0, 100, 0xFF, 0, 0);
+      this.api.updateOutput?.(deviceId);
+    }
+  }
+
+  public async toggleAudioHaptics(): Promise<boolean> {
+    if (this.isAudioHapticsEnabled) {
+      await this.disableAudioHaptics();
+      return false;
+    } else {
+      await this.enableAudioHaptics();
+      return true;
+    }
   }
 
   public readInputState(deviceId: number): FInputContext {
@@ -380,80 +631,10 @@ export class GamepadClientApplication {
   }
 
   private handleInput(deviceId: number, state: FInputContext): void {
-    const previous = this.previousInput.get(deviceId);
-
-    // [ FACE BUTTONS ]
-    // (X) Cross : Heavy Rumble + RED Light
-    if (this.isPressed(state.bCross, previous?.bCross)) {
-      this.setBasicOutput(deviceId, 64, 0, 255, 0, 0);
-      console.log(`Device ${deviceId}: (X) Cross -> Heavy Rumble + RED Light`);
-    }
-
-    // (O) Circle : Soft Rumble + YELLOW Light
-    if (this.isPressed(state.bCircle, previous?.bCircle)) {
-      this.setBasicOutput(deviceId, 0, 64, 255, 255, 0);
-      console.log(`Device ${deviceId}: (O) Circle -> Soft Rumble + YELLOW Light`);
-    }
-
-    // [ ] Square : Trigger Effect: GAMECUBE (R2)
-    if (this.isPressed(state.bSquare, previous?.bSquare)) {
-      this.setTriggerEffect(deviceId, TRIGGER_GAMECUBE, 1);
-      console.log(`Device ${deviceId}: [ ] Square -> Trigger Effect: GAMECUBE (R2)`);
-    }
-
-    // /\ Triangle : Stop All
-    if (this.isPressed(state.bTriangle, previous?.bTriangle)) {
-      this.stopTriggers(deviceId);
-      this.setBasicOutput(deviceId, 0, 0, 0, 0, 0);
-      this.api.resetLights?.(deviceId);
-      console.log(`Device ${deviceId}: /\\ Triangle -> Stop All`);
-    }
-
-    // [ D-PADS & SHOULDERS ]
-    // [L1] : Trigger Effect: Gallop (L2)
-    if (this.isPressed(state.bLeftShoulder, previous?.bLeftShoulder)) {
-      this.setTriggerEffect(deviceId, TRIGGER_GALLOPING, 0);
-      console.log(`Device ${deviceId}: [L1] -> Trigger Effect: Gallop (L2)`);
-    }
-
-    // [R1] : Trigger Effect: Machine (R2)
-    if (this.isPressed(state.bRightShoulder, previous?.bRightShoulder)) {
-      this.setTriggerEffect(deviceId, TRIGGER_MACHINE, 1);
-      console.log(`Device ${deviceId}: [R1] -> Trigger Effect: Machine (R2)`);
-    }
-
-    // [UP] : Trigger Effect: Feedback (Rigid)
-    if (this.isPressed(state.bDpadUp, previous?.bDpadUp)) {
-      this.setTriggerEffect(deviceId, TRIGGER_FEEDBACK, 1);
-      console.log(`Device ${deviceId}: [UP] -> Trigger Effect: Feedback (Rigid) (R2)`);
-    }
-
-    // [DOWN] : Trigger Effect: Bow (Tension)
-    if (this.isPressed(state.bDpadDown, previous?.bDpadDown)) {
-      this.setTriggerEffect(deviceId, TRIGGER_BOW, 1);
-      console.log(`Device ${deviceId}: [DOWN] -> Trigger Effect: Bow (Tension) (R2)`);
-    }
-
-    // [LEFT] : Trigger Effect: Weapon (Semi)
-    if (this.isPressed(state.bDpadLeft, previous?.bDpadLeft)) {
-      this.setTriggerEffect(deviceId, TRIGGER_WEAPON, 1);
-      console.log(`Device ${deviceId}: [LEFT] -> Trigger Effect: Weapon (Semi) (R2)`);
-    }
-
-    // [RIGHT] : Trigger Effect: Automatic Gun (Buzz)
-    if (this.isPressed(state.bDpadRight, previous?.bDpadRight)) {
-      this.setTriggerEffect(deviceId, TRIGGER_AUTOMATIC_GUN, 1);
-      console.log(`Device ${deviceId}: [RIGHT] -> Trigger Effect: Automatic Gun (Buzz) (R2)`);
-    }
-
     this.previousInput.set(deviceId, state);
   }
 
-  private isPressed(current: boolean, previous = false): boolean {
-    return current && !previous;
-  }
-
-  private setTriggerEffect(deviceId: number, payload: Uint8Array, hand: number): void {
+  public setTriggerEffect(deviceId: number, payload: Uint8Array, hand: number): void {
     if (!this.api.customTrigger || !this.api.updateOutput) {
       return;
     }
@@ -462,13 +643,13 @@ export class GamepadClientApplication {
     this.api.updateOutput(deviceId);
   }
 
-  private stopTriggers(deviceId: number): void {
+  public stopTriggers(deviceId: number): void {
     this.api.stopTrigger?.(deviceId, 0);
     this.api.stopTrigger?.(deviceId, 1);
     this.api.updateOutput?.(deviceId);
   }
 
-  private setBasicOutput(
+  public setBasicOutput(
     deviceId: number,
     leftRumble: number,
     rightRumble: number,
@@ -534,6 +715,34 @@ function bindNativeApi(module: NativeModule): NativeApi {
     ) as NativeApi["customTrigger"],
     stopTrigger: maybe("GCH_StopTrigger", null, ["number", "number"]) as NativeApi["stopTrigger"],
     shutdown: maybe("GCH_Shutdown", null, []) as NativeApi["shutdown"],
+    audioSubmitSamples: maybe(
+      "GCH_AudioSubmitSamples",
+      "number",
+      ["number", "number", "number", "number"]
+    ) as NativeApi["audioSubmitSamples"],
+    getProcessAudioHaptics: (maybe(
+      "GCH_GetProcessAudioHaptics",
+      "number",
+      ["number"]
+    ) || maybe(
+      "GCH_ProcessAudioHaptics",
+      "number",
+      ["number"]
+    )) as NativeApi["getProcessAudioHaptics"],
+    processAudioHaptics: (maybe(
+      "GCH_GetProcessAudioHaptics",
+      "number",
+      ["number"]
+    ) || maybe(
+      "GCH_ProcessAudioHaptics",
+      "number",
+      ["number"]
+    )) as NativeApi["processAudioHaptics"],
+    dualsenseSettings: maybe(
+      "GCH_DualSenseSettings",
+      null,
+      ["number", "number", "number", "number", "number", "number", "number", "number", "number"]
+    ) as NativeApi["dualsenseSettings"],
   };
 }
 
@@ -558,36 +767,6 @@ async function loadGamepadCoreHostFactory(): Promise<(moduleArg?: Record<string,
     throw new Error("GamepadCoreHost.js inválido: export esperado é função de inicialização.");
   }
   return candidate as (moduleArg?: Record<string, unknown>) => Promise<unknown>;
-}
-
-function printStartupBanner(): void {
-  if (bannerPrinted) {
-    return;
-  }
-  bannerPrinted = true;
-  console.log(`
-=======================================================
-           DUALSENSE INTEGRATION TEST
-=======================================================
-
- [ FACE BUTTONS ]
-   (X) Cross    : Heavy Rumble + RED Light
-   (O) Circle   : Soft Rumble  + YELLOW Light
-   [ ] Square   : Trigger Effect: GAMECUBE (R2)
-   /\\ Triangle : Stop All
-
--------------------------------------------------------
-
- [ D-PADS & SHOULDERS ]
-   [L1]    : Trigger Effect: Gallop (L2)
-   [R1]    : Trigger Effect: Machine (R2)
-   [UP]    : Trigger Effect: Feedback (Rigid)
-   [DOWN]  : Trigger Effect: Bow (Tension)
-   [LEFT]  : Trigger Effect: Weapon (Semi)
-   [RIGHT] : Trigger Effect: Automatic Gun (Buzz)
-
-=======================================================
-`);
 }
 
 function readCString(heap: Uint8Array, ptr: number): string {

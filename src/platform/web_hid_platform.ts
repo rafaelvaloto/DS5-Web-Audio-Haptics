@@ -274,7 +274,7 @@ export class WebHidPlatformBridge {
   };
 
   processAudioHaptics = (): void => {
-    // WebHID não oferece integração direta de áudio/haptics neste nível.
+
   };
 
   async dispose(): Promise<void> {

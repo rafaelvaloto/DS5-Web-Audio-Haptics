@@ -45,8 +45,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GamepadClientApplication = void 0;
 exports.startGamepadClientLoop = startGamepadClientLoop;
 const web_hid_platform_ts_1 = require("./platform/web_hid_platform.js");
-const FRAME_SECONDS = 0.0166;
-const FRAME_MS = 16.6;
+const FRAME_SECONDS = 0.010;
+const FRAME_MS = 10;
 const INPUT_DESCRIPTOR_SIZE = 148;
 let bannerPrinted = false;
 // Trigger Effect Payloads
@@ -145,7 +145,7 @@ class GamepadClientApplication {
                 const state = this.readInputState(deviceId);
                 this.handleInput(deviceId, state);
                 frameCount++;
-                if (frameCount % 60 === 0) {
+                if (frameCount % 100 === 0) {
                     console.log(`[Dev ${deviceId}] L1=${state.bLeftShoulder ? 1 : 0} L2=${state.leftTriggerAnalog.toFixed(2)} R1=${state.bRightShoulder ? 1 : 0} R2=${state.rightTriggerAnalog.toFixed(2)} | ` +
                         `LStick=(${state.leftAnalogX.toFixed(2)}, ${state.leftAnalogY.toFixed(2)}) RStick=(${state.rightAnalogX.toFixed(2)}, ${state.rightAnalogY.toFixed(2)}) | ` +
                         `Gyro=(${state.gyroscopeX.toFixed(2)}, ${state.gyroscopeY.toFixed(2)}, ${state.gyroscopeZ.toFixed(2)}) | ` +

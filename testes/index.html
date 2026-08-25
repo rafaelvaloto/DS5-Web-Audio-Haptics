@@ -132,6 +132,24 @@
       background: #7f1d1d;
     }
 
+    button.btn-warn {
+      background: #b45309;
+      border-color: #f59e0b;
+      color: #fff;
+    }
+    button.btn-warn:hover:not(:disabled) {
+      background: #92400e;
+    }
+
+    button.btn-success {
+      background: #065f46;
+      border-color: #10b981;
+      color: #fff;
+    }
+    button.btn-success:hover:not(:disabled) {
+      background: #047857;
+    }
+
     a.btn-github {
       padding: 9px 16px;
       border: 1px solid var(--border-light);
@@ -280,36 +298,117 @@
       overflow-x: auto;
     }
 
-    .command-item-row {
+    /* Interactive Controls Panel */
+    .controls-panel {
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: var(--card-soft);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
       padding: 8px 12px;
       background: var(--card-inner);
       border: 1px solid var(--border);
       border-radius: 10px;
-      transition: all 0.15s ease;
     }
 
-    .command-item-row.active {
-      border-color: var(--ok);
-      background: rgba(16, 185, 129, 0.15);
-      box-shadow: 0 0 10px var(--ok-glow);
-    }
-
-    .command-btn-tag {
-      font-weight: 700;
-      font-family: monospace;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.08);
-      font-size: 0.85rem;
-    }
-
-    .command-desc {
+    .control-row-title {
       font-size: 0.82rem;
-      font-weight: 600;
-      color: var(--ok);
+      font-weight: 700;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 140px;
+    }
+
+    .control-inputs {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .control-select {
+      background: #0e1526;
+      color: var(--text);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 0.8rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .control-select:focus {
+      border-color: var(--accent);
+    }
+
+    .color-picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    input[type="color"].led-picker {
+      -webkit-appearance: none;
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      width: 36px;
+      height: 30px;
+      padding: 0;
+      background: none;
+      cursor: pointer;
+    }
+
+    input[type="color"].led-picker::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"].led-picker::-webkit-color-swatch {
+      border: none;
+      border-radius: 5px;
+    }
+
+    .color-preset-btn {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+      padding: 0;
+      transition: transform 0.1s ease, border-color 0.1s ease;
+    }
+
+    .color-preset-btn:hover {
+      transform: scale(1.2);
+      border-color: #fff;
+    }
+
+    .checkbox-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      user-select: none;
+      color: var(--text);
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
     }
 
     /* Analogs & Triggers visual cards */
@@ -430,7 +529,7 @@
 
     /* Touchpad Surface Visualizer */
     .touchpad-surface {
-      height: 120px;
+      height: 140px;
       background: #080d1a;
       border: 2px dashed var(--border);
       border-radius: 12px;
@@ -439,17 +538,43 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .touchpad-surface.active-touch {
+      border-color: var(--accent);
+      box-shadow: inset 0 0 24px var(--accent-glow);
     }
 
     .touch-dot {
-      width: 16px;
-      height: 16px;
-      background: var(--ok);
+      width: 26px;
+      height: 26px;
+      background: radial-gradient(circle, #38bdf8 20%, #0284c7 80%);
+      border: 2px solid #ffffff;
       border-radius: 50%;
       position: absolute;
-      box-shadow: 0 0 12px var(--ok-glow);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.9), 0 0 30px rgba(56, 189, 248, 0.5);
       display: none;
       transform: translate(-50%, -50%);
+      pointer-events: none;
+      transition: left 0.03s linear, top 0.03s linear;
+    }
+
+    .touch-dot-coord {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.85);
+      color: #7dd3fc;
+      padding: 1px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      border: 1px solid rgba(56, 189, 248, 0.4);
     }
 
     .touchpad-idle-hint {
@@ -487,7 +612,7 @@
       font-family: "Fira Code", monospace, Consolas;
       font-size: 0.8rem;
       color: #cbd5e1;
-      height: 280px;
+      height: 250px;
       overflow-y: auto;
       white-space: pre-wrap;
       line-height: 1.45;
@@ -552,6 +677,7 @@
         <button id="btn-request" disabled data-i18n="header.btnConnectHid">2) Connect DualSense (WebHID)</button>
         <button id="btn-start" disabled data-i18n="header.btnStartLoop">3) Start Loop</button>
         <button id="btn-stop" class="btn-danger" disabled data-i18n="header.btnStopLoop">4) Stop Loop</button>
+        <button id="btn-audio-haptics" class="btn-warn" disabled data-i18n="header.btnAudioHaptics">🎵 Audio Haptics (Off)</button>
         <button id="btn-clear-logs" data-i18n="header.btnClearLogs">Clear Logs</button>
         <a href="https://github.com/rafaelvaloto/Gamepad-Core-Web" target="_blank" rel="noopener noreferrer" class="btn-github" title="GitHub Repository">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;">
@@ -581,10 +707,14 @@
         <span><span data-i18n="status.touch">Touchpad</span>: <strong id="lbl-touch" data-i18n="status.inactive">Inactive</strong></span>
       </div>
       <div class="status-badge">
+        <span id="dot-audio-haptics" class="status-dot"></span>
+        <span><span data-i18n="status.audioHaptics">Audio Haptics</span>: <strong id="lbl-audio-haptics" data-i18n="status.inactive">Inactive</strong></span>
+      </div>
+      <div class="status-badge">
         <span>🔋 <span data-i18n="status.battery">Battery</span>: <strong id="lbl-battery">--%</strong></span>
       </div>
       <div class="status-badge">
-        <span>⏱️ <span data-i18n="status.rate">Rate</span>: <strong id="lbl-fps">60 Hz</strong></span>
+        <span>⏱️ <span data-i18n="status.rate">Rate</span>: <strong id="lbl-fps">100 Hz</strong></span>
       </div>
     </div>
 
@@ -594,57 +724,85 @@
       <!-- LEFT COLUMN -->
       <div class="left-column">
 
-        <!-- CARD 1: MAPA DE FUNÇÕES -->
+        <!-- CARD 1: CONTROLES DE AÇÃO & GATILHOS -->
         <section class="card">
           <div class="card-header">
             <div>
-              <h2 data-i18n="cards.commands.title">🎮 Function Map (DUALSENSE INTEGRATION TEST)</h2>
-              <p data-i18n="cards.commands.subtitle">Press the buttons on the controller to trigger corresponding effects or click to test</p>
+              <h2 data-i18n="cards.commands.title">🎮 Action &amp; Trigger Controls</h2>
+              <p data-i18n="cards.commands.subtitle">Interactive controls for Adaptive Triggers, Lightbar LED and Vibration testing</p>
             </div>
           </div>
           <div class="card-body">
-            <div class="inner-grid-2">
-              <div class="command-item-row" id="cmd-cross">
-                <span class="command-btn-tag">(X) Cross</span>
-                <span class="command-desc" data-i18n="commands.cross">Heavy Rumble + RED Light</span>
+            <!-- Interactive Controls Panel -->
+            <div class="controls-panel">
+              <!-- 1. Escolha o Efeito do Gatilho -->
+              <div class="control-row">
+                <div class="control-row-title">
+                  <span>🔫 <span data-i18n="controls.triggerEffectsTitle">Adaptive Triggers</span></span>
+                </div>
+                <div class="control-inputs">
+                  <select id="sel-trigger-effect" class="control-select">
+                    <option value="none" data-i18n="controls.effectNone">None / Off</option>
+                    <option value="gamecube" data-i18n="controls.effectGameCube">GameCube (R2)</option>
+                    <option value="gallop" data-i18n="controls.effectGallop">Gallop (L2)</option>
+                    <option value="machine" data-i18n="controls.effectMachine">Machine Gun (R2)</option>
+                    <option value="feedback" data-i18n="controls.effectFeedback">Rigid Feedback (R2)</option>
+                    <option value="bow" data-i18n="controls.effectBow">Bow Tension (R2)</option>
+                    <option value="weapon" data-i18n="controls.effectWeapon">Weapon Semi-Auto (R2)</option>
+                    <option value="autogun" data-i18n="controls.effectAutoGun">Automatic Gun Buzz (R2)</option>
+                  </select>
+                  <select id="sel-trigger-hand" class="control-select">
+                    <option value="1" data-i18n="controls.rightTrigger">Right (R2)</option>
+                    <option value="0" data-i18n="controls.leftTrigger">Left (L2)</option>
+                    <option value="2" data-i18n="controls.bothTriggers">Both (L2 + R2)</option>
+                  </select>
+                  <button id="btn-apply-trigger" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.applyTrigger">Apply Effect</button>
+                  <button id="btn-reset-trigger" style="padding: 5px 12px; font-size: 0.8rem; background: #232c48;" data-i18n="controls.resetTriggers">Reset</button>
+                </div>
               </div>
-              <div class="command-item-row" id="cmd-circle">
-                <span class="command-btn-tag">(O) Circle</span>
-                <span class="command-desc" data-i18n="commands.circle">Soft Rumble + YELLOW Light</span>
+
+              <!-- 2. Escolha a Cor da Barra de Luz -->
+              <div class="control-row">
+                <div class="control-row-title">
+                  <span>💡 <span data-i18n="controls.lightbarTitle">Lightbar LED Color</span></span>
+                </div>
+                <div class="control-inputs">
+                  <div class="color-picker-wrapper">
+                    <input type="color" id="picker-led-color" class="led-picker" value="#38bdf8" title="Choose LED Color">
+                  </div>
+                  <div style="display: flex; gap: 6px; align-items: center;">
+                    <button class="color-preset-btn" data-color="#ff0000" style="background:#ff0000;" title="Red"></button>
+                    <button class="color-preset-btn" data-color="#ffff00" style="background:#ffff00;" title="Yellow"></button>
+                    <button class="color-preset-btn" data-color="#00ff00" style="background:#00ff00;" title="Green"></button>
+                    <button class="color-preset-btn" data-color="#0080ff" style="background:#0080ff;" title="Blue"></button>
+                    <button class="color-preset-btn" data-color="#a855f7" style="background:#a855f7;" title="Purple"></button>
+                    <button class="color-preset-btn" data-color="#ffffff" style="background:#ffffff;" title="White"></button>
+                    <button class="color-preset-btn" data-color="#000000" style="background:#000000;" title="Off"></button>
+                  </div>
+                  <button id="btn-apply-led" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.applyColor">Set Color</button>
+                </div>
               </div>
-              <div class="command-item-row" id="cmd-square">
-                <span class="command-btn-tag">[ ] Square</span>
-                <span class="command-desc" data-i18n="commands.square">Trigger Effect: GAMECUBE (R2)</span>
+
+              <!-- 3. Botão de Teste a Vibração -->
+              <div class="control-row">
+                <div class="control-row-title">
+                  <span>📳 <span data-i18n="controls.vibrationTitle">Vibration (Rumble)</span></span>
+                </div>
+                <div class="control-inputs">
+                  <button id="btn-test-soft" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.testSoft">Soft Rumble</button>
+                  <button id="btn-test-heavy" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.testHeavy">Heavy Rumble</button>
+                  <button id="btn-test-both" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.testBoth">Both Motors</button>
+                  <button id="btn-stop-vibe" style="padding: 5px 12px; font-size: 0.8rem; background: #232c48;" data-i18n="controls.stopVibration">Stop</button>
+                </div>
               </div>
-              <div class="command-item-row" id="cmd-triangle">
-                <span class="command-btn-tag">/\ Triangle</span>
-                <span class="command-desc" data-i18n="commands.triangle">Stop All (Triggers &amp; Lights)</span>
-              </div>
-              <div class="command-item-row" id="cmd-l1">
-                <span class="command-btn-tag">[L1]</span>
-                <span class="command-desc" data-i18n="commands.l1">Trigger Effect: Gallop (L2)</span>
-              </div>
-              <div class="command-item-row" id="cmd-r1">
-                <span class="command-btn-tag">[R1]</span>
-                <span class="command-desc" data-i18n="commands.r1">Trigger Effect: Machine (R2)</span>
-              </div>
-              <div class="command-item-row" id="cmd-up">
-                <span class="command-btn-tag">[UP]</span>
-                <span class="command-desc" data-i18n="commands.up">Trigger Effect: Feedback (Rigid)</span>
-              </div>
-              <div class="command-item-row" id="cmd-down">
-                <span class="command-btn-tag">[DOWN]</span>
-                <span class="command-desc" data-i18n="commands.down">Trigger Effect: Bow (Tension)</span>
-              </div>
-              <div class="command-item-row" id="cmd-left">
-                <span class="command-btn-tag">[LEFT]</span>
-                <span class="command-desc" data-i18n="commands.left">Trigger Effect: Weapon (Semi)</span>
-              </div>
-              <div class="command-item-row" id="cmd-right">
-                <span class="command-btn-tag">[RIGHT]</span>
-                <span class="command-desc" data-i18n="commands.right">Trigger Effect: Automatic Gun (Buzz)</span>
+
+              <!-- 4. Stop All General -->
+              <div style="display: flex; justify-content: flex-end;">
+                <button id="btn-stop-all" class="btn-danger" style="padding: 6px 14px; font-size: 0.82rem;" data-i18n="controls.stopAll">🛑 Stop All (Motors, Triggers &amp; Lights)</button>
               </div>
             </div>
+
+            <!-- Botões Rápidos / Mapa Visual de Ações -->
           </div>
         </section>
 
@@ -830,7 +988,9 @@
           </div>
           <div class="card-body">
             <div class="touchpad-surface" id="touchpad-area">
-              <div class="touch-dot" id="touch-dot-1"></div>
+              <div class="touch-dot" id="touch-dot-1">
+                <span class="touch-dot-coord" id="touch-dot-coord">0, 0</span>
+              </div>
               <div class="touchpad-idle-hint" id="touch-hint" data-i18n="touchpad.touchingHint">Touch the DualSense surface to visualize</div>
             </div>
 
@@ -899,6 +1059,8 @@
           btnConnectHid: "2) Connect DualSense (WebHID)",
           btnStartLoop: "3) Start Loop",
           btnStopLoop: "4) Stop Loop",
+          btnAudioHaptics: "🎵 Audio Haptics (Off)",
+          btnAudioHapticsOn: "🎵 Audio Haptics (On)",
           btnClearLogs: "Clear Logs",
           language: "Language",
         },
@@ -912,6 +1074,7 @@
           connected: "Connected",
           gyro: "Gyroscope",
           touch: "Touchpad",
+          audioHaptics: "Audio Haptics",
           active: "Active",
           inactive: "Inactive",
           battery: "Battery",
@@ -919,8 +1082,8 @@
         },
         cards: {
           commands: {
-            title: "🎮 Function Map (DUALSENSE INTEGRATION TEST)",
-            subtitle: "Press the buttons on the controller to trigger corresponding effects or click to test",
+            title: "🎮 Action & Trigger Controls",
+            subtitle: "Interactive controls for Adaptive Triggers, Lightbar LED and Vibration testing",
           },
           analogs: {
             title: "🕹️ Analogs & Triggers (Sticks & Triggers)",
@@ -944,17 +1107,32 @@
             subtitle: "Real-time readings from 148-byte buffer and executed commands",
           },
         },
-        commands: {
-          cross: "Heavy Rumble + RED Light",
-          circle: "Soft Rumble + YELLOW Light",
-          square: "Trigger Effect: GAMECUBE (R2)",
-          triangle: "Stop All (Triggers & Lights)",
-          l1: "Trigger Effect: Gallop (L2)",
-          r1: "Trigger Effect: Machine (R2)",
-          up: "Trigger Effect: Feedback (Rigid)",
-          down: "Trigger Effect: Bow (Tension)",
-          left: "Trigger Effect: Weapon (Semi)",
-          right: "Trigger Effect: Automatic Gun (Buzz)",
+        controls: {
+          triggerEffectsTitle: "Adaptive Triggers",
+          selectTriggerEffect: "Choose Trigger Effect",
+          targetTrigger: "Target Trigger",
+          applyTrigger: "Apply Effect",
+          resetTriggers: "Reset",
+          lightbarTitle: "Lightbar LED Color",
+          selectColor: "Select Color",
+          applyColor: "Set Color",
+          vibrationTitle: "Vibration (Rumble)",
+          testSoft: "Soft Rumble",
+          testHeavy: "Heavy Rumble",
+          testBoth: "Both Motors",
+          stopVibration: "Stop",
+          stopAll: "🛑 Stop All (Motors, Triggers & Lights)",
+          leftTrigger: "Left (L2)",
+          rightTrigger: "Right (R2)",
+          bothTriggers: "Both (L2 + R2)",
+          effectNone: "None / Off",
+          effectGameCube: "GameCube (R2)",
+          effectGallop: "Gallop (L2)",
+          effectMachine: "Machine Gun (R2)",
+          effectFeedback: "Rigid Feedback (R2)",
+          effectBow: "Bow Tension (R2)",
+          effectWeapon: "Weapon Semi-Auto (R2)",
+          effectAutoGun: "Automatic Gun Buzz (R2)",
         },
         analogs: {
           l1: "L1",
@@ -1041,6 +1219,8 @@
           btnConnectHid: "2) Conectar DualSense (WebHID)",
           btnStartLoop: "3) Iniciar Loop",
           btnStopLoop: "4) Parar Loop",
+          btnAudioHaptics: "🎵 Áudio Háptico (Desligado)",
+          btnAudioHapticsOn: "🎵 Áudio Háptico (Ligado)",
           btnClearLogs: "Limpar Logs",
           language: "Idioma",
         },
@@ -1054,6 +1234,7 @@
           connected: "Conectado",
           gyro: "Giroscópio",
           touch: "Touchpad",
+          audioHaptics: "Áudio Háptico",
           active: "Ativo",
           inactive: "Inativo",
           battery: "Bateria",
@@ -1061,8 +1242,8 @@
         },
         cards: {
           commands: {
-            title: "🎮 Mapa de Funções (DUALSENSE INTEGRATION TEST)",
-            subtitle: "Pressione os botões no controle para acionar os efeitos correspondentes ou clique para testar",
+            title: "🎮 Controles de Ação & Gatilhos",
+            subtitle: "Testes interativos de Gatilhos Adaptáveis, LED da Barra de Luz e Vibração",
           },
           analogs: {
             title: "🕹️ Analógicos & Gatilhos (Sticks & Triggers)",
@@ -1086,17 +1267,32 @@
             subtitle: "Registro automático das leituras do buffer de 148 bytes e comandos executados",
           },
         },
-        commands: {
-          cross: "Heavy Rumble + Luz VERMELHA",
-          circle: "Soft Rumble + Luz AMARELA",
-          square: "Efeito de Gatilho: GAMECUBE (R2)",
-          triangle: "Parar Tudo (Gatilhos & Luzes)",
-          l1: "Efeito de Gatilho: Gallop (L2)",
-          r1: "Efeito de Gatilho: Machine (R2)",
-          up: "Efeito de Gatilho: Feedback (Rigid)",
-          down: "Efeito de Gatilho: Bow (Tension)",
-          left: "Efeito de Gatilho: Weapon (Semi)",
-          right: "Efeito de Gatilho: Automatic Gun (Buzz)",
+        controls: {
+          triggerEffectsTitle: "Efeitos de Gatilhos Adaptáveis",
+          selectTriggerEffect: "Escolha o Efeito do Gatilho",
+          targetTrigger: "Gatilho Alvo",
+          applyTrigger: "Aplicar Efeito",
+          resetTriggers: "Desativar Gatilhos",
+          lightbarTitle: "Cor da Barra de Luz (LED)",
+          selectColor: "Escolha a Cor",
+          applyColor: "Aplicar Cor do LED",
+          vibrationTitle: "Teste de Vibração (Rumble)",
+          testSoft: "Testar Vibração Suave",
+          testHeavy: "Testar Vibração Forte",
+          testBoth: "Testar Ambos os Motores",
+          stopVibration: "Parar Vibração",
+          stopAll: "🛑 Parar Tudo (Motores, Gatilhos e Luzes)",
+          leftTrigger: "Esquerdo (L2)",
+          rightTrigger: "Direito (R2)",
+          bothTriggers: "Ambos (L2 + R2)",
+          effectNone: "Nenhum / Desativado",
+          effectGameCube: "GameCube (R2)",
+          effectGallop: "Gallop (L2)",
+          effectMachine: "Machine Gun (R2)",
+          effectFeedback: "Feedback Rígido (R2)",
+          effectBow: "Tensão de Arco (R2)",
+          effectWeapon: "Arma Semi-Automática (R2)",
+          effectAutoGun: "Tiro Automático / Buzz (R2)",
         },
         analogs: {
           l1: "L1",
@@ -1183,6 +1379,8 @@
           btnConnectHid: "2) Conectar DualSense (WebHID)",
           btnStartLoop: "3) Iniciar Bucle",
           btnStopLoop: "4) Detener Bucle",
+          btnAudioHaptics: "🎵 Audio Háptico (Apagado)",
+          btnAudioHapticsOn: "🎵 Audio Háptico (Encendido)",
           btnClearLogs: "Limpiar Registros",
           language: "Idioma",
         },
@@ -1196,6 +1394,7 @@
           connected: "Conectado",
           gyro: "Giroscopio",
           touch: "Panel táctil",
+          audioHaptics: "Audio Háptico",
           active: "Activo",
           inactive: "Inactivo",
           battery: "Batería",
@@ -1203,8 +1402,8 @@
         },
         cards: {
           commands: {
-            title: "🎮 Mapa de Funciones (DUALSENSE INTEGRATION TEST)",
-            subtitle: "Presione los botones del mando para activar los efectos correspondientes o haga clic para probar",
+            title: "🎮 Controles de Acción y Gatillos",
+            subtitle: "Pruebas interactivas de Gatillos Adaptativos, LED de Barra de Luz y Vibración",
           },
           analogs: {
             title: "🕹️ Analógicos y Gatillos (Sticks & Triggers)",
@@ -1228,17 +1427,32 @@
             subtitle: "Lecturas en tiempo real del buffer de 148 bytes y comandos ejecutados",
           },
         },
-        commands: {
-          cross: "Heavy Rumble + Luz ROJA",
-          circle: "Soft Rumble + Luz AMARILLA",
-          square: "Efecto de Gatillo: GAMECUBE (R2)",
-          triangle: "Detener Todo (Gatillos y Luces)",
-          l1: "Efecto de Gatillo: Gallop (L2)",
-          r1: "Efecto de Gatillo: Machine (R2)",
-          up: "Efecto de Gatillo: Feedback (Rigid)",
-          down: "Efecto de Gatillo: Bow (Tension)",
-          left: "Efecto de Gatillo: Weapon (Semi)",
-          right: "Efecto de Gatillo: Automatic Gun (Buzz)",
+        controls: {
+          triggerEffectsTitle: "Efectos de Gatillos Adaptativos",
+          selectTriggerEffect: "Elija el Efecto del Gatillo",
+          targetTrigger: "Gatillo Objetivo",
+          applyTrigger: "Aplicar Efecto",
+          resetTriggers: "Desactivar Gatillos",
+          lightbarTitle: "Color de la Barra de Luz (LED)",
+          selectColor: "Elija el Color",
+          applyColor: "Aplicar Color del LED",
+          vibrationTitle: "Prueba de Vibración (Rumble)",
+          testSoft: "Probar Vibración Suave",
+          testHeavy: "Probar Vibración Fuerte",
+          testBoth: "Probar Ambos Motores",
+          stopVibration: "Detener Vibración",
+          stopAll: "🛑 Detener Todo (Motores, Gatillos y Luces)",
+          leftTrigger: "Izquierdo (L2)",
+          rightTrigger: "Derecho (R2)",
+          bothTriggers: "Ambos (L2 + R2)",
+          effectNone: "Ninguno / Desactivado",
+          effectGameCube: "GameCube (R2)",
+          effectGallop: "Gallop (L2)",
+          effectMachine: "Ametralladora (R2)",
+          effectFeedback: "Retroalimentación Rígida (R2)",
+          effectBow: "Tensión de Arco (R2)",
+          effectWeapon: "Arma Semi-Automática (R2)",
+          effectAutoGun: "Disparo Automático / Buzz (R2)",
         },
         analogs: {
           l1: "L1",
@@ -1371,6 +1585,12 @@
       lblDevice.textContent = deviceIds.size > 0 ? (cachedDevices[0]?.productName || t("status.connected")) : t("status.none");
       lblGyro.textContent = isGyroActive ? t("status.active") : t("status.inactive");
       lblTouch.textContent = isTouchActive ? t("status.active") : t("status.inactive");
+      if (lblAudioHaptics) {
+        lblAudioHaptics.textContent = isAudioHapticsEnabled ? t("status.active") : t("status.inactive");
+      }
+      if (btnAudioHaptics) {
+        btnAudioHaptics.textContent = isAudioHapticsEnabled ? t("header.btnAudioHapticsOn") : t("header.btnAudioHaptics");
+      }
       lblTouchStatus.textContent = `${t("touchpad.fingers")}: ${lastFingerCount}`;
       touchHint.textContent = t("touchpad.touchingHint");
     }
@@ -1382,6 +1602,7 @@
     const btnRequest = document.getElementById("btn-request");
     const btnStart = document.getElementById("btn-start");
     const btnStop = document.getElementById("btn-stop");
+    const btnAudioHaptics = document.getElementById("btn-audio-haptics");
     const btnClearLogs = document.getElementById("btn-clear-logs");
 
     // Status Badges
@@ -1393,6 +1614,8 @@
     const lblGyro = document.getElementById("lbl-gyro");
     const dotTouch = document.getElementById("dot-touch");
     const lblTouch = document.getElementById("lbl-touch");
+    const dotAudioHaptics = document.getElementById("dot-audio-haptics");
+    const lblAudioHaptics = document.getElementById("lbl-audio-haptics");
     const lblBattery = document.getElementById("lbl-battery");
 
     // Analogs & Triggers
@@ -1487,22 +1710,23 @@
     const lblTouchRel = document.getElementById("lbl-touch-rel");
     const lblTouchRad = document.getElementById("lbl-touch-rad");
     const touchDot1 = document.getElementById("touch-dot-1");
+    const touchDotCoord = document.getElementById("touch-dot-coord");
     const touchHint = document.getElementById("touch-hint");
     const lblTouchStatus = document.getElementById("lbl-touch-status");
+    const touchpadArea = document.getElementById("touchpad-area");
 
-    // Command Map Rows
-    const cmdRows = {
-      cross: document.getElementById("cmd-cross"),
-      circle: document.getElementById("cmd-circle"),
-      square: document.getElementById("cmd-square"),
-      triangle: document.getElementById("cmd-triangle"),
-      l1: document.getElementById("cmd-l1"),
-      r1: document.getElementById("cmd-r1"),
-      up: document.getElementById("cmd-up"),
-      down: document.getElementById("cmd-down"),
-      left: document.getElementById("cmd-left"),
-      right: document.getElementById("cmd-right"),
-    };
+    // Interactive Controls Elements
+    const selTriggerEffect = document.getElementById("sel-trigger-effect");
+    const selTriggerHand = document.getElementById("sel-trigger-hand");
+    const btnApplyTrigger = document.getElementById("btn-apply-trigger");
+    const btnResetTrigger = document.getElementById("btn-reset-trigger");
+    const pickerLedColor = document.getElementById("picker-led-color");
+    const btnApplyLed = document.getElementById("btn-apply-led");
+    const btnTestSoft = document.getElementById("btn-test-soft");
+    const btnTestHeavy = document.getElementById("btn-test-heavy");
+    const btnTestBoth = document.getElementById("btn-test-both");
+    const btnStopVibe = document.getElementById("btn-stop-vibe");
+    const btnStopAll = document.getElementById("btn-stop-all");
 
     // State Variables
     let hostModule = null;
@@ -1517,6 +1741,13 @@
     let bridgesInitialized = false;
     let isGyroActive = false;
     let isTouchActive = false;
+    let isAudioHapticsEnabled = false;
+    let audioContext = null;
+    let audioStream = null;
+    let audioSourceNode = null;
+    let audioProcessorNode = null;
+    let audioBufferPtr = 0;
+    let audioBufferCapacityBytes = 0;
     let lastFingerCount = 0;
     const deviceIds = new Set();
     const previousInput = new Map();
@@ -1525,8 +1756,8 @@
     const byHandle = new Map();
     const callbackPtrs = [];
 
-    const FRAME_SECONDS = 0.0166;
-    const FRAME_MS = 16.6;
+    const FRAME_SECONDS = 0.01;
+    const FRAME_MS = 10;
     const SONY_VENDOR = 0x054c;
     const DEVICE_TYPE_BY_PRODUCT_ID = {
       0x0ce6: 1, // DualSense
@@ -1553,10 +1784,69 @@
     const TRIGGER_AUTOMATIC_GUN = new Uint8Array([0x26, 0x00, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x0a]);
     const TRIGGER_GAMECUBE = new Uint8Array([0x25, 0x90, 0x02, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
+    const AUDIO_HAPTICS_WORKLET_CODE = `
+class AudioHapticsWorkletProcessor extends AudioWorkletProcessor {
+  process(inputs, outputs, parameters) {
+    const input = inputs[0];
+    if (input && input.length > 0) {
+      const ch0 = input[0];
+      const ch1 = input[1];
+      if (ch0 && ch0.length > 0) {
+        const frameCount = ch0.length;
+        const numChannels = ch1 && ch1.length > 0 ? 2 : 1;
+        const totalFloats = frameCount * numChannels;
+        const interleaved = new Float32Array(totalFloats);
+        if (numChannels >= 2 && ch1) {
+          for (let i = 0; i < frameCount; i++) {
+            interleaved[i * 2] = ch0[i];
+            interleaved[i * 2 + 1] = ch1[i];
+          }
+        } else {
+          interleaved.set(ch0);
+        }
+        this.port.postMessage({
+          audioData: interleaved,
+          frameCount,
+          numChannels
+        }, [interleaved.buffer]);
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcessor);
+`;
+
+    // Log Buffer com limite de linhas e renderização em lote desacoplada (evita travar a UI e o áudio)
+    const MAX_LOG_LINES = 150;
+    const logLines = [];
+    let logRenderPending = false;
+
+    function flushLogRender() {
+      logRenderPending = false;
+      logBox.textContent = logLines.join("\n") + "\n";
+      logBox.scrollTop = logBox.scrollHeight;
+    }
+
     function log(message) {
       const time = new Date().toLocaleTimeString();
-      logBox.textContent += `[${time}] ${message}\n`;
-      logBox.scrollTop = logBox.scrollHeight;
+      logLines.push(`[${time}] ${message}`);
+      if (logLines.length > MAX_LOG_LINES) {
+        logLines.shift();
+      }
+      if (!logRenderPending) {
+        logRenderPending = true;
+        requestAnimationFrame(flushLogRender);
+      }
+    }
+
+    function readCString(ptr) {
+      if (!ptr || !hostModule || !hostModule.HEAPU8) return "";
+      let end = ptr;
+      while (hostModule.HEAPU8[end] !== 0 && end < hostModule.HEAPU8.length) {
+        end++;
+      }
+      return new TextDecoder().decode(hostModule.HEAPU8.subarray(ptr, end));
     }
 
     langSelect.addEventListener("change", (e) => {
@@ -1564,6 +1854,7 @@
     });
 
     btnClearLogs.addEventListener("click", () => {
+      logLines.length = 0;
       logBox.textContent = "";
     });
 
@@ -1585,11 +1876,30 @@
         inputPtr = hostModule._malloc(INPUT_DESCRIPTOR_SIZE);
         triggerBufferPtr = hostModule._malloc(64);
 
+        if (api.setLogCallback && typeof hostModule.addFunction === "function") {
+          const logFnPtr = hostModule.addFunction((level, messagePtr) => {
+            const text = readCString(messagePtr);
+            // Completely ignore high-frequency repetitive audio streaming logs
+            if (
+              text.includes("GCH_AudioSubmitSamples") ||
+              text.includes("GCH_GetProcessAudioHaptics") ||
+              text.includes("GCH_ProcessAudioHaptics")
+            ) {
+              return;
+            }
+
+            log(`[Native:${level}] ${text}`);
+            console.log(`[Native:${level}] ${text}`);
+          }, "vii");
+          api.setLogCallback(logFnPtr);
+        }
+
         dotWasm.classList.add("active");
         lblWasm.textContent = t("status.ready");
         btnLoad.disabled = true;
         btnRequest.disabled = false;
         btnStart.disabled = false;
+        btnAudioHaptics.disabled = false;
 
         log(t("logs.wasmLoaded"));
       } catch (err) {
@@ -1638,6 +1948,189 @@
       log(t("logs.loopStopped"));
     });
 
+    async function enableAudioHaptics() {
+      if (isAudioHapticsEnabled) return;
+      if (!navigator.mediaDevices?.getDisplayMedia) {
+        log("❌ getDisplayMedia não é suportado pelo navegador.");
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        const audioTracks = stream.getAudioTracks();
+        if (audioTracks.length === 0) {
+          stream.getTracks().forEach((t) => t.stop());
+          log("❌ Nenhuma faixa de áudio compartilhada. Marque 'Compartilhar áudio'.");
+          return;
+        }
+
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        if (ctx.state === "suspended") await ctx.resume();
+
+        const source = ctx.createMediaStreamSource(stream);
+        let processor;
+
+        if (ctx.audioWorklet && typeof ctx.audioWorklet.addModule === "function") {
+          const blob = new Blob([AUDIO_HAPTICS_WORKLET_CODE], { type: "application/javascript" });
+          const workletUrl = URL.createObjectURL(blob);
+          try {
+            await ctx.audioWorklet.addModule(workletUrl);
+          } finally {
+            URL.revokeObjectURL(workletUrl);
+          }
+
+          const workletNode = new AudioWorkletNode(ctx, "audio-haptics-worklet-processor");
+          let sampleSubmitCount = 0;
+          workletNode.port.onmessage = (e) => {
+            if (!isAudioHapticsEnabled || !api.audioSubmitSamples) return;
+            const { audioData, frameCount, numChannels } = e.data;
+            const totalFloats = frameCount * numChannels;
+            const totalBytes = totalFloats * 4;
+
+            if (audioBufferCapacityBytes < totalBytes) {
+              if (audioBufferPtr !== 0) hostModule._free(audioBufferPtr);
+              audioBufferPtr = hostModule._malloc(totalBytes);
+              audioBufferCapacityBytes = totalBytes;
+            }
+
+            const floatView = new Float32Array(hostModule.HEAPU8.buffer, hostModule.HEAPU8.byteOffset + audioBufferPtr, totalFloats);
+            floatView.set(audioData);
+
+            api.audioSubmitSamples(audioBufferPtr, frameCount, numChannels, ctx.sampleRate);
+            if (sampleSubmitCount++ === 0) {
+              log(`🎧 Transmitindo amostras de áudio para o WASM (${numChannels} canais @ ${ctx.sampleRate}Hz, frames=${frameCount}).`);
+            }
+          };
+
+          processor = workletNode;
+        } else {
+          const scriptProcessor = ctx.createScriptProcessor(4096, 2, 2);
+          let scriptSubmitCount = 0;
+          scriptProcessor.onaudioprocess = (e) => {
+            if (!isAudioHapticsEnabled || !api.audioSubmitSamples) return;
+            const inBuf = e.inputBuffer;
+            const numChannels = inBuf.numberOfChannels;
+            const frameCount = inBuf.length;
+            const sampleRate = inBuf.sampleRate;
+            const totalFloats = frameCount * numChannels;
+            const totalBytes = totalFloats * 4;
+
+            if (audioBufferCapacityBytes < totalBytes) {
+              if (audioBufferPtr !== 0) hostModule._free(audioBufferPtr);
+              audioBufferPtr = hostModule._malloc(totalBytes);
+              audioBufferCapacityBytes = totalBytes;
+            }
+
+            const floatView = new Float32Array(hostModule.HEAPU8.buffer, hostModule.HEAPU8.byteOffset + audioBufferPtr, totalFloats);
+            const ch0 = inBuf.getChannelData(0);
+            if (numChannels >= 2) {
+              const ch1 = inBuf.getChannelData(1);
+              for (let i = 0; i < frameCount; i++) {
+                floatView[i * 2] = ch0[i];
+                floatView[i * 2 + 1] = ch1[i];
+              }
+            } else {
+              floatView.set(ch0);
+            }
+
+            api.audioSubmitSamples(audioBufferPtr, frameCount, numChannels, sampleRate);
+            if (scriptSubmitCount++ === 0) {
+              log(`🎧 Transmitindo amostras de áudio para o WASM (${numChannels} canais @ ${sampleRate}Hz, frames=${frameCount}).`);
+            }
+          };
+
+          processor = scriptProcessor;
+        }
+
+        source.connect(processor);
+        processor.connect(ctx.destination);
+
+        stream.getVideoTracks().concat(audioTracks).forEach((t) => {
+          t.addEventListener("ended", () => {
+            if (isAudioHapticsEnabled) disableAudioHaptics();
+          });
+        });
+
+        audioStream = stream;
+        audioContext = ctx;
+        audioSourceNode = source;
+        audioProcessorNode = processor;
+        isAudioHapticsEnabled = true;
+
+        // RumbleMode = 0x0C, vibracao haptics e audio.
+        const ids = Array.from(deviceIds);
+        for (const id of ids) {
+          api.dualsenseSettings?.(id, 0, 0, 1, 0, 100, 0x0C, 0, 0);
+          api.updateOutput?.(id);
+        }
+
+        dotAudioHaptics.classList.add("active");
+        lblAudioHaptics.textContent = t("status.active");
+        btnAudioHaptics.textContent = t("header.btnAudioHapticsOn");
+        btnAudioHaptics.classList.add("btn-success");
+        btnAudioHaptics.classList.remove("btn-warn");
+        log("🎵 Audio Haptics ativado (RumbleMode=0x0C, mapa de funções desativado).");
+      } catch (err) {
+        log(`❌ Erro ao ativar Audio Haptics: ${err}`);
+      }
+    }
+
+    async function disableAudioHaptics() {
+      if (!isAudioHapticsEnabled) return;
+      isAudioHapticsEnabled = false;
+
+      if (audioProcessorNode) {
+        audioProcessorNode.disconnect();
+        if ("onaudioprocess" in audioProcessorNode) {
+          audioProcessorNode.onaudioprocess = null;
+        }
+        if ("port" in audioProcessorNode) {
+          audioProcessorNode.port.onmessage = null;
+          audioProcessorNode.port.close();
+        }
+        audioProcessorNode = null;
+      }
+      if (audioSourceNode) {
+        audioSourceNode.disconnect();
+        audioSourceNode = null;
+      }
+      if (audioContext) {
+        audioContext.close().catch(() => {});
+        audioContext = null;
+      }
+      if (audioStream) {
+        audioStream.getTracks().forEach((t) => t.stop());
+        audioStream = null;
+      }
+      if (audioBufferPtr !== 0) {
+        hostModule._free(audioBufferPtr);
+        audioBufferPtr = 0;
+        audioBufferCapacityBytes = 0;
+      }
+
+      // RumbleMode = 0xff, vibracao normal.
+      const ids = Array.from(deviceIds);
+      for (const id of ids) {
+        api.dualsenseSettings?.(id, 0, 0, 0, 0, 100, 0xFF, 0, 0);
+        api.updateOutput?.(id);
+      }
+
+      dotAudioHaptics.classList.remove("active");
+      lblAudioHaptics.textContent = t("status.inactive");
+      btnAudioHaptics.textContent = t("header.btnAudioHaptics");
+      btnAudioHaptics.classList.remove("btn-success");
+      btnAudioHaptics.classList.add("btn-warn");
+      log("🎵 Audio Haptics desativado (RumbleMode=0xFF, vibração normal restaurada).");
+    }
+
+    btnAudioHaptics.addEventListener("click", async () => {
+      if (isAudioHapticsEnabled) {
+        await disableAudioHaptics();
+      } else {
+        await enableAudioHaptics();
+      }
+    });
+
     async function refreshAuthorizedDevices() {
       if (!("hid" in navigator)) return;
       const devices = await navigator.hid.getDevices();
@@ -1671,6 +2164,10 @@
         updateOutput: tryWrap("GCH_UpdateOutput", null, ["number"]),
         customTrigger: tryWrap("GCH_CustomTrigger", "number", ["number", "number", "number", "number"]),
         stopTrigger: tryWrap("GCH_StopTrigger", null, ["number", "number"]),
+        audioSubmitSamples: tryWrap("GCH_AudioSubmitSamples", "number", ["number", "number", "number", "number"]),
+        getProcessAudioHaptics: tryWrap("GCH_GetProcessAudioHaptics", "number", ["number"]) || tryWrap("GCH_ProcessAudioHaptics", "number", ["number"]),
+        processAudioHaptics: tryWrap("GCH_GetProcessAudioHaptics", "number", ["number"]) || tryWrap("GCH_ProcessAudioHaptics", "number", ["number"]),
+        dualsenseSettings: tryWrap("GCH_DualSenseSettings", null, ["number", "number", "number", "number", "number", "number", "number", "number", "number"]),
       };
     }
 
@@ -1704,7 +2201,6 @@
         log(t("logs.devicesReady", { count: deviceIds.size }));
       });
 
-      let frameCounter = 0;
       inputTimer = setInterval(() => {
         const ids = Array.from(deviceIds);
         for (const id of ids) {
@@ -1719,17 +2215,6 @@
             const state = readInputState(id);
             handleInput(id, state);
             updateUI(state);
-
-            // Log periodical summary of inputs
-            frameCounter++;
-            if (frameCounter % 60 === 0) {
-              log(
-                `📊 [Dev ${id}] L1:${state.bLeftShoulder ? 1 : 0} L2:${state.leftTriggerAnalog.toFixed(2)} R1:${state.bRightShoulder ? 1 : 0} R2:${state.rightTriggerAnalog.toFixed(2)} | ` +
-                `LStick:(${state.leftAnalogX.toFixed(2)},${state.leftAnalogY.toFixed(2)}) RStick:(${state.rightAnalogX.toFixed(2)},${state.rightAnalogY.toFixed(2)}) | ` +
-                `Gyro:(${state.gyroscopeX.toFixed(2)},${state.gyroscopeY.toFixed(2)},${state.gyroscopeZ.toFixed(2)}) | ` +
-                `Touch:(${state.touchPositionX.toFixed(2)},${state.touchPositionY.toFixed(2)}) | Bat:${state.batteryLevel.toFixed(0)}%`
-              );
-            }
           } catch (e) {
             log(`❌ Input error: ${String(e)}`);
           }
@@ -1828,6 +2313,12 @@
           dotTouch.classList.add("active");
           lblTouch.textContent = t("status.active");
           log(t("logs.touchActive", { id: deviceId }));
+        }
+
+        // Enable Audio Haptics mode if currently active
+        if (isAudioHapticsEnabled && api.dualsenseSettings) {
+          api.dualsenseSettings(deviceId, 0, 0, 1, 0, 100, 0x0C, 0, 0);
+          api.updateOutput?.(deviceId);
         }
       }
     }
@@ -1981,63 +2472,19 @@
       };
     }
 
+    const TRIGGER_EFFECT_MAP = {
+      none: null,
+      gamecube: TRIGGER_GAMECUBE,
+      gallop: TRIGGER_GALLOPING,
+      machine: TRIGGER_MACHINE,
+      feedback: TRIGGER_FEEDBACK,
+      bow: TRIGGER_BOW,
+      weapon: TRIGGER_WEAPON,
+      autogun: TRIGGER_AUTOMATIC_GUN,
+    };
+
     function handleInput(deviceId, state) {
-      const prev = previousInput.get(deviceId) || {};
-
-      // [ FACE BUTTONS ]
-      if (isPressed(state.bCross, prev.bCross)) {
-        setBasicOutput(deviceId, 64, 0, 255, 0, 0, "(X) Cross -> Heavy Rumble + RED Light");
-        highlightCmd("cross");
-      }
-      if (isPressed(state.bCircle, prev.bCircle)) {
-        setBasicOutput(deviceId, 0, 64, 255, 255, 0, "(O) Circle -> Soft Rumble + YELLOW Light");
-        highlightCmd("circle");
-      }
-      if (isPressed(state.bSquare, prev.bSquare)) {
-        setTriggerEffect(deviceId, TRIGGER_GAMECUBE, 1, "[ ] Square -> Trigger Effect: GAMECUBE (R2)");
-        highlightCmd("square");
-      }
-      if (isPressed(state.bTriangle, prev.bTriangle)) {
-        stopTriggers(deviceId);
-        setBasicOutput(deviceId, 0, 0, 0, 0, 0, "/\\ Triangle -> Stop All");
-        api.resetLights?.(deviceId);
-        highlightCmd("triangle");
-      }
-
-      // [ D-PADS & SHOULDERS ]
-      if (isPressed(state.bLeftShoulder, prev.bLeftShoulder)) {
-        setTriggerEffect(deviceId, TRIGGER_GALLOPING, 0, "[L1] -> Trigger Effect: Gallop (L2)");
-        highlightCmd("l1");
-      }
-      if (isPressed(state.bRightShoulder, prev.bRightShoulder)) {
-        setTriggerEffect(deviceId, TRIGGER_MACHINE, 1, "[R1] -> Trigger Effect: Machine (R2)");
-        highlightCmd("r1");
-      }
-      if (isPressed(state.bDpadUp, prev.bDpadUp)) {
-        setTriggerEffect(deviceId, TRIGGER_FEEDBACK, 1, "[UP] -> Trigger Effect: Feedback (Rigid) (R2)");
-        highlightCmd("up");
-      }
-      if (isPressed(state.bDpadDown, prev.bDpadDown)) {
-        setTriggerEffect(deviceId, TRIGGER_BOW, 1, "[DOWN] -> Trigger Effect: Bow (Tension) (R2)");
-        highlightCmd("down");
-      }
-      if (isPressed(state.bDpadLeft, prev.bDpadLeft)) {
-        setTriggerEffect(deviceId, TRIGGER_WEAPON, 1, "[LEFT] -> Trigger Effect: Weapon (Semi) (R2)");
-        highlightCmd("left");
-      }
-      if (isPressed(state.bDpadRight, prev.bDpadRight)) {
-        setTriggerEffect(deviceId, TRIGGER_AUTOMATIC_GUN, 1, "[RIGHT] -> Trigger Effect: Automatic Gun (Buzz) (R2)");
-        highlightCmd("right");
-      }
-
       previousInput.set(deviceId, state);
-    }
-
-    function highlightCmd(name) {
-      const el = cmdRows[name];
-      if (!el) return;
-      el.classList.add("active");
-      setTimeout(() => el.classList.remove("active"), 400);
     }
 
     function getActiveDeviceId() {
@@ -2045,58 +2492,104 @@
       return ids.length > 0 ? ids[0] : 1;
     }
 
-    // Permite testar comandos clicando diretamente nas linhas do mapa
-    cmdRows.cross?.addEventListener("click", () => {
+    // Interactive Trigger Controls
+    btnApplyTrigger?.addEventListener("click", () => {
       const id = getActiveDeviceId();
-      setBasicOutput(id, 64, 0, 255, 0, 0, "(X) Cross -> Heavy Rumble + RED Light");
-      highlightCmd("cross");
+      const effectKey = selTriggerEffect?.value || "none";
+      const hand = parseInt(selTriggerHand?.value ?? "1", 10);
+      const payload = TRIGGER_EFFECT_MAP[effectKey];
+
+      if (!payload) {
+        stopTriggers(id);
+        return;
+      }
+
+      if (hand === 2) {
+        setTriggerEffect(id, payload, 0, `Trigger Effect: ${effectKey.toUpperCase()} (L2)`);
+        setTriggerEffect(id, payload, 1, `Trigger Effect: ${effectKey.toUpperCase()} (R2)`);
+      } else {
+        const handName = hand === 0 ? "L2" : "R2";
+        setTriggerEffect(id, payload, hand, `Trigger Effect: ${effectKey.toUpperCase()} (${handName})`);
+      }
     });
-    cmdRows.circle?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setBasicOutput(id, 0, 64, 255, 255, 0, "(O) Circle -> Soft Rumble + YELLOW Light");
-      highlightCmd("circle");
-    });
-    cmdRows.square?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setTriggerEffect(id, TRIGGER_GAMECUBE, 1, "[ ] Square -> Trigger Effect: GAMECUBE (R2)");
-      highlightCmd("square");
-    });
-    cmdRows.triangle?.addEventListener("click", () => {
+
+    btnResetTrigger?.addEventListener("click", () => {
       const id = getActiveDeviceId();
       stopTriggers(id);
-      setBasicOutput(id, 0, 0, 0, 0, 0, "/\\ Triangle -> Stop All");
+    });
+
+    // LED Color Controls
+    function hexToRgb(hex) {
+      const clean = hex.replace("#", "");
+      const r = parseInt(clean.substring(0, 2), 16) || 0;
+      const g = parseInt(clean.substring(2, 4), 16) || 0;
+      const b = parseInt(clean.substring(4, 6), 16) || 0;
+      return { r, g, b };
+    }
+
+    function applySelectedColor(hexColor) {
+      const id = getActiveDeviceId();
+      const { r, g, b } = hexToRgb(hexColor);
+      api?.lightbar?.(id, r, g, b);
+      api?.updateOutput?.(id);
+      log(`💡 Device ${id}: LED Color set to RGB(${r}, ${g}, ${b})`);
+    }
+
+    btnApplyLed?.addEventListener("click", () => {
+      if (pickerLedColor) applySelectedColor(pickerLedColor.value);
+    });
+
+    pickerLedColor?.addEventListener("input", (e) => {
+      applySelectedColor(e.target.value);
+    });
+
+    document.querySelectorAll(".color-preset-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        const color = e.target.getAttribute("data-color");
+        if (color) {
+          if (pickerLedColor) pickerLedColor.value = color;
+          applySelectedColor(color);
+        }
+      });
+    });
+
+    // Vibration Testing Controls
+    btnTestSoft?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      api?.setVibration?.(id, 0, 64);
+      api?.updateOutput?.(id);
+      log(`📳 Device ${id}: Soft Rumble Test (Right Motor = 64)`);
+    });
+
+    btnTestHeavy?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      api?.setVibration?.(id, 64, 0);
+      api?.updateOutput?.(id);
+      log(`📳 Device ${id}: Heavy Rumble Test (Left Motor = 64)`);
+    });
+
+    btnTestBoth?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      api?.setVibration?.(id, 64, 64);
+      api?.updateOutput?.(id);
+      log(`📳 Device ${id}: Both Motors Rumble Test (Left=64, Right=64)`);
+    });
+
+    btnStopVibe?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      api?.setVibration?.(id, 0, 0);
+      api?.updateOutput?.(id);
+      log(`📳 Device ${id}: Vibration Stopped.`);
+    });
+
+    btnStopAll?.addEventListener("click", () => {
+      const id = getActiveDeviceId();
+      stopTriggers(id);
+      api?.setVibration?.(id, 0, 0);
+      api?.lightbar?.(id, 0, 0, 0);
       api?.resetLights?.(id);
-      highlightCmd("triangle");
-    });
-    cmdRows.l1?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setTriggerEffect(id, TRIGGER_GALLOPING, 0, "[L1] -> Trigger Effect: Gallop (L2)");
-      highlightCmd("l1");
-    });
-    cmdRows.r1?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setTriggerEffect(id, TRIGGER_MACHINE, 1, "[R1] -> Trigger Effect: Machine (R2)");
-      highlightCmd("r1");
-    });
-    cmdRows.up?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setTriggerEffect(id, TRIGGER_FEEDBACK, 1, "[UP] -> Trigger Effect: Feedback (Rigid) (R2)");
-      highlightCmd("up");
-    });
-    cmdRows.down?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setTriggerEffect(id, TRIGGER_BOW, 1, "[DOWN] -> Trigger Effect: Bow (Tension) (R2)");
-      highlightCmd("down");
-    });
-    cmdRows.left?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setTriggerEffect(id, TRIGGER_WEAPON, 1, "[LEFT] -> Trigger Effect: Weapon (Semi) (R2)");
-      highlightCmd("left");
-    });
-    cmdRows.right?.addEventListener("click", () => {
-      const id = getActiveDeviceId();
-      setTriggerEffect(id, TRIGGER_AUTOMATIC_GUN, 1, "[RIGHT] -> Trigger Effect: Automatic Gun (Buzz) (R2)");
-      highlightCmd("right");
+      api?.updateOutput?.(id);
+      log(`🛑 Device ${id}: All vibration, trigger effects, and lights stopped.`);
     });
 
     function setTriggerEffect(deviceId, payload, hand, msg) {
@@ -2221,25 +2714,43 @@
 
       // Touchpad
       lblIsTouching.textContent = String(s.bIsTouching);
+      lblIsTouching.style.color = s.bIsTouching ? "var(--ok)" : "inherit";
       lblTouchId.textContent = String(s.touchId);
       lblTouchDir.textContent = String(s.directionRaw);
-      lblTouchPos.textContent = `(${s.touchPositionX.toFixed(2)}, ${s.touchPositionY.toFixed(2)})`;
-      lblTouchRel.textContent = `(${s.touchRelativeX.toFixed(2)}, ${s.touchRelativeY.toFixed(2)})`;
-      lblTouchRad.textContent = `(${s.touchRadiusX.toFixed(2)}, ${s.touchRadiusY.toFixed(2)})`;
+      lblTouchPos.textContent = `(${s.touchPositionX.toFixed(1)}, ${s.touchPositionY.toFixed(1)})`;
+      lblTouchRel.textContent = `(${s.touchRelativeX.toFixed(1)}, ${s.touchRelativeY.toFixed(1)})`;
+      lblTouchRad.textContent = `(${s.touchRadiusX.toFixed(1)}, ${s.touchRadiusY.toFixed(1)})`;
       lastFingerCount = s.touchFingerCount;
       lblTouchStatus.textContent = `${t("touchpad.fingers")}: ${s.touchFingerCount}`;
 
-      if (s.bIsTouching) {
+      const isTouching = Boolean(s.bIsTouching || s.touchFingerCount > 0 || (s.touchPositionX !== 0 || s.touchPositionY !== 0));
+
+      if (isTouching && (s.touchPositionX > 0 || s.touchPositionY > 0 || s.bIsTouching)) {
         touchDot1.style.display = "block";
-        // Pos normalizada para a superfície
-        const nx = Math.min(1, Math.max(0, (s.touchPositionX + 1) / 2));
-        const ny = Math.min(1, Math.max(0, (s.touchPositionY + 1) / 2));
-        touchDot1.style.left = `${nx * 100}%`;
-        touchDot1.style.top = `${ny * 100}%`;
+        let nx = 0;
+        let ny = 0;
+        if (s.touchPositionX > 1.5 || s.touchPositionY > 1.5) {
+          // DualSense hardware touchpad resolution is 1920 x 1080
+          nx = Math.min(1, Math.max(0, s.touchPositionX / 1920));
+          ny = Math.min(1, Math.max(0, s.touchPositionY / 1080));
+        } else if (s.touchPositionX >= 0 && s.touchPositionX <= 1.0 && s.touchPositionY >= 0 && s.touchPositionY <= 1.0) {
+          nx = s.touchPositionX;
+          ny = s.touchPositionY;
+        } else {
+          nx = Math.min(1, Math.max(0, (s.touchPositionX + 1) / 2));
+          ny = Math.min(1, Math.max(0, (s.touchPositionY + 1) / 2));
+        }
+        touchDot1.style.left = `${(nx * 100).toFixed(2)}%`;
+        touchDot1.style.top = `${(ny * 100).toFixed(2)}%`;
+        if (touchDotCoord) {
+          touchDotCoord.textContent = `${s.touchPositionX.toFixed(0)}, ${s.touchPositionY.toFixed(0)}`;
+        }
         touchHint.style.display = "none";
+        touchpadArea?.classList.add("active-touch");
       } else {
         touchDot1.style.display = "none";
         touchHint.style.display = "block";
+        touchpadArea?.classList.remove("active-touch");
       }
 
       // Bateria

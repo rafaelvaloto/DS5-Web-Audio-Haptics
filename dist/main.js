@@ -45,8 +45,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GamepadClientApplication = void 0;
 exports.startGamepadClientLoop = startGamepadClientLoop;
 const web_hid_platform_ts_1 = require("./platform/web_hid_platform.js");
-const FRAME_SECONDS = 0.0166;
-const FRAME_MS = 16.6;
+const FRAME_SECONDS = 0.010;
+const FRAME_MS = 10;
 const INPUT_DESCRIPTOR_SIZE = 148;
 let bannerPrinted = false;
 // Trigger Effect Payloads
@@ -57,6 +57,38 @@ const TRIGGER_WEAPON = new Uint8Array([0x25, 0x08, 0x01, 0x07, 0x00, 0x00, 0x00,
 const TRIGGER_BOW = new Uint8Array([0x22, 0x02, 0x01, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 const TRIGGER_AUTOMATIC_GUN = new Uint8Array([0x26, 0x00, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x0a]);
 const TRIGGER_GAMECUBE = new Uint8Array([0x25, 0x90, 0x02, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+const AUDIO_HAPTICS_WORKLET_CODE = `
+class AudioHapticsWorkletProcessor extends AudioWorkletProcessor {
+  process(inputs, outputs, parameters) {
+    const input = inputs[0];
+    if (input && input.length > 0) {
+      const ch0 = input[0];
+      const ch1 = input[1];
+      if (ch0 && ch0.length > 0) {
+        const frameCount = ch0.length;
+        const numChannels = ch1 && ch1.length > 0 ? 2 : 1;
+        const totalFloats = frameCount * numChannels;
+        const interleaved = new Float32Array(totalFloats);
+        if (numChannels >= 2 && ch1) {
+          for (let i = 0; i < frameCount; i++) {
+            interleaved[i * 2] = ch0[i];
+            interleaved[i * 2 + 1] = ch1[i];
+          }
+        } else {
+          interleaved.set(ch0);
+        }
+        this.port.postMessage({
+          audioData: interleaved,
+          frameCount,
+          numChannels
+        }, [interleaved.buffer]);
+      }
+    }
+    return true;
+  }
+}
+registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcessor);
+`;
 class GamepadClientApplication {
     constructor(module, api, platformCleanup, registryCleanup, logFnPtr) {
         this.deviceIds = new Set();
@@ -64,6 +96,13 @@ class GamepadClientApplication {
         this.discoveryTimer = null;
         this.inputTimer = null;
         this.isRunning = false;
+        this.isAudioHapticsEnabled = false;
+        this.audioContext = null;
+        this.audioStream = null;
+        this.audioProcessorNode = null;
+        this.audioSourceNode = null;
+        this.audioBufferPtr = 0;
+        this.audioBufferCapacityBytes = 0;
         this.module = module;
         this.api = api;
         this.platformCleanup = platformCleanup;
@@ -96,7 +135,7 @@ class GamepadClientApplication {
             const registryCleanup = (0, web_hid_platform_ts_1.initializeDeviceRegistryPolicy)(module, typeId, {
                 alloc: wrappedCallbacks.alloc,
                 dispatch: (deviceId) => {
-                    var _a, _b, _c;
+                    var _a, _b, _c, _d, _e, _f, _g, _h;
                     (_a = appRef.value) === null || _a === void 0 ? void 0 : _a.deviceIds.add(deviceId);
                     wrappedCallbacks.dispatch(deviceId);
                     printStartupBanner();
@@ -109,6 +148,10 @@ class GamepadClientApplication {
                     if ((_c = appRef.value) === null || _c === void 0 ? void 0 : _c.api.enableTouch) {
                         appRef.value.api.enableTouch(deviceId, 1);
                         console.log(`Device ${deviceId}: Touchpad enabled.`);
+                    }
+                    if ((_d = appRef.value) === null || _d === void 0 ? void 0 : _d.getIsAudioHapticsEnabled()) {
+                        (_f = (_e = appRef.value.api).dualsenseSettings) === null || _f === void 0 ? void 0 : _f.call(_e, deviceId, 0, 0, 1, 0, 100, 0x0C, 0, 0);
+                        (_h = (_g = appRef.value.api).updateOutput) === null || _h === void 0 ? void 0 : _h.call(_g, deviceId);
                     }
                 },
                 disconnect: (deviceId) => {
@@ -145,7 +188,7 @@ class GamepadClientApplication {
                 const state = this.readInputState(deviceId);
                 this.handleInput(deviceId, state);
                 frameCount++;
-                if (frameCount % 60 === 0) {
+                if (frameCount % 100 === 0) {
                     console.log(`[Dev ${deviceId}] L1=${state.bLeftShoulder ? 1 : 0} L2=${state.leftTriggerAnalog.toFixed(2)} R1=${state.bRightShoulder ? 1 : 0} R2=${state.rightTriggerAnalog.toFixed(2)} | ` +
                         `LStick=(${state.leftAnalogX.toFixed(2)}, ${state.leftAnalogY.toFixed(2)}) RStick=(${state.rightAnalogX.toFixed(2)}, ${state.rightAnalogY.toFixed(2)}) | ` +
                         `Gyro=(${state.gyroscopeX.toFixed(2)}, ${state.gyroscopeY.toFixed(2)}, ${state.gyroscopeZ.toFixed(2)}) | ` +
@@ -170,6 +213,7 @@ class GamepadClientApplication {
             if (this.inputTimer) {
                 clearInterval(this.inputTimer);
             }
+            yield this.disableAudioHaptics();
             this.registryCleanup.dispose();
             yield this.platformCleanup.dispose();
             (_b = (_a = this.api).shutdown) === null || _b === void 0 ? void 0 : _b.call(_a);
@@ -178,6 +222,189 @@ class GamepadClientApplication {
             }
             this.module._free(this.inputBufferPtr);
             this.module._free(this.outputBufferPtr);
+        });
+    }
+    getIsAudioHapticsEnabled() {
+        return this.isAudioHapticsEnabled;
+    }
+    enableAudioHaptics() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d, _e;
+            if (this.isAudioHapticsEnabled) {
+                return;
+            }
+            if (typeof navigator === "undefined" || !((_a = navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getDisplayMedia)) {
+                throw new Error("getDisplayMedia não é suportado neste ambiente.");
+            }
+            const stream = yield navigator.mediaDevices.getDisplayMedia({
+                video: true,
+                audio: true,
+            });
+            const audioTracks = stream.getAudioTracks();
+            if (audioTracks.length === 0) {
+                stream.getTracks().forEach((track) => track.stop());
+                throw new Error("Nenhuma faixa de áudio encontrada no compartilhamento de tela. Certifique-se de habilitar o áudio do sistema/aba.");
+            }
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            const ctx = new AudioContextClass();
+            if (ctx.state === "suspended") {
+                yield ctx.resume();
+            }
+            const source = ctx.createMediaStreamSource(stream);
+            let processorNode;
+            if (ctx.audioWorklet && typeof ctx.audioWorklet.addModule === "function") {
+                const blob = new Blob([AUDIO_HAPTICS_WORKLET_CODE], { type: "application/javascript" });
+                const workletUrl = URL.createObjectURL(blob);
+                try {
+                    yield ctx.audioWorklet.addModule(workletUrl);
+                }
+                finally {
+                    URL.revokeObjectURL(workletUrl);
+                }
+                const workletNode = new AudioWorkletNode(ctx, "audio-haptics-worklet-processor");
+                workletNode.port.onmessage = (event) => {
+                    if (!this.isAudioHapticsEnabled || !this.api.audioSubmitSamples) {
+                        return;
+                    }
+                    const { audioData, frameCount, numChannels } = event.data;
+                    const totalFloats = frameCount * numChannels;
+                    const totalBytes = totalFloats * 4;
+                    if (this.audioBufferCapacityBytes < totalBytes) {
+                        if (this.audioBufferPtr !== 0) {
+                            this.module._free(this.audioBufferPtr);
+                        }
+                        this.audioBufferPtr = this.module._malloc(totalBytes);
+                        this.audioBufferCapacityBytes = totalBytes;
+                    }
+                    const heap = this.module.HEAPU8;
+                    const floatView = new Float32Array(heap.buffer, heap.byteOffset + this.audioBufferPtr, totalFloats);
+                    floatView.set(audioData);
+                    this.api.audioSubmitSamples(this.audioBufferPtr, frameCount, numChannels, ctx.sampleRate);
+                    const ids = Array.from(this.deviceIds);
+                    for (const deviceId of ids) {
+                        (_a = (this.api.getProcessAudioHaptics || this.api.processAudioHaptics)) === null || _a === void 0 ? void 0 : _a.call(this.api, deviceId);
+                    }
+                };
+                processorNode = workletNode;
+            }
+            else {
+                const bufferSize = 4096;
+                const scriptProcessor = ctx.createScriptProcessor(bufferSize, 2, 2);
+                scriptProcessor.onaudioprocess = (e) => {
+                    var _a;
+                    if (!this.isAudioHapticsEnabled || !this.api.audioSubmitSamples) {
+                        return;
+                    }
+                    const inputBuffer = e.inputBuffer;
+                    const numChannels = inputBuffer.numberOfChannels;
+                    const frameCount = inputBuffer.length;
+                    const sampleRate = inputBuffer.sampleRate;
+                    const totalFloats = frameCount * numChannels;
+                    const totalBytes = totalFloats * 4;
+                    if (this.audioBufferCapacityBytes < totalBytes) {
+                        if (this.audioBufferPtr !== 0) {
+                            this.module._free(this.audioBufferPtr);
+                        }
+                        this.audioBufferPtr = this.module._malloc(totalBytes);
+                        this.audioBufferCapacityBytes = totalBytes;
+                    }
+                    const heap = this.module.HEAPU8;
+                    const floatView = new Float32Array(heap.buffer, heap.byteOffset + this.audioBufferPtr, totalFloats);
+                    const ch0 = inputBuffer.getChannelData(0);
+                    if (numChannels >= 2) {
+                        const ch1 = inputBuffer.getChannelData(1);
+                        for (let i = 0; i < frameCount; i++) {
+                            floatView[i * 2] = ch0[i];
+                            floatView[i * 2 + 1] = ch1[i];
+                        }
+                    }
+                    else {
+                        floatView.set(ch0);
+                    }
+                    this.api.audioSubmitSamples(this.audioBufferPtr, frameCount, numChannels, sampleRate);
+                    const ids = Array.from(this.deviceIds);
+                    for (const deviceId of ids) {
+                        (_a = (this.api.getProcessAudioHaptics || this.api.processAudioHaptics)) === null || _a === void 0 ? void 0 : _a.call(this.api, deviceId);
+                    }
+                };
+                processorNode = scriptProcessor;
+            }
+            source.connect(processorNode);
+            processorNode.connect(ctx.destination);
+            stream.getVideoTracks().concat(audioTracks).forEach((track) => {
+                track.addEventListener("ended", () => {
+                    if (this.isAudioHapticsEnabled) {
+                        this.disableAudioHaptics().catch(console.error);
+                    }
+                });
+            });
+            this.audioStream = stream;
+            this.audioContext = ctx;
+            this.audioSourceNode = source;
+            this.audioProcessorNode = processorNode;
+            this.isAudioHapticsEnabled = true;
+            // RumbleMode = 0x0C, vibracao haptics e audio.
+            const ids = Array.from(this.deviceIds);
+            for (const deviceId of ids) {
+                (_c = (_b = this.api).dualsenseSettings) === null || _c === void 0 ? void 0 : _c.call(_b, deviceId, 0, 0, 1, 0, 100, 0x0C, 0, 0);
+                (_e = (_d = this.api).updateOutput) === null || _e === void 0 ? void 0 : _e.call(_d, deviceId);
+            }
+        });
+    }
+    disableAudioHaptics() {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d;
+            if (!this.isAudioHapticsEnabled) {
+                return;
+            }
+            this.isAudioHapticsEnabled = false;
+            if (this.audioProcessorNode) {
+                this.audioProcessorNode.disconnect();
+                if ("onaudioprocess" in this.audioProcessorNode) {
+                    this.audioProcessorNode.onaudioprocess = null;
+                }
+                if ("port" in this.audioProcessorNode) {
+                    const port = this.audioProcessorNode.port;
+                    port.onmessage = null;
+                    port.close();
+                }
+                this.audioProcessorNode = null;
+            }
+            if (this.audioSourceNode) {
+                this.audioSourceNode.disconnect();
+                this.audioSourceNode = null;
+            }
+            if (this.audioContext) {
+                yield this.audioContext.close().catch(() => { });
+                this.audioContext = null;
+            }
+            if (this.audioStream) {
+                this.audioStream.getTracks().forEach((track) => track.stop());
+                this.audioStream = null;
+            }
+            if (this.audioBufferPtr !== 0) {
+                this.module._free(this.audioBufferPtr);
+                this.audioBufferPtr = 0;
+                this.audioBufferCapacityBytes = 0;
+            }
+            // RumbleMode = 0xff, vibracao normal.
+            const ids = Array.from(this.deviceIds);
+            for (const deviceId of ids) {
+                (_b = (_a = this.api).dualsenseSettings) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId, 0, 0, 0, 0, 100, 0xFF, 0, 0);
+                (_d = (_c = this.api).updateOutput) === null || _d === void 0 ? void 0 : _d.call(_c, deviceId);
+            }
+        });
+    }
+    toggleAudioHaptics() {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.isAudioHapticsEnabled) {
+                yield this.disableAudioHaptics();
+                return false;
+            }
+            else {
+                yield this.enableAudioHaptics();
+                return true;
+            }
         });
     }
     readInputState(deviceId) {
@@ -267,6 +494,10 @@ class GamepadClientApplication {
     }
     handleInput(deviceId, state) {
         var _a, _b;
+        if (this.isAudioHapticsEnabled) {
+            this.previousInput.set(deviceId, state);
+            return;
+        }
         const previous = this.previousInput.get(deviceId);
         // [ FACE BUTTONS ]
         // (X) Cross : Heavy Rumble + RED Light
@@ -385,6 +616,9 @@ function bindNativeApi(module) {
         customTrigger: maybe("GCH_CustomTrigger", "number", ["number", "number", "number", "number"]),
         stopTrigger: maybe("GCH_StopTrigger", null, ["number", "number"]),
         shutdown: maybe("GCH_Shutdown", null, []),
+        audioSubmitSamples: maybe("GCH_AudioSubmitSamples", "number", ["number", "number", "number", "number"]),
+        processAudioHaptics: maybe("GCH_ProcessAudioHaptics", "number", ["number"]),
+        dualsenseSettings: maybe("GCH_DualSenseSettings", null, ["number", "number", "number", "number", "number", "number", "number", "number", "number"]),
     };
 }
 function registerLogCallback(module, api) {

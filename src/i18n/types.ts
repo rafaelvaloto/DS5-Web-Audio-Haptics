@@ -8,6 +8,8 @@ export interface TranslationDictionary {
     btnConnectHid: string;
     btnStartLoop: string;
     btnStopLoop: string;
+    btnAudioHaptics?: string;
+    btnAudioHapticsOn?: string;
     btnClearLogs: string;
     language: string;
   };
@@ -21,6 +23,7 @@ export interface TranslationDictionary {
     connected: string;
     gyro: string;
     touch: string;
+    audioHaptics?: string;
     active: string;
     inactive: string;
     battery: string;
@@ -52,7 +55,34 @@ export interface TranslationDictionary {
       subtitle: string;
     };
   };
-  commands: {
+  controls?: {
+    triggerEffectsTitle: string;
+    selectTriggerEffect: string;
+    targetTrigger: string;
+    applyTrigger: string;
+    resetTriggers: string;
+    lightbarTitle: string;
+    selectColor: string;
+    applyColor: string;
+    vibrationTitle: string;
+    testSoft: string;
+    testHeavy: string;
+    testBoth: string;
+    stopVibration: string;
+    stopAll: string;
+    leftTrigger: string;
+    rightTrigger: string;
+    bothTriggers: string;
+    effectNone: string;
+    effectGameCube: string;
+    effectGallop: string;
+    effectMachine: string;
+    effectFeedback: string;
+    effectBow: string;
+    effectWeapon: string;
+    effectAutoGun: string;
+  };
+  commands?: {
     cross: string;
     circle: string;
     square: string;
