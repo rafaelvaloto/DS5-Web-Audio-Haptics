@@ -42,7 +42,6 @@ The C-compatible API is compiled with **Emscripten** into high-efficiency **WebA
 - ⚡ **Zero-Copy WebAssembly Telemetry**: Direct 148-byte memory layout decoding (`FInputContext` / `InputDescriptor`) for real-time input status.
 - 🏎️ **Adaptive Triggers**: Real-time programmatic triggers (Feedback, Weapon Semi-Auto, Automatic Gun Buzz, Bow Resistance, Gallop, GameCube click, Machine Gun).
 - 📳 **Haptics & Dual Rumble**: Heavy and soft rumble motor control with synchronized RGB Lightbar feedback.
-- 🧭 **Motion Sensors (6-Axis IMU)**: Real-time Gyroscope, Accelerometer, Gravity Vector, and Tilt degree tracking.
 - 📱 **Multi-Touch Capacitive Touchpad**: Multi-finger touch tracking, normalized position, relative deltas, and radius.
 - 🎮 **DualSense Edge Support**: Dedicated telemetry for Function buttons (`Fn1`, `Fn2`) and Back Paddles (`PaddleLeft`, `PaddleRight`).
 - 🌐 **Built-in Internationalization (i18n)**: Multi-language interface supporting **English (`en`)**, **Portuguese (`pt-BR`)**, and **Spanish (`es`)**.

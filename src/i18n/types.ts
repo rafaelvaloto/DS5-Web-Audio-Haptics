@@ -10,6 +10,7 @@ export interface TranslationDictionary {
     btnStopLoop: string;
     btnAudioHaptics?: string;
     btnAudioHapticsOn?: string;
+    btnPip?: string;
     btnClearLogs: string;
     language: string;
   };

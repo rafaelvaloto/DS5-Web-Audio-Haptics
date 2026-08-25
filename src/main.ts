@@ -240,11 +240,7 @@ export class GamepadClientApplication {
           wrappedCallbacks.dispatch(deviceId);
           console.log(`Device dispatched: ${deviceId}`);
 
-          // Enable Gyroscope and Touchpad
-          if (appRef.value?.api.enableGyroscopeValues) {
-            appRef.value.api.enableGyroscopeValues(deviceId, 1);
-            console.log(`Device ${deviceId}: Gyroscope enabled.`);
-          }
+          // Enable Touchpad
           if (appRef.value?.api.enableTouch) {
             appRef.value.api.enableTouch(deviceId, 1);
             console.log(`Device ${deviceId}: Touchpad enabled.`);

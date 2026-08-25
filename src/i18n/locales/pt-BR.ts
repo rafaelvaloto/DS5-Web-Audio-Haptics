@@ -10,6 +10,7 @@ export const ptBR: TranslationDictionary = {
     btnStopLoop: "4) Parar Loop",
     btnAudioHaptics: "🎵 Áudio Háptico (Desligado)",
     btnAudioHapticsOn: "🎵 Áudio Háptico (Ligado)",
+    btnPip: "🪟 Picture-in-Picture",
     btnClearLogs: "Limpar Logs",
     language: "Idioma",
   },

@@ -10,6 +10,7 @@ export const es: TranslationDictionary = {
     btnStopLoop: "4) Detener Bucle",
     btnAudioHaptics: "🎵 Audio Háptico (Apagado)",
     btnAudioHapticsOn: "🎵 Audio Háptico (Encendido)",
+    btnPip: "🪟 Picture-in-Picture",
     btnClearLogs: "Limpiar Registros",
     language: "Idioma",
   },
