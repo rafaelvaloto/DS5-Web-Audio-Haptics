@@ -2,6 +2,7 @@
 
 Transform your browser into a real-time haptic feedback router. This tool captures live game audio via Screen Share and translates it into high-fidelity haptics via Bluetooth for PlayStation **DualSense** controllers—no cables or custom dongles required!
 
+
 ---
 
 ## 🚀 Live Haptic Router
@@ -9,6 +10,9 @@ Transform your browser into a real-time haptic feedback router. This tool captur
 Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge, Opera, Brave):
 
 👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/testes/index.html)**
+
+
+🎥 **[Watch the example on YouTube.](https://youtu.be/k_1XgeNzt5A)**
 
 
 ## Picture-In-Picture
