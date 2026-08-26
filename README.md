@@ -10,6 +10,11 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 
 👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/testes/index.html)**
 
+
+## Picture-In-Picture
+
+<img width="329" alt="image" src="https://github.com/user-attachments/assets/b3730e87-5c40-40d8-a9de-52a243e5d337" />
+
 ---
 
 ## 🎧 How to Use (Step-by-Step)
@@ -48,6 +53,7 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 - 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
 
 ---
+
 
 ## 📄 License
 
