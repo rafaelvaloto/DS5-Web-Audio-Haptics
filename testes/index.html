@@ -3,6 +3,52 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script>
+    (function () {
+      const gaMeasurementId = "G-YC51CE6XFE";
+      const consentStorageKey = "ga-consent";
+
+      function loadGoogleAnalytics() {
+        if (window.__googleAnalyticsLoaded) return;
+        window.__googleAnalyticsLoaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag("js", new Date());
+        window.gtag("config", gaMeasurementId);
+
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
+        document.head.appendChild(script);
+      }
+
+      function setupAnalyticsConsent() {
+        const banner = document.getElementById("cookie-consent");
+        const acceptButton = document.getElementById("cookie-consent-accept");
+        const rejectButton = document.getElementById("cookie-consent-reject");
+        const savedConsent = localStorage.getItem(consentStorageKey);
+
+        if (savedConsent === "accepted") {
+          loadGoogleAnalytics();
+          return;
+        }
+        if (savedConsent === "rejected") return;
+
+        banner.hidden = false;
+        acceptButton.addEventListener("click", function () {
+          localStorage.setItem(consentStorageKey, "accepted");
+          banner.hidden = true;
+          loadGoogleAnalytics();
+        });
+        rejectButton.addEventListener("click", function () {
+          localStorage.setItem(consentStorageKey, "rejected");
+          banner.hidden = true;
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", setupAnalyticsConsent);
+    })();
+  </script>
   <title>DS5 Web Audio Haptics Bluetooth</title>
   <style>
     :root {
@@ -1304,6 +1350,27 @@
     .pip-col-green { background: #00ff66; }
     .pip-col-purple { background: #aa00ff; }
 
+    .cookie-consent {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 100000;
+      max-width: 430px;
+      padding: 18px;
+      background: var(--card);
+      color: var(--text);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+    .cookie-consent[hidden] { display: none; }
+    .cookie-consent p { margin: 0 0 14px; line-height: 1.45; font-size: 0.86rem; }
+    .cookie-consent-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+    @media (max-width: 520px) {
+      .cookie-consent { right: 10px; bottom: 10px; left: 10px; }
+    }
+
     @media (max-width: 1100px) {
       .main-grid { grid-template-columns: 1fr; }
       .inner-grid-3, .inner-grid-4 { grid-template-columns: 1fr 1fr; }
@@ -1311,6 +1378,13 @@
   </style>
 </head>
 <body>
+  <aside id="cookie-consent" class="cookie-consent" hidden aria-label="Consentimento de cookies">
+    <p data-i18n="cookie.message">Usamos cookies analíticos do Google Analytics para entender como a aplicação é utilizada e melhorar a experiência. Você aceita?</p>
+    <div class="cookie-consent-actions">
+      <button id="cookie-consent-reject" type="button" data-i18n="cookie.reject">Recusar</button>
+      <button id="cookie-consent-accept" type="button" class="btn-primary" data-i18n="cookie.accept">Aceitar</button>
+    </div>
+  </aside>
   <div class="app-container">
 
     <!-- Header Bar -->
@@ -1401,9 +1475,6 @@
                 <div class="control-inputs">
                   <select id="sel-trigger-effect" class="control-select">
                     <option value="none" data-i18n="controls.effectNone">None / Off</option>
-                    <option value="gamecube" data-i18n="controls.effectGameCube">GameCube (R2)</option>
-                    <option value="gallop" data-i18n="controls.effectGallop">Gallop (L2)</option>
-                    <option value="machine" data-i18n="controls.effectMachine">Machine Gun (R2)</option>
                     <option value="feedback" data-i18n="controls.effectFeedback">Rigid Feedback (R2)</option>
                     <option value="bow" data-i18n="controls.effectBow">Bow Tension (R2)</option>
                     <option value="weapon" data-i18n="controls.effectWeapon">Weapon Semi-Auto (R2)</option>
@@ -1438,6 +1509,38 @@
                     <button class="color-preset-btn" data-color="#000000" style="background:#000000;" title="Off"></button>
                   </div>
                   <button id="btn-apply-led" style="padding: 5px 12px; font-size: 0.8rem;" data-i18n="controls.applyColor">Set Color</button>
+                </div>
+              </div>
+
+              <!-- 3. Configurações de áudio e hápticos -->
+              <div class="control-row">
+                <div class="control-row-title">
+                  <span>🔊 <span data-i18n="controls.audioSettingsTitle">Audio &amp; Haptics Settings</span></span>
+                </div>
+                <div class="control-inputs">
+                  <label class="checkbox-container">
+                    <span data-i18n="controls.speaker">Headset / Speaker</span>
+                    <select id="sel-speaker" class="control-select">
+                      <option value="0" data-i18n="controls.headsetOnly">Apenas Headset = 0</option>
+                      <option value="1" selected data-i18n="controls.headsetAndSpeaker">Headset + Speaker = 1</option>
+                    </select>
+                  </label>
+                  <label class="checkbox-container">
+                    <span data-i18n="controls.volume">Volume</span>
+                    <input id="input-audio-volume" type="number" min="0" max="100" value="100" class="control-select" style="width:70px;">
+                  </label>
+                  <label class="checkbox-container">
+                    <span data-i18n="controls.audioHapticsMode">Audio Haptics</span>
+                    <select id="sel-rumble-mode" class="control-select">
+                        <option value="252" selected data-i18n="controls.modeAudioHaptics">0xFC — Audio + Haptics</option>
+                        <option value="255" data-i18n="controls.modeAudioOnly">0xFF — Audio</option>
+                    </select>
+                  </label>
+                  <label class="checkbox-container">
+                    <span data-i18n="controls.reduceVibration">Reduce Vibration</span>
+                    <input id="input-rumble-reduce" type="number" min="0" max="15" value="0" class="control-select" style="width:62px;">
+                  </label>
+                  <button id="btn-apply-audio-settings" data-i18n="controls.applyAudioSettings">Apply Settings</button>
                 </div>
               </div>
 
@@ -1672,6 +1775,11 @@
           btnClearLogs: "Clear Logs",
           language: "Language",
         },
+        cookie: {
+          message: "We use Google Analytics cookies to understand how the application is used and improve the experience. Do you accept?",
+          accept: "Accept",
+          reject: "Reject",
+        },
         status: {
           wasm: "WASM",
           notLoaded: "Not Loaded",
@@ -1722,6 +1830,16 @@
           applyTrigger: "Apply Effect",
           resetTriggers: "Reset",
           lightbarTitle: "Lightbar LED Color",
+          audioSettingsTitle: "Audio & Haptics Settings",
+          speaker: "Headset & Speaker",
+          headsetOnly: "Headset only = 0",
+          headsetAndSpeaker: "Headset + Speaker = 1",
+          volume: "Volume",
+          audioHapticsMode: "Audio Haptics",
+          modeAudioOnly: "0xFF — Audio only",
+          modeAudioHaptics: "0xFC — Audio + Haptics",
+          reduceVibration: "Reduce Vibration",
+          applyAudioSettings: "Apply Settings",
           selectColor: "Select Color",
           applyColor: "Set Color",
           vibrationTitle: "Vibration (Rumble)",
@@ -1833,6 +1951,11 @@
           btnClearLogs: "Limpar Logs",
           language: "Idioma",
         },
+        cookie: {
+          message: "Usamos cookies analíticos do Google Analytics para entender como a aplicação é utilizada e melhorar a experiência. Você aceita?",
+          accept: "Aceitar",
+          reject: "Recusar",
+        },
         status: {
           wasm: "WASM",
           notLoaded: "Não carregado",
@@ -1883,6 +2006,16 @@
           applyTrigger: "Aplicar Efeito",
           resetTriggers: "Desativar Gatilhos",
           lightbarTitle: "Cor da Barra de Luz (LED)",
+          audioSettingsTitle: "Configurações de Áudio e Hápticos",
+          speaker: "Headset e Speaker",
+          headsetOnly: "Apenas Headset = 0",
+          headsetAndSpeaker: "Headset + Speaker = 1",
+          volume: "Volume",
+          audioHapticsMode: "Áudio Háptico",
+          modeAudioOnly: "0xFF — Apenas áudio",
+          modeAudioHaptics: "0xFC — Áudio + hápticos",
+          reduceVibration: "Reduzir Vibração",
+          applyAudioSettings: "Aplicar Configurações",
           selectColor: "Escolha a Cor",
           applyColor: "Aplicar Cor do LED",
           vibrationTitle: "Teste de Vibração (Rumble)",
@@ -1994,6 +2127,11 @@
           btnClearLogs: "Limpiar Registros",
           language: "Idioma",
         },
+        cookie: {
+          message: "Usamos cookies analíticos de Google Analytics para entender cómo se utiliza la aplicación y mejorar la experiencia. ¿Acepta?",
+          accept: "Aceptar",
+          reject: "Rechazar",
+        },
         status: {
           wasm: "WASM",
           notLoaded: "No cargado",
@@ -2044,6 +2182,16 @@
           applyTrigger: "Aplicar Efecto",
           resetTriggers: "Desactivar Gatillos",
           lightbarTitle: "Color de la Barra de Luz (LED)",
+          audioSettingsTitle: "Configuración de Audio y Hápticos",
+          speaker: "Auriculares y Altavoz",
+          headsetOnly: "Solo auriculares = 0",
+          headsetAndSpeaker: "Auriculares + altavoz = 1",
+          volume: "Volumen",
+          audioHapticsMode: "Audio Háptico",
+          modeAudioOnly: "0xFF — Solo audio",
+          modeAudioHaptics: "0xFC — Audio + hápticos",
+          reduceVibration: "Reducir Vibración",
+          applyAudioSettings: "Aplicar Configuración",
           selectColor: "Elija el Color",
           applyColor: "Aplicar Color del LED",
           vibrationTitle: "Prueba de Vibración (Rumble)",
@@ -2143,7 +2291,25 @@
       },
     };
 
-    let currentLocale = localStorage.getItem("dualsense_i18n_lang") || "en";
+    function detectBrowserLocale() {
+      const browserLocales = Array.isArray(navigator.languages) && navigator.languages.length > 0
+        ? navigator.languages
+        : [navigator.language || "en"];
+
+      for (const browserLocale of browserLocales) {
+        const normalized = browserLocale.toLowerCase();
+        if (normalized.startsWith("pt")) return "pt-BR";
+        if (normalized.startsWith("es")) return "es";
+        if (normalized.startsWith("en")) return "en";
+      }
+
+      return "en";
+    }
+
+    const savedLocale = localStorage.getItem("dualsense_i18n_lang");
+    let currentLocale = savedLocale && translations[savedLocale]
+      ? savedLocale
+      : detectBrowserLocale();
     if (!translations[currentLocale]) currentLocale = "en";
 
     function t(keyPath, params, locale = currentLocale) {
@@ -2317,6 +2483,11 @@
     const btnResetTrigger = document.getElementById("btn-reset-trigger");
     const pickerLedColor = document.getElementById("picker-led-color");
     const btnApplyLed = document.getElementById("btn-apply-led");
+    const selSpeaker = document.getElementById("sel-speaker");
+    const inputAudioVolume = document.getElementById("input-audio-volume");
+    const selRumbleMode = document.getElementById("sel-rumble-mode");
+    const inputRumbleReduce = document.getElementById("input-rumble-reduce");
+    const btnApplyAudioSettings = document.getElementById("btn-apply-audio-settings");
     const btnTestSoft = document.getElementById("btn-test-soft");
     const btnTestHeavy = document.getElementById("btn-test-heavy");
     const btnTestBoth = document.getElementById("btn-test-both");
@@ -2350,6 +2521,26 @@
     const byHandle = new Map();
     const callbackPtrs = [];
 
+    function applyAudioSettings() {
+      const ids = Array.from(deviceIds);
+      if (ids.length === 0) {
+        log("⚠️ Conecte um controle antes de aplicar as configurações de áudio.");
+        return;
+      }
+
+      const isSpeaker = Number(selSpeaker?.value ?? "1") === 1 ? 1 : 0;
+      const volume = Math.min(100, Math.max(0, Number(inputAudioVolume?.value ?? 100) || 0));
+      const rumbleMode = Number(selRumbleMode?.value ?? "255") === 252 ? 0xFC : 0xFF;
+      const rumbleReduce = Math.min(15, Math.max(0, Number(inputRumbleReduce?.value ?? 0) || 0));
+
+      for (const deviceId of ids) {
+        api?.dualsenseSettings?.(deviceId, 0, 1, isSpeaker, 0, volume, rumbleMode, rumbleReduce, 0);
+        api?.updateOutput?.(deviceId);
+      }
+
+      log(`🔊 Audio: speaker=${isSpeaker}, volume=${volume}, mode=0x${rumbleMode.toString(16).toUpperCase()}, reduce=${rumbleReduce}.`);
+    }
+
     const FRAME_SECONDS = 0.01;
     const FRAME_MS = 10;
     const SONY_VENDOR = 0x054c;
@@ -2370,13 +2561,10 @@
     const INPUT_DESCRIPTOR_SIZE = 148;
 
     // Trigger Payloads
-    const TRIGGER_GALLOPING = new Uint8Array([0x23, 0x82, 0x00, 0xf7, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00]);
-    const TRIGGER_MACHINE = new Uint8Array([0x27, 0x80, 0x02, 0x3a, 0x0a, 0x04, 0x00, 0x00, 0x00, 0x00]);
     const TRIGGER_FEEDBACK = new Uint8Array([0x21, 0xfe, 0x03, 0xf8, 0xff, 0xff, 0x3f, 0x00, 0x00, 0x00]);
-    const TRIGGER_WEAPON = new Uint8Array([0x25, 0x08, 0x01, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-    const TRIGGER_BOW = new Uint8Array([0x22, 0x02, 0x01, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    const TRIGGER_BOW = new Uint8Array([0x22, 0x22, 0x01, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+    const TRIGGER_WEAPON = new Uint8Array([0x25, 0xc0, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     const TRIGGER_AUTOMATIC_GUN = new Uint8Array([0x26, 0x00, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x0a]);
-    const TRIGGER_GAMECUBE = new Uint8Array([0x25, 0x90, 0x02, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
     const AUDIO_HAPTICS_WORKLET_CODE = `
 class AudioHapticsWorkletProcessor extends AudioWorkletProcessor {
@@ -2828,7 +3016,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         const ids = Array.from(deviceIds);
         for (const id of ids) {
           try {
-            api?.updateOutput?.(id);
+
             api.updateInput?.(id, FRAME_SECONDS);
           } catch (e) {
             log(`❌ GCH_UpdateInput error: ${String(e)}`);
@@ -3090,9 +3278,6 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
 
     const TRIGGER_EFFECT_MAP = {
       none: null,
-      gamecube: TRIGGER_GAMECUBE,
-      gallop: TRIGGER_GALLOPING,
-      machine: TRIGGER_MACHINE,
       feedback: TRIGGER_FEEDBACK,
       bow: TRIGGER_BOW,
       weapon: TRIGGER_WEAPON,
@@ -3109,6 +3294,8 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
     }
 
     // Interactive Trigger Controls
+    btnApplyAudioSettings?.addEventListener("click", applyAudioSettings);
+
     btnApplyTrigger?.addEventListener("click", () => {
       const id = getActiveDeviceId();
       const effectKey = selTriggerEffect?.value || "none";
@@ -3597,8 +3784,8 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
       if ("documentPictureInPicture" in window) {
         try {
           pipWindow = await window.documentPictureInPicture.requestWindow({
-            width: 380,
-            height: 480,
+            width: 410,
+            height: 320,
           });
 
           // Copy all styles into the new PiP window

@@ -1909,6 +1909,7 @@ var _GCH_Shutdown = Module['_GCH_Shutdown'] = makeInvalidEarlyAccess('_GCH_Shutd
 var _GCH_GetVersion = Module['_GCH_GetVersion'] = makeInvalidEarlyAccess('_GCH_GetVersion');
 var _GCH_SetLogCallback = Module['_GCH_SetLogCallback'] = makeInvalidEarlyAccess('_GCH_SetLogCallback');
 var _GCH_AudioSubmitSamples = Module['_GCH_AudioSubmitSamples'] = makeInvalidEarlyAccess('_GCH_AudioSubmitSamples');
+var _GCH_InitializeAudio = Module['_GCH_InitializeAudio'] = makeInvalidEarlyAccess('_GCH_InitializeAudio');
 var _GCH_GetProcessAudioHaptics = Module['_GCH_GetProcessAudioHaptics'] = makeInvalidEarlyAccess('_GCH_GetProcessAudioHaptics');
 var _GCH_DiscoverDevices = Module['_GCH_DiscoverDevices'] = makeInvalidEarlyAccess('_GCH_DiscoverDevices');
 var _GCH_CreateDevice = Module['_GCH_CreateDevice'] = makeInvalidEarlyAccess('_GCH_CreateDevice');
@@ -1956,6 +1957,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['GCH_GetVersion'] != 'undefined', 'missing Wasm export: GCH_GetVersion');
   assert(typeof wasmExports['GCH_SetLogCallback'] != 'undefined', 'missing Wasm export: GCH_SetLogCallback');
   assert(typeof wasmExports['GCH_AudioSubmitSamples'] != 'undefined', 'missing Wasm export: GCH_AudioSubmitSamples');
+  assert(typeof wasmExports['GCH_InitializeAudio'] != 'undefined', 'missing Wasm export: GCH_InitializeAudio');
   assert(typeof wasmExports['GCH_GetProcessAudioHaptics'] != 'undefined', 'missing Wasm export: GCH_GetProcessAudioHaptics');
   assert(typeof wasmExports['GCH_DiscoverDevices'] != 'undefined', 'missing Wasm export: GCH_DiscoverDevices');
   assert(typeof wasmExports['GCH_CreateDevice'] != 'undefined', 'missing Wasm export: GCH_CreateDevice');
@@ -1999,6 +2001,7 @@ function assignWasmExports(wasmExports) {
   _GCH_GetVersion = Module['_GCH_GetVersion'] = createExportWrapper('GCH_GetVersion', wasmExports['GCH_GetVersion'], 0);
   _GCH_SetLogCallback = Module['_GCH_SetLogCallback'] = createExportWrapper('GCH_SetLogCallback', wasmExports['GCH_SetLogCallback'], 1);
   _GCH_AudioSubmitSamples = Module['_GCH_AudioSubmitSamples'] = createExportWrapper('GCH_AudioSubmitSamples', wasmExports['GCH_AudioSubmitSamples'], 4);
+  _GCH_InitializeAudio = Module['_GCH_InitializeAudio'] = createExportWrapper('GCH_InitializeAudio', wasmExports['GCH_InitializeAudio'], 2);
   _GCH_GetProcessAudioHaptics = Module['_GCH_GetProcessAudioHaptics'] = createExportWrapper('GCH_GetProcessAudioHaptics', wasmExports['GCH_GetProcessAudioHaptics'], 1);
   _GCH_DiscoverDevices = Module['_GCH_DiscoverDevices'] = createExportWrapper('GCH_DiscoverDevices', wasmExports['GCH_DiscoverDevices'], 1);
   _GCH_CreateDevice = Module['_GCH_CreateDevice'] = createExportWrapper('GCH_CreateDevice', wasmExports['GCH_CreateDevice'], 1);

@@ -168,6 +168,13 @@ type NativeApi = {
   ) => void;
 };
 
+export interface AudioHapticsSettings {
+  bIsSpeaker: 0 | 1;
+  audioVolume: number;
+  rumbleMode: number;
+  rumbleReduce: number;
+}
+
 export class GamepadClientApplication {
   private readonly module: NativeModule;
   private readonly api: NativeApi;
@@ -182,6 +189,12 @@ export class GamepadClientApplication {
   private readonly logFnPtr: number | null;
   private isRunning = false;
   private isAudioHapticsEnabled = false;
+  private audioHapticsSettings: AudioHapticsSettings = {
+    bIsSpeaker: 1,
+    audioVolume: 100,
+    rumbleMode: 0xFC,
+    rumbleReduce: 0,
+  };
   private audioContext: AudioContext | null = null;
   private audioStream: MediaStream | null = null;
   private audioProcessorNode: AudioNode | null = null;
@@ -247,8 +260,7 @@ export class GamepadClientApplication {
           }
 
           if (appRef.value?.getIsAudioHapticsEnabled()) {
-            appRef.value.api.dualsenseSettings?.(deviceId, 0, 0, 1, 0, 100, 0x0C, 0, 0);
-            appRef.value.api.updateOutput?.(deviceId);
+            appRef.value.applyAudioHapticsSettings(deviceId);
           }
         },
         disconnect: (deviceId) => {
@@ -285,6 +297,9 @@ export class GamepadClientApplication {
       const ids = Array.from(this.deviceIds);
       for (const deviceId of ids) {
         this.api.updateInput(deviceId, FRAME_SECONDS);
+        if (this.audioHapticsSettings.rumbleMode === 0xFC) {
+          this.api.updateOutput?.(deviceId);
+        }
       }
       for (const deviceId of ids) {
         const state = this.readInputState(deviceId);
@@ -324,6 +339,40 @@ export class GamepadClientApplication {
 
   public getIsAudioHapticsEnabled(): boolean {
     return this.isAudioHapticsEnabled;
+  }
+
+  public getAudioHapticsSettings(): AudioHapticsSettings {
+    return { ...this.audioHapticsSettings };
+  }
+
+  public setAudioHapticsSettings(settings: Partial<AudioHapticsSettings>): void {
+    this.audioHapticsSettings = {
+      bIsSpeaker: settings.bIsSpeaker === 0 ? 0 : 1,
+      audioVolume: Math.min(100, Math.max(0, Math.round(settings.audioVolume ?? this.audioHapticsSettings.audioVolume))),
+      rumbleMode: settings.rumbleMode === 0xFF ? 0xFF : 0xFC,
+      rumbleReduce: Math.min(15, Math.max(0, Math.round(settings.rumbleReduce ?? this.audioHapticsSettings.rumbleReduce))),
+    };
+
+    if (this.isAudioHapticsEnabled) {
+      for (const deviceId of this.deviceIds) {
+        this.applyAudioHapticsSettings(deviceId);
+      }
+    }
+  }
+
+  private applyAudioHapticsSettings(deviceId: number, rumbleMode = this.audioHapticsSettings.rumbleMode): void {
+    this.api.dualsenseSettings?.(
+      deviceId,
+      0,
+      1,
+      this.audioHapticsSettings.bIsSpeaker,
+      0,
+      this.audioHapticsSettings.audioVolume,
+      rumbleMode,
+      this.audioHapticsSettings.rumbleReduce,
+      0
+    );
+    this.api.updateOutput?.(deviceId);
   }
 
   public async enableAudioHaptics(): Promise<void> {
@@ -416,8 +465,7 @@ export class GamepadClientApplication {
         // RumbleMode = 0x0C, vibracao haptics e audio.
         const ids = Array.from(this.deviceIds);
         for (const deviceId of ids) {
-            this.api.dualsenseSettings?.(deviceId, 0, 1, 1, 0, 100, 0xFC, 0, 0);
-            this.api.updateOutput?.(deviceId);
+            this.applyAudioHapticsSettings(deviceId);
         }
     }
     // } else {
@@ -509,8 +557,7 @@ export class GamepadClientApplication {
     // RumbleMode = 0xff, vibracao normal.
     const ids = Array.from(this.deviceIds);
     for (const deviceId of ids) {
-      this.api.dualsenseSettings?.(deviceId, 0, 0, 0, 0, 100, 0xFF, 0, 0);
-      this.api.updateOutput?.(deviceId);
+      this.applyAudioHapticsSettings(deviceId, 0xFF);
     }
   }
 

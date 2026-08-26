@@ -97,6 +97,12 @@ class GamepadClientApplication {
         this.inputTimer = null;
         this.isRunning = false;
         this.isAudioHapticsEnabled = false;
+        this.audioHapticsSettings = {
+            bIsSpeaker: 1,
+            audioVolume: 100,
+            rumbleMode: 0xFC,
+            rumbleReduce: 0,
+        };
         this.audioContext = null;
         this.audioStream = null;
         this.audioProcessorNode = null;
@@ -135,7 +141,7 @@ class GamepadClientApplication {
             const registryCleanup = (0, web_hid_platform_ts_1.initializeDeviceRegistryPolicy)(module, typeId, {
                 alloc: wrappedCallbacks.alloc,
                 dispatch: (deviceId) => {
-                    var _a, _b, _c, _d, _e, _f, _g;
+                    var _a, _b, _c;
                     (_a = appRef.value) === null || _a === void 0 ? void 0 : _a.deviceIds.add(deviceId);
                     wrappedCallbacks.dispatch(deviceId);
                     console.log(`Device dispatched: ${deviceId}`);
@@ -145,8 +151,7 @@ class GamepadClientApplication {
                         console.log(`Device ${deviceId}: Touchpad enabled.`);
                     }
                     if ((_c = appRef.value) === null || _c === void 0 ? void 0 : _c.getIsAudioHapticsEnabled()) {
-                        (_e = (_d = appRef.value.api).dualsenseSettings) === null || _e === void 0 ? void 0 : _e.call(_d, deviceId, 0, 0, 1, 0, 100, 0x0C, 0, 0);
-                        (_g = (_f = appRef.value.api).updateOutput) === null || _g === void 0 ? void 0 : _g.call(_f, deviceId);
+                        appRef.value.applyAudioHapticsSettings(deviceId);
                     }
                 },
                 disconnect: (deviceId) => {
@@ -175,8 +180,12 @@ class GamepadClientApplication {
         }, FRAME_MS);
         let frameCount = 0;
         const inputHandle = setInterval(() => {
+            var _a, _b;
             const ids = Array.from(this.deviceIds);
             for (const deviceId of ids) {
+                if (this.audioHapticsSettings.rumbleMode === 0xFC) {
+                    (_b = (_a = this.api).updateOutput) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId);
+                }
                 this.api.updateInput(deviceId, FRAME_SECONDS);
             }
             for (const deviceId of ids) {
@@ -214,9 +223,31 @@ class GamepadClientApplication {
     getIsAudioHapticsEnabled() {
         return this.isAudioHapticsEnabled;
     }
+    getAudioHapticsSettings() {
+        return Object.assign({}, this.audioHapticsSettings);
+    }
+    setAudioHapticsSettings(settings) {
+        var _a, _b;
+        this.audioHapticsSettings = {
+            bIsSpeaker: settings.bIsSpeaker === 0 ? 0 : 1,
+            audioVolume: Math.min(100, Math.max(0, Math.round((_a = settings.audioVolume) !== null && _a !== void 0 ? _a : this.audioHapticsSettings.audioVolume))),
+            rumbleMode: settings.rumbleMode === 0xFF ? 0xFF : 0xFC,
+            rumbleReduce: Math.min(15, Math.max(0, Math.round((_b = settings.rumbleReduce) !== null && _b !== void 0 ? _b : this.audioHapticsSettings.rumbleReduce))),
+        };
+        if (this.isAudioHapticsEnabled) {
+            for (const deviceId of this.deviceIds) {
+                this.applyAudioHapticsSettings(deviceId);
+            }
+        }
+    }
+    applyAudioHapticsSettings(deviceId, rumbleMode = this.audioHapticsSettings.rumbleMode) {
+        var _a, _b, _c, _d;
+        (_b = (_a = this.api).dualsenseSettings) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId, 0, 1, this.audioHapticsSettings.bIsSpeaker, 0, this.audioHapticsSettings.audioVolume, rumbleMode, this.audioHapticsSettings.rumbleReduce, 0);
+        (_d = (_c = this.api).updateOutput) === null || _d === void 0 ? void 0 : _d.call(_c, deviceId);
+    }
     enableAudioHaptics() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d, _e;
+            var _a;
             if (this.isAudioHapticsEnabled) {
                 return;
             }
@@ -286,8 +317,7 @@ class GamepadClientApplication {
                 // RumbleMode = 0x0C, vibracao haptics e audio.
                 const ids = Array.from(this.deviceIds);
                 for (const deviceId of ids) {
-                    (_c = (_b = this.api).dualsenseSettings) === null || _c === void 0 ? void 0 : _c.call(_b, deviceId, 0, 1, 1, 0, 100, 0xFC, 0, 0);
-                    (_e = (_d = this.api).updateOutput) === null || _e === void 0 ? void 0 : _e.call(_d, deviceId);
+                    this.applyAudioHapticsSettings(deviceId);
                 }
             }
             // } else {
@@ -338,7 +368,6 @@ class GamepadClientApplication {
     }
     disableAudioHaptics() {
         return __awaiter(this, void 0, void 0, function* () {
-            var _a, _b, _c, _d;
             if (!this.isAudioHapticsEnabled) {
                 return;
             }
@@ -375,8 +404,7 @@ class GamepadClientApplication {
             // RumbleMode = 0xff, vibracao normal.
             const ids = Array.from(this.deviceIds);
             for (const deviceId of ids) {
-                (_b = (_a = this.api).dualsenseSettings) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId, 0, 0, 0, 0, 100, 0xFF, 0, 0);
-                (_d = (_c = this.api).updateOutput) === null || _d === void 0 ? void 0 : _d.call(_c, deviceId);
+                this.applyAudioHapticsSettings(deviceId, 0xFF);
             }
         });
     }
