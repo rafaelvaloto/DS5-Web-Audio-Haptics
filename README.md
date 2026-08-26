@@ -58,6 +58,16 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 
 ---
 
+## ⭐ 3rdParty
+
+* [Gamepad-Core Host](https://github.com/rafaelvaloto/Gamepad-Core-Host) - The C-compatible API can also be consumed from JavaScript and TypeScript through WebAssembly, compiled with Emscripten. This makes Gamepad-Core Host available to browser applications, Node.js tools, and other JavaScript runtimes that support WebAssembly.
+
+## ⭐ Credits
+
+* [SAxense](https://github.com/egormanga/SAxense) - Base for Bluetooth Audio Haptics.
+* [Awalol/DS5Dongle](https://github.com/awalol/DS5Dongle) - Reference **Bluetooth Audio (Headset/Speaker)** opus codec and buffer sizes.
+
+---
 
 ## 📄 License
 
