@@ -46,6 +46,11 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 **Paid Games:**
 - [NBA THE RUN](https://store.steampowered.com/app/2866670/NBA_THE_RUN/)
 
+- [EA | FC 26]
+<img width="960" height="540" alt="FC26" src="https://github.com/user-attachments/assets/8cc6cf98-1a3b-4b7f-8243-1595959c7a8f" />
+
+
+
 ---
 
 ## ✨ Key Features
