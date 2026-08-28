@@ -1,7 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ptBR = void 0;
-exports.ptBR = {
+export const ptBR = {
     header: {
         title: "DS5 Web Audio Haptics Bluetooth",
         subtitle: "Áudio e hápticos de alta fidelidade via Bluetooth para controles PlayStation DualSense usando WebHID e WebAssembly",

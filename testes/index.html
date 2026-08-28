@@ -1437,6 +1437,10 @@
         <span><span data-i18n="status.audioHaptics">Audio Haptics</span>: <strong id="lbl-audio-haptics" data-i18n="status.inactive">Inactive</strong></span>
       </div>
       <div class="status-badge">
+        <span id="dot-ws" class="status-dot"></span>
+        <span><span data-i18n="status.vgamepad">VirtualGamePad</span>: <strong id="lbl-ws-status" data-i18n="status.disconnected">Disconnected</strong></span>
+      </div>
+      <div class="status-badge">
         <span>🔋 <span data-i18n="status.battery">Battery</span>: <strong id="lbl-battery">--%</strong></span>
       </div>
       <div class="status-badge">
@@ -1718,7 +1722,61 @@
           </div>
         </section>
 
-        <!-- CARD 5: LOGS EM TEMPO REAL -->
+        <!-- CARD 5: VIRTUALGAMEPAD STREAMING -->
+        <section class="card" id="card-virtualgamepad" style="display: none;">
+          <div class="card-header">
+            <div>
+              <h3 data-i18n="cards.vgamepad.title">📡 VirtualGamePad Streaming (WebSocket)</h3>
+              <p data-i18n="cards.vgamepad.subtitle">Stream 24-byte binary input packets to VirtualGamePad server</p>
+            </div>
+            <span id="badge-ws-rate" class="status-badge">0 pkts/s</span>
+          </div>
+          <div class="card-body">
+            <div class="ws-controls-panel">
+              <div class="ws-input-group" style="display: flex; flex-direction: column; gap: 6px;">
+                <label for="txt-ws-url" style="font-size: 0.8rem; font-weight: 600; color: #cbd5e1;" data-i18n="vgamepad.serverUrl">Server URL (WebSocket):</label>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <input type="text" id="txt-ws-url" class="ws-url-input" value="ws://192.168.1.18:51204" placeholder="ws://192.168.1.18:51204" style="flex: 1; min-width: 200px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; color: #fff; font-family: 'Consolas', monospace; font-size: 0.82rem;" />
+                  <button id="btn-ws-connect" class="btn-primary" style="padding: 7px 16px; font-size: 0.82rem;" data-i18n="vgamepad.connect">Connect</button>
+                </div>
+              </div>
+
+              <div class="ws-options-row" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <label class="chk-label" style="display: flex; align-items: center; gap: 6px; font-size: 0.82rem; cursor: pointer;">
+                  <input type="checkbox" id="chk-ws-autostream" checked />
+                  <span data-i18n="vgamepad.autoStream">Stream inputs automatically during loop (100 Hz)</span>
+                </label>
+                <span id="lbl-ws-state-detail" style="font-size: 0.8rem; color: var(--muted);" data-i18n="vgamepad.notConnected">Disconnected</span>
+              </div>
+
+              <div class="inner-grid-3" style="margin-top: 12px;">
+                <div class="sensor-item">
+                  <span class="sensor-label" data-i18n="vgamepad.packetsSent">Packets Sent</span>
+                  <div><strong id="lbl-ws-pkts">0</strong></div>
+                  <div style="font-size: 0.75rem; color: var(--muted);"><span data-i18n="vgamepad.sequence">Sequence</span>: <strong id="lbl-ws-seq">#0</strong></div>
+                </div>
+
+                <div class="sensor-item">
+                  <span class="sensor-label" data-i18n="vgamepad.encodedButtons">Encoded Mask</span>
+                  <div><strong id="lbl-ws-buttons">0x0000</strong></div>
+                  <div style="font-size: 0.75rem; color: var(--muted);"><span data-i18n="vgamepad.activeBtns">Buttons</span>: <strong id="lbl-ws-btn-names">None</strong></div>
+                </div>
+
+                <div class="sensor-item">
+                  <span class="sensor-label" data-i18n="vgamepad.packetAxes">Triggers & Sticks (16-bit)</span>
+                  <div style="font-size: 0.78rem;">LT:<strong id="lbl-ws-lt">0</strong> RT:<strong id="lbl-ws-rt">0</strong></div>
+                  <div style="font-size: 0.75rem; color: var(--muted);">L:(<strong id="lbl-ws-lx">0</strong>,<strong id="lbl-ws-ly">0</strong>) R:(<strong id="lbl-ws-rx">0</strong>,<strong id="lbl-ws-ry">0</strong>)</div>
+                </div>
+              </div>
+
+              <div style="margin-top: 10px; font-size: 0.75rem; color: var(--muted); font-family: 'Consolas', monospace; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); overflow-x: auto; white-space: nowrap;">
+                <span style="color: var(--accent);">Binary Layout (24B):</span> <span id="lbl-ws-hex-preview">00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 6: LOGS EM TEMPO REAL -->
         <section class="card" style="flex:1;">
           <div class="card-header">
             <div>
@@ -1757,6 +1815,7 @@
 
   <script src="../src/lib/GamepadCoreHost.js"></script>
   <script type="module">
+    import { GamepadClientApplication } from "../dist/main.js";
     // ==========================================
     // I18N Translation System
     // ==========================================
@@ -1795,6 +1854,9 @@
           inactive: "Inactive",
           battery: "Battery",
           rate: "Rate",
+          vgamepad: "VirtualGamePad",
+          disconnected: "Disconnected",
+          connecting: "Connecting...",
         },
         cards: {
           commands: {
@@ -1818,10 +1880,30 @@
             subtitle: "Enabled via GCH_EnableTouch",
             touchingHint: "Touch the DualSense surface to visualize",
           },
+          vgamepad: {
+            title: "📡 VirtualGamePad Streaming (WebSocket)",
+            subtitle: "Stream 24-byte binary input packets to VirtualGamePad server",
+          },
           logs: {
             title: "📜 Diagnostic & Event Log",
             subtitle: "Real-time readings from 148-byte buffer and executed commands",
           },
+        },
+        vgamepad: {
+          serverUrl: "Server URL (WebSocket):",
+          connect: "Connect",
+          disconnect: "Disconnect",
+          autoStream: "Stream inputs automatically during loop (100 Hz)",
+          notConnected: "Disconnected",
+          connected: "Connected to Server",
+          connecting: "Connecting...",
+          error: "Connection Error",
+          packetsSent: "Packets Sent",
+          sequence: "Sequence",
+          encodedButtons: "Encoded Mask",
+          activeBtns: "Buttons",
+          packetAxes: "Triggers & Sticks (16-bit)",
+          none: "None",
         },
         controls: {
           triggerEffectsTitle: "Adaptive Triggers",
@@ -1971,6 +2053,9 @@
           inactive: "Inativo",
           battery: "Bateria",
           rate: "Frequência",
+          vgamepad: "VirtualGamePad",
+          disconnected: "Desconectado",
+          connecting: "Conectando...",
         },
         cards: {
           commands: {
@@ -1994,10 +2079,30 @@
             subtitle: "Habilitado via GCH_EnableTouch",
             touchingHint: "Toque na superfície do DualSense para visualizar",
           },
+          vgamepad: {
+            title: "📡 Streaming VirtualGamePad (WebSocket)",
+            subtitle: "Transmissão de pacotes binários de 24 bytes para o servidor VirtualGamePad",
+          },
           logs: {
             title: "📜 Log de Leituras & Eventos",
             subtitle: "Registro automático das leituras do buffer de 148 bytes e comandos executados",
           },
+        },
+        vgamepad: {
+          serverUrl: "URL do Servidor (WebSocket):",
+          connect: "Conectar",
+          disconnect: "Desconectar",
+          autoStream: "Enviar entradas automaticamente durante o loop (100 Hz)",
+          notConnected: "Desconectado",
+          connected: "Conectado ao Servidor",
+          connecting: "Conectando...",
+          error: "Erro de Conexão",
+          packetsSent: "Pacotes Enviados",
+          sequence: "Sequência",
+          encodedButtons: "Máscara Codificada",
+          activeBtns: "Botões",
+          packetAxes: "Gatilhos e Analógicos (16-bit)",
+          none: "Nenhum",
         },
         controls: {
           triggerEffectsTitle: "Efeitos de Gatilhos Adaptáveis",
@@ -2147,6 +2252,9 @@
           inactive: "Inactivo",
           battery: "Batería",
           rate: "Frecuencia",
+          vgamepad: "VirtualGamePad",
+          disconnected: "Desconectado",
+          connecting: "Conectando...",
         },
         cards: {
           commands: {
@@ -2170,10 +2278,30 @@
             subtitle: "Habilitado mediante GCH_EnableTouch",
             touchingHint: "Toque la superficie del DualSense para visualizar",
           },
+          vgamepad: {
+            title: "📡 Transmisión VirtualGamePad (WebSocket)",
+            subtitle: "Transmisión de paquetes binarios de 24 bytes al servidor VirtualGamePad",
+          },
           logs: {
             title: "📜 Diagnóstico en Tiempo Real y Registro",
             subtitle: "Lecturas en tiempo real del buffer de 148 bytes y comandos ejecutados",
           },
+        },
+        vgamepad: {
+          serverUrl: "URL del Servidor (WebSocket):",
+          connect: "Conectar",
+          disconnect: "Desconectar",
+          autoStream: "Transmitir entradas automáticamente durante el bucle (100 Hz)",
+          notConnected: "Desconectado",
+          connected: "Conectado al Servidor",
+          connecting: "Conectando...",
+          error: "Error de Conexión",
+          packetsSent: "Paquetes Enviados",
+          sequence: "Secuencia",
+          encodedButtons: "Máscara Codificada",
+          activeBtns: "Botones",
+          packetAxes: "Gatillos y Palancas (16-bit)",
+          none: "Ninguno",
         },
         controls: {
           triggerEffectsTitle: "Efectos de Gatillos Adaptativos",
@@ -2366,6 +2494,16 @@
       if (btnAudioHaptics) {
         btnAudioHaptics.textContent = isAudioHapticsEnabled ? t("header.btnAudioHapticsOn") : t("header.btnAudioHaptics");
       }
+      if (lblWsStatus) {
+        lblWsStatus.textContent = wsSocket && wsSocket.readyState === WebSocket.OPEN
+          ? t("status.connected")
+          : (wsSocket && wsSocket.readyState === WebSocket.CONNECTING ? t("status.connecting") : t("status.disconnected"));
+      }
+      if (btnWsConnect) {
+        btnWsConnect.textContent = wsSocket && wsSocket.readyState === WebSocket.OPEN
+          ? t("vgamepad.disconnect")
+          : (wsSocket && wsSocket.readyState === WebSocket.CONNECTING ? t("vgamepad.connecting") : t("vgamepad.connect"));
+      }
       lblTouchStatus.textContent = `${t("touchpad.fingers")}: ${lastFingerCount}`;
       touchHint.textContent = t("touchpad.touchingHint");
     }
@@ -2494,6 +2632,34 @@
     const btnStopVibe = document.getElementById("btn-stop-vibe");
     const btnStopAll = document.getElementById("btn-stop-all");
 
+    // VirtualGamePad Streaming Elements
+    const dotWs = document.getElementById("dot-ws");
+    const lblWsStatus = document.getElementById("lbl-ws-status");
+    const txtWsUrl = document.getElementById("txt-ws-url");
+    const btnWsConnect = document.getElementById("btn-ws-connect");
+    const chkWsAutoStream = document.getElementById("chk-ws-autostream");
+    const lblWsStateDetail = document.getElementById("lbl-ws-state-detail");
+    const badgeWsRate = document.getElementById("badge-ws-rate");
+    const lblWsPkts = document.getElementById("lbl-ws-pkts");
+    const lblWsSeq = document.getElementById("lbl-ws-seq");
+    const lblWsButtons = document.getElementById("lbl-ws-buttons");
+    const lblWsBtnNames = document.getElementById("lbl-ws-btn-names");
+    const lblWsLt = document.getElementById("lbl-ws-lt");
+    const lblWsRt = document.getElementById("lbl-ws-rt");
+    const lblWsLx = document.getElementById("lbl-ws-lx");
+    const lblWsLy = document.getElementById("lbl-ws-ly");
+    const lblWsRx = document.getElementById("lbl-ws-rx");
+    const lblWsRy = document.getElementById("lbl-ws-ry");
+    const lblWsHexPreview = document.getElementById("lbl-ws-hex-preview");
+
+    // Load saved WebSocket URL
+    try {
+      const savedWsUrl = localStorage.getItem("dualsense_vgamepad_ws_url");
+      if (savedWsUrl && txtWsUrl) {
+        txtWsUrl.value = savedWsUrl;
+      }
+    } catch {}
+
     // State Variables
     let hostModule = null;
     let api = null;
@@ -2507,13 +2673,14 @@
     let bridgesInitialized = false;
     let isTouchActive = false;
     let isAudioHapticsEnabled = false;
-    let audioContext = null;
-    let audioStream = null;
-    let audioSourceNode = null;
-    let audioProcessorNode = null;
-    let audioBufferPtr = 0;
-    let audioBufferCapacityBytes = 0;
     let lastFingerCount = 0;
+    let wsSocket = null;
+    let wsSequence = 0;
+    let wsPacketsSent = 0;
+    let wsLastPacketRateTimer = null;
+    let wsPacketsInSec = 0;
+    let wsCurrentRate = 0;
+    let gamepadApp = null;
     const deviceIds = new Set();
     const previousInput = new Map();
     const cachedDevices = [];
@@ -2565,39 +2732,6 @@
     const TRIGGER_BOW = new Uint8Array([0x22, 0x22, 0x01, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     const TRIGGER_WEAPON = new Uint8Array([0x25, 0xc0, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
     const TRIGGER_AUTOMATIC_GUN = new Uint8Array([0x26, 0x00, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x0a]);
-
-    const AUDIO_HAPTICS_WORKLET_CODE = `
-class AudioHapticsWorkletProcessor extends AudioWorkletProcessor {
-  process(inputs, outputs, parameters) {
-    const input = inputs[0];
-    if (input && input.length > 0) {
-      const ch0 = input[0];
-      const ch1 = input[1];
-      if (ch0 && ch0.length > 0) {
-        const frameCount = ch0.length;
-        const numChannels = ch1 && ch1.length > 0 ? 2 : 1;
-        const totalFloats = frameCount * numChannels;
-        const interleaved = new Float32Array(totalFloats);
-        if (numChannels >= 2 && ch1) {
-          for (let i = 0; i < frameCount; i++) {
-            interleaved[i * 2] = ch0[i];
-            interleaved[i * 2 + 1] = ch1[i];
-          }
-        } else {
-          interleaved.set(ch0);
-        }
-        this.port.postMessage({
-          audioData: interleaved,
-          frameCount,
-          numChannels
-        }, [interleaved.buffer]);
-      }
-    }
-    return true;
-  }
-}
-registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcessor);
-`;
 
     // Log Buffer com limite de linhas e renderização em lote desacoplada (evita travar a UI e o áudio)
     const MAX_LOG_LINES = 150;
@@ -2655,6 +2789,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         });
 
         api = bindNativeApi(hostModule);
+        gamepadApp = GamepadClientApplication.fromNativeRuntime(hostModule, api, deviceIds);
         inputPtr = hostModule._malloc(INPUT_DESCRIPTOR_SIZE);
         triggerBufferPtr = hostModule._malloc(64);
 
@@ -2753,188 +2888,21 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
       }
     }
 
-    async function enableAudioHaptics() {
-      if (isAudioHapticsEnabled) return;
-      if (!navigator.mediaDevices?.getDisplayMedia) {
-        log("❌ getDisplayMedia não é suportado pelo navegador.");
-        return;
-      }
-      try {
-        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-        const audioTracks = stream.getAudioTracks();
-        if (audioTracks.length === 0) {
-          stream.getTracks().forEach((t) => t.stop());
-          log("❌ Nenhuma faixa de áudio compartilhada. Marque 'Compartilhar áudio'.");
-          return;
-        }
-
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioCtx();
-        if (ctx.state === "suspended") await ctx.resume();
-
-        const source = ctx.createMediaStreamSource(stream);
-        let processor;
-
-        if (ctx.audioWorklet && typeof ctx.audioWorklet.addModule === "function") {
-          const blob = new Blob([AUDIO_HAPTICS_WORKLET_CODE], { type: "application/javascript" });
-          const workletUrl = URL.createObjectURL(blob);
-          try {
-            await ctx.audioWorklet.addModule(workletUrl);
-          } finally {
-            URL.revokeObjectURL(workletUrl);
-          }
-
-          const workletNode = new AudioWorkletNode(ctx, "audio-haptics-worklet-processor");
-          let sampleSubmitCount = 0;
-          workletNode.port.onmessage = (e) => {
-            if (!isAudioHapticsEnabled || !api.audioSubmitSamples) return;
-            const { audioData, frameCount, numChannels } = e.data;
-            const totalFloats = frameCount * numChannels;
-            const totalBytes = totalFloats * 4;
-
-            if (audioBufferCapacityBytes < totalBytes) {
-              if (audioBufferPtr !== 0) hostModule._free(audioBufferPtr);
-              audioBufferPtr = hostModule._malloc(totalBytes);
-              audioBufferCapacityBytes = totalBytes;
-            }
-
-            const floatView = new Float32Array(hostModule.HEAPU8.buffer, hostModule.HEAPU8.byteOffset + audioBufferPtr, totalFloats);
-            floatView.set(audioData);
-
-            api.audioSubmitSamples(audioBufferPtr, frameCount, numChannels, ctx.sampleRate);
-            if (sampleSubmitCount++ === 0) {
-              log(`🎧 Transmitindo amostras de áudio para o WASM (${numChannels} canais @ ${ctx.sampleRate}Hz, frames=${frameCount}).`);
-            }
-          };
-
-          processor = workletNode;
-        } else {
-          const scriptProcessor = ctx.createScriptProcessor(4096, 2, 2);
-          let scriptSubmitCount = 0;
-          scriptProcessor.onaudioprocess = (e) => {
-            if (!isAudioHapticsEnabled || !api.audioSubmitSamples) return;
-            const inBuf = e.inputBuffer;
-            const numChannels = inBuf.numberOfChannels;
-            const frameCount = inBuf.length;
-            const sampleRate = inBuf.sampleRate;
-            const totalFloats = frameCount * numChannels;
-            const totalBytes = totalFloats * 4;
-
-            if (audioBufferCapacityBytes < totalBytes) {
-              if (audioBufferPtr !== 0) hostModule._free(audioBufferPtr);
-              audioBufferPtr = hostModule._malloc(totalBytes);
-              audioBufferCapacityBytes = totalBytes;
-            }
-
-            const floatView = new Float32Array(hostModule.HEAPU8.buffer, hostModule.HEAPU8.byteOffset + audioBufferPtr, totalFloats);
-            const ch0 = inBuf.getChannelData(0);
-            if (numChannels >= 2) {
-              const ch1 = inBuf.getChannelData(1);
-              for (let i = 0; i < frameCount; i++) {
-                floatView[i * 2] = ch0[i];
-                floatView[i * 2 + 1] = ch1[i];
-              }
-            } else {
-              floatView.set(ch0);
-            }
-
-            api.audioSubmitSamples(audioBufferPtr, frameCount, numChannels, sampleRate);
-            if (scriptSubmitCount++ === 0) {
-              log(`🎧 Transmitindo amostras de áudio para o WASM (${numChannels} canais @ ${sampleRate}Hz, frames=${frameCount}).`);
-            }
-          };
-
-          processor = scriptProcessor;
-        }
-
-        source.connect(processor);
-        processor.connect(ctx.destination);
-
-        stream.getVideoTracks().concat(audioTracks).forEach((t) => {
-          t.addEventListener("ended", () => {
-            if (isAudioHapticsEnabled) disableAudioHaptics();
-          });
-        });
-
-        audioStream = stream;
-        audioContext = ctx;
-        audioSourceNode = source;
-        audioProcessorNode = processor;
-        isAudioHapticsEnabled = true;
-
-        // RumbleMode = 0x0C, vibracao haptics e audio.
-        const ids = Array.from(deviceIds);
-        for (const id of ids) {
-          api.dualsenseSettings?.(id, 0, 0, 1, 0, 100, 0x0C, 0, 0);
-          api.updateOutput?.(id);
-        }
-
-        dotAudioHaptics.classList.add("active");
-        lblAudioHaptics.textContent = t("status.active");
-        btnAudioHaptics.textContent = t("header.btnAudioHapticsOn");
-        btnAudioHaptics.classList.add("btn-success");
-        btnAudioHaptics.classList.remove("btn-warn");
-        syncTransportButtons();
-        log("🎵 Audio Haptics ativado (RumbleMode=0x0C, mapa de funções desativado).");
-      } catch (err) {
-        log(`❌ Erro ao ativar Audio Haptics: ${err}`);
-      }
-    }
-
-    async function disableAudioHaptics() {
-      if (!isAudioHapticsEnabled) return;
-      isAudioHapticsEnabled = false;
-
-      if (audioProcessorNode) {
-        audioProcessorNode.disconnect();
-        if ("onaudioprocess" in audioProcessorNode) {
-          audioProcessorNode.onaudioprocess = null;
-        }
-        if ("port" in audioProcessorNode) {
-          audioProcessorNode.port.onmessage = null;
-          audioProcessorNode.port.close();
-        }
-        audioProcessorNode = null;
-      }
-      if (audioSourceNode) {
-        audioSourceNode.disconnect();
-        audioSourceNode = null;
-      }
-      if (audioContext) {
-        audioContext.close().catch(() => {});
-        audioContext = null;
-      }
-      if (audioStream) {
-        audioStream.getTracks().forEach((t) => t.stop());
-        audioStream = null;
-      }
-      if (audioBufferPtr !== 0) {
-        hostModule._free(audioBufferPtr);
-        audioBufferPtr = 0;
-        audioBufferCapacityBytes = 0;
-      }
-
-      // RumbleMode = 0xff, vibracao normal.
-      const ids = Array.from(deviceIds);
-      for (const id of ids) {
-        api.dualsenseSettings?.(id, 0, 0, 0, 0, 100, 0xFF, 0, 0);
-        api.updateOutput?.(id);
-      }
-
-      dotAudioHaptics.classList.remove("active");
-      lblAudioHaptics.textContent = t("status.inactive");
-      btnAudioHaptics.textContent = t("header.btnAudioHaptics");
-      btnAudioHaptics.classList.remove("btn-success");
-      btnAudioHaptics.classList.add("btn-warn");
-      syncTransportButtons();
-      log("🎵 Audio Haptics desativado (RumbleMode=0xFF, vibração normal restaurada).");
-    }
 
     btnAudioHaptics.addEventListener("click", async () => {
-      if (isAudioHapticsEnabled) {
-        await disableAudioHaptics();
-      } else {
-        await enableAudioHaptics();
+      if (!gamepadApp) return;
+      try {
+        await gamepadApp.toggleAudioHaptics();
+        isAudioHapticsEnabled = gamepadApp.getIsAudioHapticsEnabled();
+        dotAudioHaptics.classList.toggle("active", isAudioHapticsEnabled);
+        lblAudioHaptics.textContent = isAudioHapticsEnabled ? t("status.active") : t("status.inactive");
+        btnAudioHaptics.textContent = isAudioHapticsEnabled ? t("header.btnAudioHapticsOn") : t("header.btnAudioHaptics");
+        btnAudioHaptics.classList.toggle("btn-success", isAudioHapticsEnabled);
+        btnAudioHaptics.classList.toggle("btn-warn", !isAudioHapticsEnabled);
+        syncTransportButtons();
+        log(isAudioHapticsEnabled ? "🎵 Audio Haptics ativado." : "🎵 Audio Haptics desativado.");
+      } catch (err) {
+        log(`❌ Erro ao alternar Audio Haptics: ${String(err)}`);
       }
     });
 
@@ -3005,6 +2973,195 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
       log(t("logs.bridgeConnected"));
     }
 
+    const VIRTUAL_GAMEPAD_BUTTONS = {
+      DPAD_UP: 0x0001,
+      DPAD_DOWN: 0x0002,
+      DPAD_LEFT: 0x0004,
+      DPAD_RIGHT: 0x0008,
+      START: 0x0010,
+      BACK: 0x0020,
+      LEFT_THUMB: 0x0040,
+      RIGHT_THUMB: 0x0080,
+      LEFT_SHOULDER: 0x0100,
+      RIGHT_SHOULDER: 0x0200,
+      GUIDE: 0x0400,
+      A: 0x1000,
+      B: 0x2000,
+      X: 0x4000,
+      Y: 0x8000,
+    };
+
+    function updateWsUIState(status, message = "") {
+      if (status === "connected") {
+        dotWs?.classList.add("active");
+        if (lblWsStatus) {
+          lblWsStatus.textContent = t("status.connected");
+          lblWsStatus.style.color = "var(--ok)";
+        }
+        if (lblWsStateDetail) {
+          lblWsStateDetail.textContent = message || t("vgamepad.connected");
+          lblWsStateDetail.style.color = "var(--ok)";
+        }
+        if (btnWsConnect) {
+          btnWsConnect.textContent = t("vgamepad.disconnect");
+          btnWsConnect.className = "btn-danger";
+        }
+      } else if (status === "connecting") {
+        dotWs?.classList.remove("active");
+        if (lblWsStatus) {
+          lblWsStatus.textContent = t("status.connecting");
+          lblWsStatus.style.color = "var(--warn)";
+        }
+        if (lblWsStateDetail) {
+          lblWsStateDetail.textContent = t("vgamepad.connecting");
+          lblWsStateDetail.style.color = "var(--warn)";
+        }
+        if (btnWsConnect) {
+          btnWsConnect.textContent = t("vgamepad.connecting");
+          btnWsConnect.className = "btn-warn";
+        }
+      } else {
+        dotWs?.classList.remove("active");
+        if (lblWsStatus) {
+          lblWsStatus.textContent = t("status.disconnected");
+          lblWsStatus.style.color = "inherit";
+        }
+        if (lblWsStateDetail) {
+          lblWsStateDetail.textContent = message || t("vgamepad.notConnected");
+          lblWsStateDetail.style.color = "var(--muted)";
+        }
+        if (btnWsConnect) {
+          btnWsConnect.textContent = t("vgamepad.connect");
+          btnWsConnect.className = "btn-primary";
+        }
+      }
+    }
+
+    function toggleWsConnection() {
+      if (wsSocket && (wsSocket.readyState === WebSocket.OPEN || wsSocket.readyState === WebSocket.CONNECTING)) {
+        try {
+          wsSocket.close();
+        } catch {}
+        wsSocket = null;
+        updateWsUIState("disconnected");
+        log("🔌 Desconectado do servidor VirtualGamePad.");
+        return;
+      }
+
+      const url = txtWsUrl?.value?.trim() || "ws://192.168.1.18:51204";
+      try {
+        localStorage.setItem("dualsense_vgamepad_ws_url", url);
+      } catch {}
+
+      updateWsUIState("connecting");
+      log(`📡 Conectando ao servidor VirtualGamePad: ${url}...`);
+
+      try {
+        wsSocket = new WebSocket(url);
+        wsSocket.binaryType = "arraybuffer";
+
+        wsSocket.onopen = () => {
+          updateWsUIState("connected", `Conectado: ${url}`);
+          log(`✅ Conectado ao servidor VirtualGamePad (${url}). Pronto para transmitir.`);
+          if (!wsLastPacketRateTimer) {
+            wsLastPacketRateTimer = setInterval(() => {
+              wsCurrentRate = wsPacketsInSec;
+              wsPacketsInSec = 0;
+              if (badgeWsRate) badgeWsRate.textContent = `${wsCurrentRate} pkts/s`;
+            }, 1000);
+          }
+        };
+
+        wsSocket.onclose = () => {
+          updateWsUIState("disconnected");
+          log("🔌 Conexão WebSocket com VirtualGamePad encerrada.");
+        };
+
+        wsSocket.onerror = () => {
+          updateWsUIState("disconnected", "Falha na conexão");
+          log(`❌ Erro no WebSocket ao conectar a ${url}`);
+        };
+      } catch (err) {
+        updateWsUIState("disconnected", String(err));
+        log(`❌ Falha ao instanciar WebSocket: ${String(err)}`);
+      }
+    }
+
+    btnWsConnect?.addEventListener("click", toggleWsConnection);
+
+    function sendVirtualGamepadInput(state) {
+      if (!wsSocket || wsSocket.readyState !== WebSocket.OPEN) return;
+      if (!chkWsAutoStream || !chkWsAutoStream.checked) return;
+
+      let buttons = 0;
+      const activeNames = [];
+      if (state.bDpadUp) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_UP; activeNames.push("Up"); }
+      if (state.bDpadDown) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_DOWN; activeNames.push("Down"); }
+      if (state.bDpadLeft) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_LEFT; activeNames.push("Left"); }
+      if (state.bDpadRight) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_RIGHT; activeNames.push("Right"); }
+      if (state.bStart) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.START; activeNames.push("Start"); }
+      if (state.bShare) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.BACK; activeNames.push("Back"); }
+      if (state.bLeftStick) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.LEFT_THUMB; activeNames.push("L3"); }
+      if (state.bRightStick) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.RIGHT_THUMB; activeNames.push("R3"); }
+      if (state.bLeftShoulder) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.LEFT_SHOULDER; activeNames.push("L1"); }
+      if (state.bRightShoulder) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.RIGHT_SHOULDER; activeNames.push("R1"); }
+      if (state.bPSButton) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.GUIDE; activeNames.push("Guide"); }
+      if (state.bCross) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.A; activeNames.push("A/Cross"); }
+      if (state.bCircle) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.B; activeNames.push("B/Circle"); }
+      if (state.bSquare) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.X; activeNames.push("X/Square"); }
+      if (state.bTriangle) { buttons |= VIRTUAL_GAMEPAD_BUTTONS.Y; activeNames.push("Y/Triangle"); }
+
+      const clampU8 = (val) => Math.round(Math.max(0, Math.min(1, val)) * 255);
+      const clampI16 = (val) => {
+        const c = Math.max(-1, Math.min(1, val));
+        return Math.round(c * (c >= 0 ? 32767 : 32768));
+      };
+
+      const seq = (wsSequence++) >>> 0;
+      const leftTrigger = clampU8(state.leftTriggerAnalog);
+      const rightTrigger = clampU8(state.rightTriggerAnalog);
+      const leftX = clampI16(state.leftAnalogX);
+      const leftY = clampI16(state.leftAnalogY);
+      const rightX = clampI16(state.rightAnalogX);
+      const rightY = clampI16(state.rightAnalogY);
+
+      const packet = new ArrayBuffer(24);
+      const view = new DataView(packet);
+
+      view.setUint32(0, seq, true);
+      view.setUint16(4, buttons, true);
+      view.setUint8(6, leftTrigger);
+      view.setUint8(7, rightTrigger);
+      view.setInt16(8, leftX, true);
+      view.setInt16(10, leftY, true);
+      view.setInt16(12, rightX, true);
+      view.setInt16(14, rightY, true);
+
+      wsSocket.send(packet);
+      wsPacketsSent++;
+      wsPacketsInSec++;
+
+      if (lblWsPkts) lblWsPkts.textContent = wsPacketsSent.toLocaleString();
+      if (lblWsSeq) lblWsSeq.textContent = `#${seq}`;
+      if (lblWsButtons) lblWsButtons.textContent = `0x${buttons.toString(16).toUpperCase().padStart(4, '0')}`;
+      if (lblWsBtnNames) lblWsBtnNames.textContent = activeNames.length > 0 ? activeNames.join(", ") : "None";
+      if (lblWsLt) lblWsLt.textContent = String(leftTrigger);
+      if (lblWsRt) lblWsRt.textContent = String(rightTrigger);
+      if (lblWsLx) lblWsLx.textContent = String(leftX);
+      if (lblWsLy) lblWsLy.textContent = String(leftY);
+      if (lblWsRx) lblWsRx.textContent = String(rightX);
+      if (lblWsRy) lblWsRy.textContent = String(rightY);
+
+      if (lblWsHexPreview) {
+        const u8 = new Uint8Array(packet);
+        let hexStr = "";
+        for (let i = 0; i < u8.length; i++) {
+          hexStr += u8[i].toString(16).toUpperCase().padStart(2, '0') + " ";
+        }
+        lblWsHexPreview.textContent = hexStr.trim();
+      }
+    }
+
     function startLoops() {
       stopLoops();
 
@@ -3016,7 +3173,6 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
         const ids = Array.from(deviceIds);
         for (const id of ids) {
           try {
-
             api.updateInput?.(id, FRAME_SECONDS);
           } catch (e) {
             log(`❌ GCH_UpdateInput error: ${String(e)}`);
@@ -3026,6 +3182,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
           try {
             const state = readInputState(id);
             handleInput(id, state);
+            sendVirtualGamepadInput(state);
             updateUI(state);
           } catch (e) {
             log(`❌ Input error: ${String(e)}`);
@@ -3120,7 +3277,7 @@ registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcesso
 
         // Enable Audio Haptics mode if currently active
         if (isAudioHapticsEnabled && api.dualsenseSettings) {
-          api.dualsenseSettings(deviceId, 0, 0, 1, 0, 100, 0x0C, 0, 0);
+          api.dualsenseSettings(deviceId, 0, 0, 1, 0, 100, 0xFC, 0, 0);
           api.updateOutput?.(deviceId);
         }
       }

@@ -1,37 +1,3 @@
-"use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -41,10 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.GamepadClientApplication = void 0;
-exports.startGamepadClientLoop = startGamepadClientLoop;
-const web_hid_platform_ts_1 = require("./platform/web_hid_platform.js");
+import { createInMemoryDeviceRegistryPolicy, initializeDeviceRegistryPolicy, initializeWebHidPlatformBridge, requestSonyWebHidAccess, } from "./platform/web_hid_platform.js";
 const FRAME_SECONDS = 0.010;
 const FRAME_MS = 10;
 const INPUT_DESCRIPTOR_SIZE = 148;
@@ -89,9 +52,144 @@ class AudioHapticsWorkletProcessor extends AudioWorkletProcessor {
 }
 registerProcessor('audio-haptics-worklet-processor', AudioHapticsWorkletProcessor);
 `;
-class GamepadClientApplication {
-    constructor(module, api, platformCleanup, registryCleanup, logFnPtr) {
-        this.deviceIds = new Set();
+/** Audio haptics adapter for pages that own the UI/connection lifecycle. */
+export function createAudioHapticsController(options) {
+    var _a, _b, _c, _d, _e, _f;
+    let enabled = false;
+    let stream = null;
+    let context = null;
+    let source = null;
+    let processor = null;
+    let mute = null;
+    let bufferPtr = 0;
+    let bufferCapacity = 0;
+    const settings = {
+        bIsSpeaker: ((_a = options.settings) === null || _a === void 0 ? void 0 : _a.bIsSpeaker) === 0 ? 0 : 1,
+        audioVolume: Math.min(100, Math.max(0, (_c = (_b = options.settings) === null || _b === void 0 ? void 0 : _b.audioVolume) !== null && _c !== void 0 ? _c : 100)),
+        rumbleMode: ((_d = options.settings) === null || _d === void 0 ? void 0 : _d.rumbleMode) === 0xFF ? 0xFF : 0xFC,
+        rumbleReduce: Math.min(15, Math.max(0, (_f = (_e = options.settings) === null || _e === void 0 ? void 0 : _e.rumbleReduce) !== null && _f !== void 0 ? _f : 0)),
+    };
+    const applySettings = (mode = settings.rumbleMode) => {
+        var _a, _b, _c, _d;
+        for (const id of options.deviceIds) {
+            (_b = (_a = options.api).dualsenseSettings) === null || _b === void 0 ? void 0 : _b.call(_a, id, 0, 1, settings.bIsSpeaker, 0xc7, settings.audioVolume, mode, settings.rumbleReduce, 0);
+            (_d = (_c = options.api).updateOutput) === null || _d === void 0 ? void 0 : _d.call(_c, id);
+        }
+    };
+    const submit = (data, frames, channels, rate) => {
+        if (!enabled || !options.api.audioSubmitSamples)
+            return;
+        const bytes = data.length * Float32Array.BYTES_PER_ELEMENT;
+        if (bufferCapacity < bytes) {
+            if (bufferPtr)
+                options.module._free(bufferPtr);
+            bufferPtr = options.module._malloc(bytes);
+            bufferCapacity = bytes;
+        }
+        const heap = options.module.HEAPU8;
+        new Float32Array(heap.buffer, heap.byteOffset + bufferPtr, data.length).set(data);
+        options.api.audioSubmitSamples(bufferPtr, frames, channels, rate);
+    };
+    const disable = () => __awaiter(this, void 0, void 0, function* () {
+        var _a;
+        if (!enabled && !stream)
+            return;
+        enabled = false;
+        processor === null || processor === void 0 ? void 0 : processor.disconnect();
+        if (processor && "port" in processor)
+            processor.port.close();
+        source === null || source === void 0 ? void 0 : source.disconnect();
+        mute === null || mute === void 0 ? void 0 : mute.disconnect();
+        if (context)
+            yield context.close().catch(() => { });
+        stream === null || stream === void 0 ? void 0 : stream.getTracks().forEach((track) => track.stop());
+        if (bufferPtr)
+            options.module._free(bufferPtr);
+        stream = null;
+        context = null;
+        source = null;
+        processor = null;
+        mute = null;
+        bufferPtr = 0;
+        bufferCapacity = 0;
+        applySettings(0xFF);
+        (_a = options.onChange) === null || _a === void 0 ? void 0 : _a.call(options, false);
+    });
+    const enable = () => __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
+        if (enabled)
+            return;
+        if (typeof navigator === "undefined" || !((_a = navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getDisplayMedia)) {
+            throw new Error("getDisplayMedia não é suportado neste ambiente.");
+        }
+        const nextStream = yield navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        if (nextStream.getAudioTracks().length === 0) {
+            nextStream.getTracks().forEach((track) => track.stop());
+            throw new Error("Nenhuma faixa de áudio disponível. Marque 'Compartilhar áudio'.");
+        }
+        try {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            const nextContext = new AudioContextClass();
+            if (nextContext.state === "suspended")
+                yield nextContext.resume();
+            const nextSource = nextContext.createMediaStreamSource(nextStream);
+            let nextProcessor;
+            if (nextContext.audioWorklet && typeof nextContext.audioWorklet.addModule === "function") {
+                const url = URL.createObjectURL(new Blob([AUDIO_HAPTICS_WORKLET_CODE], { type: "application/javascript" }));
+                try {
+                    yield nextContext.audioWorklet.addModule(url);
+                }
+                finally {
+                    URL.revokeObjectURL(url);
+                }
+                const node = new AudioWorkletNode(nextContext, "audio-haptics-worklet-processor");
+                node.port.onmessage = (event) => {
+                    const value = event.data;
+                    submit(value.audioData, value.frameCount, value.numChannels, nextContext.sampleRate);
+                };
+                nextProcessor = node;
+            }
+            else {
+                const node = nextContext.createScriptProcessor(4096, 2, 2);
+                node.onaudioprocess = (event) => {
+                    const input = event.inputBuffer;
+                    const channels = input.numberOfChannels;
+                    const data = new Float32Array(input.length * channels);
+                    for (let i = 0; i < input.length; i++)
+                        for (let c = 0; c < channels; c++)
+                            data[i * channels + c] = input.getChannelData(c)[i];
+                    submit(data, input.length, channels, input.sampleRate);
+                };
+                nextProcessor = node;
+            }
+            const nextMute = nextContext.createGain();
+            nextMute.gain.value = 0;
+            nextSource.connect(nextProcessor);
+            nextProcessor.connect(nextMute);
+            nextMute.connect(nextContext.destination);
+            nextStream.getTracks().forEach((track) => track.addEventListener("ended", () => { if (enabled)
+                disable().catch(console.error); }));
+            stream = nextStream;
+            context = nextContext;
+            source = nextSource;
+            processor = nextProcessor;
+            mute = nextMute;
+            enabled = true;
+            applySettings();
+            (_b = options.onChange) === null || _b === void 0 ? void 0 : _b.call(options, true);
+        }
+        catch (error) {
+            nextStream.getTracks().forEach((track) => track.stop());
+            throw error;
+        }
+    });
+    return { enable, disable, toggle: () => __awaiter(this, void 0, void 0, function* () { if (enabled) {
+            yield disable();
+            return false;
+        } yield enable(); return true; }), isEnabled: () => enabled };
+}
+export class GamepadClientApplication {
+    constructor(module, api, platformCleanup, registryCleanup, logFnPtr, deviceIds = new Set()) {
         this.previousInput = new Map();
         this.discoveryTimer = null;
         this.inputTimer = null;
@@ -107,27 +205,37 @@ class GamepadClientApplication {
         this.audioStream = null;
         this.audioProcessorNode = null;
         this.audioSourceNode = null;
+        this.audioMuteNode = null;
         this.audioBufferPtr = 0;
         this.audioBufferCapacityBytes = 0;
         this.module = module;
         this.api = api;
+        this.deviceIds = deviceIds;
         this.platformCleanup = platformCleanup;
         this.registryCleanup = registryCleanup;
         this.logFnPtr = logFnPtr;
         this.inputBufferPtr = module._malloc(INPUT_DESCRIPTOR_SIZE);
         this.outputBufferPtr = module._malloc(64);
     }
+    /**
+     * Creates an application facade around a runtime already initialized by a
+     * legacy/custom UI. The UI can still use the main class as the single owner
+     * of audio haptics without initializing WASM or WebHID a second time.
+     */
+    static fromNativeRuntime(module, api, deviceIds) {
+        return new GamepadClientApplication(module, api, { dispose: () => __awaiter(this, void 0, void 0, function* () { }) }, { dispose: () => { } }, null, deviceIds);
+    }
     static create() {
         return __awaiter(this, arguments, void 0, function* (typeId = 0) {
             if (typeof navigator === "undefined" || !("hid" in navigator)) {
                 throw new Error("Este loop usa WebHID e precisa rodar no navegador (com interação do usuário).");
             }
-            yield (0, web_hid_platform_ts_1.requestSonyWebHidAccess)();
+            yield requestSonyWebHidAccess();
             const initGamepadCoreHost = yield loadGamepadCoreHostFactory();
             const module = (yield initGamepadCoreHost());
-            const platformCleanup = yield (0, web_hid_platform_ts_1.initializeWebHidPlatformBridge)(module);
+            const platformCleanup = yield initializeWebHidPlatformBridge(module);
             let nextDeviceId = 1;
-            const registryCallbacks = (0, web_hid_platform_ts_1.createInMemoryDeviceRegistryPolicy)(nextDeviceId);
+            const registryCallbacks = createInMemoryDeviceRegistryPolicy(nextDeviceId);
             const wrappedCallbacks = {
                 alloc: (...args) => {
                     const deviceId = registryCallbacks.alloc(...args);
@@ -138,7 +246,7 @@ class GamepadClientApplication {
                 disconnect: registryCallbacks.disconnect,
             };
             const appRef = { value: null };
-            const registryCleanup = (0, web_hid_platform_ts_1.initializeDeviceRegistryPolicy)(module, typeId, {
+            const registryCleanup = initializeDeviceRegistryPolicy(module, typeId, {
                 alloc: wrappedCallbacks.alloc,
                 dispatch: (deviceId) => {
                     var _a, _b, _c;
@@ -183,15 +291,15 @@ class GamepadClientApplication {
             var _a, _b;
             const ids = Array.from(this.deviceIds);
             for (const deviceId of ids) {
+                this.api.updateInput(deviceId, FRAME_SECONDS);
                 if (this.audioHapticsSettings.rumbleMode === 0xFC) {
                     (_b = (_a = this.api).updateOutput) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId);
                 }
-                this.api.updateInput(deviceId, FRAME_SECONDS);
             }
-            for (const deviceId of ids) {
-                const state = this.readInputState(deviceId);
-                this.handleInput(deviceId, state);
-            }
+            // for (const deviceId of ids) {
+            //   const state = this.readInputState(deviceId);
+            //   this.handleInput(deviceId, state);
+            // }
         }, FRAME_MS);
         this.discoveryTimer = discoveryHandle;
         this.inputTimer = inputHandle;
@@ -242,7 +350,7 @@ class GamepadClientApplication {
     }
     applyAudioHapticsSettings(deviceId, rumbleMode = this.audioHapticsSettings.rumbleMode) {
         var _a, _b, _c, _d;
-        (_b = (_a = this.api).dualsenseSettings) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId, 0, 1, this.audioHapticsSettings.bIsSpeaker, 0, this.audioHapticsSettings.audioVolume, rumbleMode, this.audioHapticsSettings.rumbleReduce, 0);
+        (_b = (_a = this.api).dualsenseSettings) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId, 0, 1, this.audioHapticsSettings.bIsSpeaker, 0xc7, this.audioHapticsSettings.audioVolume, rumbleMode, this.audioHapticsSettings.rumbleReduce, 0);
         (_d = (_c = this.api).updateOutput) === null || _d === void 0 ? void 0 : _d.call(_c, deviceId);
     }
     enableAudioHaptics() {
@@ -256,20 +364,28 @@ class GamepadClientApplication {
             }
             const stream = yield navigator.mediaDevices.getDisplayMedia({
                 video: true,
-                audio: true,
+                audio: {
+                    autoGainControl: true,
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    channelCount: 1,
+                    sampleRate: 48000
+                }
             });
             const audioTracks = stream.getAudioTracks();
             if (audioTracks.length === 0) {
                 stream.getTracks().forEach((track) => track.stop());
-                throw new Error("Nenhuma faixa de áudio encontrada no compartilhamento de tela. Certifique-se de habilitar o áudio do sistema/aba.");
+                throw new Error("Nenhuma faixa de áudio disponível no stream.");
             }
             const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            const ctx = new AudioContextClass();
+            const ctx = new AudioContextClass({
+                sampleRate: 48000,
+                latencyHint: "interactive", // Configurado para menor latência
+            });
             if (ctx.state === "suspended") {
                 yield ctx.resume();
             }
             const source = ctx.createMediaStreamSource(stream);
-            let processorNode;
             if (ctx.audioWorklet && typeof ctx.audioWorklet.addModule === "function") {
                 const blob = new Blob([AUDIO_HAPTICS_WORKLET_CODE], { type: "application/javascript" });
                 const workletUrl = URL.createObjectURL(blob);
@@ -286,7 +402,7 @@ class GamepadClientApplication {
                     }
                     const { audioData, frameCount, numChannels } = event.data;
                     const totalFloats = frameCount * numChannels;
-                    const totalBytes = totalFloats * 4;
+                    const totalBytes = totalFloats * Float32Array.BYTES_PER_ELEMENT; // Corrigido para multiplicar por 4 bytes
                     if (this.audioBufferCapacityBytes < totalBytes) {
                         if (this.audioBufferPtr !== 0) {
                             this.module._free(this.audioBufferPtr);
@@ -299,9 +415,14 @@ class GamepadClientApplication {
                     floatView.set(audioData);
                     this.api.audioSubmitSamples(this.audioBufferPtr, frameCount, numChannels, ctx.sampleRate);
                 };
-                processorNode = workletNode;
-                source.connect(processorNode);
-                processorNode.connect(ctx.destination);
+                // Cria o nó mudo com ganho 0
+                const muteNode = ctx.createGain();
+                muteNode.gain.value = 0;
+                // Conecta a fonte -> worklet -> mudo -> destino final
+                source.connect(workletNode);
+                workletNode.connect(muteNode);
+                muteNode.connect(ctx.destination);
+                // Desativa haptics se o usuário encerrar o compartilhamento de tela
                 stream.getVideoTracks().concat(audioTracks).forEach((track) => {
                     track.addEventListener("ended", () => {
                         if (this.isAudioHapticsEnabled) {
@@ -309,61 +430,16 @@ class GamepadClientApplication {
                         }
                     });
                 });
+                this.audioMuteNode = muteNode; // Adicione esta propriedade na sua classe para limpeza posterior
                 this.audioStream = stream;
                 this.audioContext = ctx;
                 this.audioSourceNode = source;
-                this.audioProcessorNode = processorNode;
+                this.audioProcessorNode = workletNode;
                 this.isAudioHapticsEnabled = true;
-                // RumbleMode = 0x0C, vibracao haptics e audio.
-                const ids = Array.from(this.deviceIds);
-                for (const deviceId of ids) {
+                for (const deviceId of this.deviceIds) {
                     this.applyAudioHapticsSettings(deviceId);
                 }
             }
-            // } else {
-            //   const bufferSize = 4096;
-            //   const scriptProcessor = ctx.createScriptProcessor(bufferSize, 2, 2);
-            //
-            //   scriptProcessor.onaudioprocess = (e: AudioProcessingEvent) => {
-            //     if (!this.isAudioHapticsEnabled || !this.api.audioSubmitSamples) {
-            //       return;
-            //     }
-            //
-            //     const inputBuffer = e.inputBuffer;
-            //     const numChannels = inputBuffer.numberOfChannels;
-            //     const frameCount = inputBuffer.length;
-            //     const sampleRate = inputBuffer.sampleRate;
-            //     const totalFloats = frameCount * numChannels;
-            //     const totalBytes = totalFloats * 4;
-            //
-            //     if (this.audioBufferCapacityBytes < totalBytes) {
-            //       if (this.audioBufferPtr !== 0) {
-            //         this.module._free(this.audioBufferPtr);
-            //       }
-            //       this.audioBufferPtr = this.module._malloc(totalBytes);
-            //       this.audioBufferCapacityBytes = totalBytes;
-            //     }
-            //
-            //     const heap = this.module.HEAPU8;
-            //     const floatView = new Float32Array(heap.buffer, heap.byteOffset + this.audioBufferPtr, totalFloats);
-            //
-            //     const ch0 = inputBuffer.getChannelData(0);
-            //     if (numChannels >= 2) {
-            //       const ch1 = inputBuffer.getChannelData(1);
-            //       for (let i = 0; i < frameCount; i++) {
-            //         floatView[i * 2] = ch0[i];
-            //         floatView[i * 2 + 1] = ch1[i];
-            //       }
-            //     } else {
-            //       floatView.set(ch0);
-            //     }
-            //
-            //     // this.api.audioSubmitSamples(this.audioBufferPtr, frameCount, numChannels, sampleRate);
-            //     // const ids = Array.from(this.deviceIds);
-            //     // for (const deviceId of ids) {
-            //     //   (this.api.getProcessAudioHaptics || this.api.processAudioHaptics)?.(deviceId);
-            //     // }
-            //   };
         });
     }
     disableAudioHaptics() {
@@ -387,6 +463,10 @@ class GamepadClientApplication {
             if (this.audioSourceNode) {
                 this.audioSourceNode.disconnect();
                 this.audioSourceNode = null;
+            }
+            if (this.audioMuteNode) {
+                this.audioMuteNode.disconnect();
+                this.audioMuteNode = null;
             }
             if (this.audioContext) {
                 yield this.audioContext.close().catch(() => { });
@@ -529,8 +609,7 @@ class GamepadClientApplication {
         (_f = (_e = this.api).updateOutput) === null || _f === void 0 ? void 0 : _f.call(_e, deviceId);
     }
 }
-exports.GamepadClientApplication = GamepadClientApplication;
-function startGamepadClientLoop() {
+export function startGamepadClientLoop() {
     return __awaiter(this, arguments, void 0, function* (typeId = 0) {
         const app = yield GamepadClientApplication.create(typeId);
         app.run();
@@ -586,7 +665,7 @@ function registerLogCallback(module, api) {
 function loadGamepadCoreHostFactory() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
-        const esm = yield Promise.resolve().then(() => __importStar(require("./lib/GamepadCoreHost.js")));
+        const esm = yield import("./lib/GamepadCoreHost.js");
         const candidate = (_a = esm.default) !== null && _a !== void 0 ? _a : esm;
         if (typeof candidate !== "function") {
             throw new Error("GamepadCoreHost.js inválido: export esperado é função de inicialização.");

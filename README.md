@@ -53,6 +53,7 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 - 🔊 **Audio-to-Haptic:** Turn on-screen game audio into synchronized controller vibrations.
 - 🛜 **100% Wireless:** Works fully over Bluetooth. No USB cables needed.
 - 🚫 **No Installs Required:** Runs entirely in your web browser.
+- 📡 **VirtualGamePad Streaming:** Stream 24-byte binary input packets over WebSocket (`ws://IP:PORT`) directly to VirtualGamePad server instances in real time (100 Hz).
 - 🏎️ **Trigger Testing:** Manually test Adaptive Triggers (Machine Gun, Bow, etc.) directly in the app.
 - 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
 

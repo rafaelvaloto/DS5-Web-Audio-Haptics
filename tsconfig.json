@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2016",
-    "module": "commonjs",
+    "module": "es2022",
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "esModuleInterop": true,

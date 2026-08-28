@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,13 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.WebHidPlatformBridge = void 0;
-exports.requestSonyWebHidAccess = requestSonyWebHidAccess;
-exports.initializeWebHidPlatformBridge = initializeWebHidPlatformBridge;
-exports.initializeDeviceRegistryPolicy = initializeDeviceRegistryPolicy;
-exports.createInMemoryDeviceRegistryPolicy = createInMemoryDeviceRegistryPolicy;
-function requestSonyWebHidAccess() {
+export function requestSonyWebHidAccess() {
     return __awaiter(this, void 0, void 0, function* () {
         const nav = navigator;
         if (!nav.hid) {
@@ -53,7 +46,7 @@ const DEFAULT_DEVICE_REGISTRY_SIGNATURES = {
     dispatch: "vii",
     disconnect: "vi",
 };
-class WebHidPlatformBridge {
+export class WebHidPlatformBridge {
     constructor() {
         this.byPath = new Map();
         this.byHandle = new Map();
@@ -273,8 +266,7 @@ class WebHidPlatformBridge {
         view.setUint32(offset + 4, 0, true);
     }
 }
-exports.WebHidPlatformBridge = WebHidPlatformBridge;
-function initializeWebHidPlatformBridge(module_1) {
+export function initializeWebHidPlatformBridge(module_1) {
     return __awaiter(this, arguments, void 0, function* (module, signatures = {}) {
         if (typeof module.addFunction !== "function" || typeof module.removeFunction !== "function") {
             throw new Error("Module sem addFunction/removeFunction. Recompile o WASM com EXPORTED_RUNTIME_METHODS=addFunction,removeFunction.");
@@ -327,7 +319,7 @@ function initializeWebHidPlatformBridge(module_1) {
         };
     });
 }
-function initializeDeviceRegistryPolicy(module, typeId, callbacks, signatures = {}) {
+export function initializeDeviceRegistryPolicy(module, typeId, callbacks, signatures = {}) {
     if (typeof module.addFunction !== "function" || typeof module.removeFunction !== "function") {
         throw new Error("Module sem addFunction/removeFunction. Recompile o WASM com EXPORTED_RUNTIME_METHODS=addFunction,removeFunction.");
     }
@@ -356,7 +348,7 @@ function initializeDeviceRegistryPolicy(module, typeId, callbacks, signatures = 
         },
     };
 }
-function createInMemoryDeviceRegistryPolicy(startEngineDeviceId = 1) {
+export function createInMemoryDeviceRegistryPolicy(startEngineDeviceId = 1) {
     let nextId = startEngineDeviceId;
     const handlesToEngineIds = new Map();
     return {
