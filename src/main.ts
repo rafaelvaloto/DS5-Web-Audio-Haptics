@@ -248,7 +248,10 @@ export function createAudioHapticsController(options: {
             let nextProcessor: AudioNode;
             if (nextContext.audioWorklet && typeof nextContext.audioWorklet.addModule === "function") {
                 const url = URL.createObjectURL(new Blob([AUDIO_HAPTICS_WORKLET_CODE], { type: "application/javascript" }));
-                try { await nextContext.audioWorklet.addModule(url); } finally { URL.revokeObjectURL(url); }
+                try {
+                    await nextContext.audioWorklet.addModule(url);
+                } finally { URL.revokeObjectURL(url); }
+
                 const node = new AudioWorkletNode(nextContext, "audio-haptics-worklet-processor");
                 node.port.onmessage = (event: MessageEvent) => {
                     const value = event.data as { audioData: Float32Array; frameCount: number; numChannels: number };
@@ -261,16 +264,31 @@ export function createAudioHapticsController(options: {
                     const input = event.inputBuffer;
                     const channels = input.numberOfChannels;
                     const data = new Float32Array(input.length * channels);
-                    for (let i = 0; i < input.length; i++) for (let c = 0; c < channels; c++) data[i * channels + c] = input.getChannelData(c)[i];
+                    for (let i = 0; i < input.length; i++)
+                        for (let c = 0; c < channels; c++) data[i * channels + c] = input.getChannelData(c)[i];
+
+
                     submit(data, input.length, channels, input.sampleRate);
                 };
                 nextProcessor = node;
             }
+
+            applySettings();
+
             const nextMute = nextContext.createGain();
             nextMute.gain.value = 0;
-            nextSource.connect(nextProcessor); nextProcessor.connect(nextMute); nextMute.connect(nextContext.destination);
+            nextSource.connect(nextProcessor);
+            nextProcessor.connect(nextMute);
+            nextMute.connect(nextContext.destination);
+
             nextStream.getTracks().forEach((track) => track.addEventListener("ended", () => { if (enabled) disable().catch(console.error); }));
-            stream = nextStream; context = nextContext; source = nextSource; processor = nextProcessor; mute = nextMute; enabled = true;
+            stream = nextStream;
+            context = nextContext;
+            source = nextSource;
+            processor = nextProcessor;
+            mute = nextMute;
+            enabled = true;
+
             applySettings();
             options.onChange?.(true);
         } catch (error) {
@@ -302,8 +320,8 @@ export class GamepadClientApplication {
     private readonly registryCleanup: { dispose(): void };
     private readonly logFnPtr: number | null;
     private isRunning = false;
-  private isAudioHapticsEnabled = false;
-  private audioHapticsStateListener: ((enabled: boolean) => void) | null = null;
+    private isAudioHapticsEnabled = false;
+    private audioHapticsStateListener: ((enabled: boolean) => void) | null = null;
     private audioHapticsSettings: AudioHapticsSettings = {
         bIsSpeaker: 1,
         audioVolume: 100,
@@ -475,13 +493,13 @@ export class GamepadClientApplication {
         this.module._free(this.outputBufferPtr);
     }
 
-  public getIsAudioHapticsEnabled(): boolean {
-    return this.isAudioHapticsEnabled;
-  }
+    public getIsAudioHapticsEnabled(): boolean {
+        return this.isAudioHapticsEnabled;
+    }
 
-  public setAudioHapticsStateListener(listener: ((enabled: boolean) => void) | null): void {
-    this.audioHapticsStateListener = listener;
-  }
+    public setAudioHapticsStateListener(listener: ((enabled: boolean) => void) | null): void {
+        this.audioHapticsStateListener = listener;
+    }
 
     public getAudioHapticsSettings(): AudioHapticsSettings {
         return { ...this.audioHapticsSettings };

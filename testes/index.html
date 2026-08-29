@@ -2626,6 +2626,11 @@
             const ids = Array.from(deviceIds);
             for (const id of ids) {
                 try {
+                    const isSpeaker = !switchSpeaker?.checked ? 1 : 0;
+                    const rumbleMode = !switchAudioHaptics?.checked ? 0xFC : 0xFF;
+                    const rumbleReduce = Math.min(15, Math.max(0, Number(inputRumbleReduce?.value ?? 0) || 0));
+                    api?.dualsenseSettings?.(id, 0, 1, isSpeaker, 0, audioVolume, rumbleMode, rumbleReduce, 0);
+
                     api.updateInput?.(id, FRAME_SECONDS);
                 } catch (e) {
                     log(`❌ GCH_UpdateInput error: ${String(e)}`);
@@ -2635,7 +2640,6 @@
                 try {
                     const state = readInputState(id);
                     handleInput(id, state);
-                    sendVirtualGamepadInput(state);
                     updateUI(state);
                 } catch (e) {
                     log(`❌ Input error: ${String(e)}`);
@@ -2733,10 +2737,10 @@
             }
 
             // Enable Audio Haptics mode if currently active
-            if (isAudioHapticsEnabled && api.dualsenseSettings) {
-          api.dualsenseSettings(deviceId, 0, 0, 1, 0, audioVolume, 0xFC, 0, 0);
-                api.updateOutput?.(deviceId);
-            }
+          //   if (isAudioHapticsEnabled && api.dualsenseSettings) {
+          // api.dualsenseSettings(deviceId, 0, 0, 1, 0, audioVolume, 0xFC, 0, 0);
+          //       api.updateOutput?.(deviceId);
+          //   }
         }
     }
 
@@ -3428,14 +3432,12 @@
 
     async function togglePictureInPicture() {
         if (pipWindow) {
-            await stopAudioHapticsFromUi();
             pipWindow.close();
             pipWindow = null;
             btnPip.classList.remove("active");
             return;
         }
         if (inPagePip.style.display !== "none") {
-            await stopAudioHapticsFromUi();
             inPagePip.style.display = "none";
             btnPip.classList.remove("active");
             return;
