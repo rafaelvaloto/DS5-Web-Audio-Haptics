@@ -8,6 +8,9 @@
 *.js linguist-language=JavaScript linguist-detectable=true linguist-vendored=false
 src/lib/GamepadCoreHost.js linguist-language=JavaScript linguist-detectable=true linguist-vendored=false
 
+# WebAssembly binaries
+*.wasm linguist-language=WebAssembly linguist-detectable=true linguist-vendored=false
+
 # Exclude markup, tests UI and build artifacts from language statistics
 *.html linguist-detectable=false
 testes/** linguist-detectable=false

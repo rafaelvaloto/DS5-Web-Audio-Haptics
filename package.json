@@ -4,12 +4,19 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "npm run build:ext && npm run build:web",
+    "build:ext": "tsc -p ext/tsconfig.json",
+    "build:web": "tsc -p web/tsconfig.json"
   },
   "type": "module",
   "devDependencies": {
+    "@types/chrome": "^0.2.7",
     "@types/node": "^26.2.0",
+    "@types/w3c-web-hid": "^1.0.7",
     "typescript": "^6.0.3"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "ws": "^8.21.3"
+  }
 }
