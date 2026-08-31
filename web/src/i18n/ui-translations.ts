@@ -86,6 +86,7 @@ export const uiTranslations = {
           none: "None",
         },
         controls: {
+          connectionFlow: "Connection Flow",
           triggerEffectsTitle: "Triggers",
           selectTriggerEffect: "Choose Trigger Effect",
           targetTrigger: "Target Trigger",
@@ -295,6 +296,7 @@ export const uiTranslations = {
           none: "Nenhum",
         },
         controls: {
+          connectionFlow: "Fluxo de Conexão",
           triggerEffectsTitle: "Gatilhos",
           selectTriggerEffect: "Escolha o Efeito do Gatilho",
           targetTrigger: "Gatilho Alvo",
@@ -504,6 +506,7 @@ export const uiTranslations = {
           none: "Ninguno",
         },
         controls: {
+          connectionFlow: "Flujo de Conexión",
           triggerEffectsTitle: "Gatillos",
           selectTriggerEffect: "Elija el Efecto del Gatillo",
           targetTrigger: "Gatillo Objetivo",
