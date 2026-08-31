@@ -90,6 +90,7 @@ export interface TranslationDictionary {
     connectInputServer?: string;
     disconnectInputServer?: string;
     inputServerHint?: string;
+    inputServerRepository?: string;
   };
   commands?: {
     cross: string;

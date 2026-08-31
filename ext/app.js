@@ -463,9 +463,14 @@ window.addEventListener("load", () => {
   }
 });
 
+const DEFAULT_INPUT_SERVER_URL = "ws://localhost:26760";
 const savedInputServerUrl = localStorage.getItem("dualsense_input_server_url");
-if (savedInputServerUrl && savedInputServerUrl !== "ws://localhost:8080")
+if (savedInputServerUrl && savedInputServerUrl !== "ws://localhost:26760") {
   inputServerUrl.value = savedInputServerUrl;
+} else {
+  inputServerUrl.value = DEFAULT_INPUT_SERVER_URL;
+  localStorage.setItem("dualsense_input_server_url", DEFAULT_INPUT_SERVER_URL);
+}
 btnInputServer?.addEventListener("click", () => {
   if (!gamepadApp) {
     log(t("logs.inputServerNeedsWasm"));

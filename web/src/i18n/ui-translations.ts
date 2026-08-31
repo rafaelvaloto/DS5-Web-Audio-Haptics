@@ -102,6 +102,8 @@ export const uiTranslations = {
           openPictureInPicture: "🪟 Open Picture-in-Picture",
           inputServerHint:
             "For web games or games without native PlayStation 5 controller support, connect the socket and install the ViGEmBus driver to emulate a virtual gamepad.",
+          inputServerRepository:
+            "To connect the controller to a virtual gamepad, use this repository:",
           modeAudioOnly: "Audio only",
           reduceVibration: "Reduce Vibration",
           applyAudioSettings: "Apply Settings",
@@ -312,6 +314,8 @@ export const uiTranslations = {
           openPictureInPicture: "🪟 Abrir Picture-in-Picture",
           inputServerHint:
             "Para jogos web ou jogos sem suporte nativo ao controle PlayStation 5, conecte o socket e instale o driver ViGEmBus para emular um gamepad virtual.",
+          inputServerRepository:
+            "Para conectar o controle a um gamepad virtual, use este repositório:",
           modeAudioOnly: "Apenas áudio",
           reduceVibration: "Reduzir Vibração",
           applyAudioSettings: "Aplicar Configurações",
@@ -522,6 +526,8 @@ export const uiTranslations = {
           openPictureInPicture: "🪟 Abrir Picture-in-Picture",
           inputServerHint:
             "Para juegos web o juegos sin soporte nativo para el control PlayStation 5, conecta el socket e instala el controlador ViGEmBus para emular un gamepad virtual.",
+          inputServerRepository:
+            "Para conectar el control a un gamepad virtual, usa este repositorio:",
           modeAudioOnly: "Solo audio",
           reduceVibration: "Reducir Vibración",
           applyAudioSettings: "Aplicar Configuración",

@@ -11,13 +11,7 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 
 👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/testes/index.html)**
 
-
-🎥 **[Watch the example on YouTube.](https://youtu.be/k_1XgeNzt5A)**
-
-
-## Picture-In-Picture
-
-<img width="329" alt="image" src="https://github.com/user-attachments/assets/b3730e87-5c40-40d8-a9de-52a243e5d337" />
+🎥 **[Watch the browser extension and web page demonstration.](https://youtu.be/hyBbN2aqjOc?si=5nG2WPL8PeZHLYOf)**
 
 ---
 
@@ -35,22 +29,19 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 
 **Note:** This routing method relies on the game engine natively reading PlayStation hardware inputs (Raw Input / Direct HID). **It should work on any game that natively supports the DualSense controller via Bluetooth.** Games that strictly require Microsoft's XInput API (Xbox controller format) will not register commands without an external wrapper.
 
+To connect the controller to a virtual gamepad, use the [Gamepad Socket repository](https://github.com/rafaelvaloto/Gamepad_Socket).
+
 **Tested & Confirmed Games:**
 
 **Free Games:**
-- [GOALS](https://store.epicgames.com/p/goals-a271d5)
 - [Atlas Wars](https://store.epicgames.com/p/atlas-wars-5b83bd)
 - [Pixel Gun 3D](https://store.epicgames.com/p/pixel-gun-3d-812855)
-- [Armor of God](https://store.epicgames.com/p/armor-of-god-d55d93)
 
 **Paid Games:**
 - [NBA THE RUN](https://store.steampowered.com/app/2866670/NBA_THE_RUN/)
 
 - [EA | FC 26]
-<img width="960" height="540" alt="FC26" src="https://github.com/user-attachments/assets/8cc6cf98-1a3b-4b7f-8243-1595959c7a8f" />
-
-
-
+- 
 ---
 
 ## ✨ Key Features

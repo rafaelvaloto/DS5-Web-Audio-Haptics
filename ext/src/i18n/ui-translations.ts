@@ -114,6 +114,8 @@ export const uiTranslations = {
       disconnectInputServer: "Disconnect",
       inputServerHint:
         "For web games or games without native PlayStation 5 controller support, connect the socket and install the ViGEmBus driver to emulate a virtual gamepad.",
+      inputServerRepository:
+        "To connect the controller to a virtual gamepad, use this repository:",
       showLogs: "📜 Show Logs",
       clearLogs: "Clear",
       closeLogs: "Close",
@@ -345,6 +347,8 @@ export const uiTranslations = {
       disconnectInputServer: "Desconectar",
       inputServerHint:
         "Para jogos web ou jogos sem suporte nativo ao controle PlayStation 5, conecte o socket e instale o driver ViGEmBus para emular um gamepad virtual.",
+      inputServerRepository:
+        "Para conectar o controle a um gamepad virtual, use este repositório:",
       showLogs: "📜 Mostrar logs",
       clearLogs: "Limpar",
       closeLogs: "Fechar",
@@ -576,6 +580,8 @@ export const uiTranslations = {
       disconnectInputServer: "Desconectar",
       inputServerHint:
         "Para juegos web o juegos sin soporte nativo para el control PlayStation 5, conecta el socket e instala el controlador ViGEmBus para emular un gamepad virtual.",
+      inputServerRepository:
+        "Para conectar el control a un gamepad virtual, usa este repositorio:",
       showLogs: "📜 Mostrar registros",
       clearLogs: "Limpiar",
       closeLogs: "Cerrar",

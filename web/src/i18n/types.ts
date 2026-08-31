@@ -83,6 +83,7 @@ export interface TranslationDictionary {
     effectWeapon: string;
     effectAutoGun: string;
     inputServerHint?: string;
+    inputServerRepository?: string;
   };
   commands?: {
     cross: string;

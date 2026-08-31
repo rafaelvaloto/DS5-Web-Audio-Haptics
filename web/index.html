@@ -2075,6 +2075,18 @@
             support, connect the socket and install the ViGEmBus driver to
             emulate a virtual gamepad.
           </p>
+          <p class="input-server-help">
+            <span data-i18n="controls.inputServerRepository"
+              >To connect the controller to a virtual gamepad, use this
+              repository:</span
+            >
+            <a
+              href="https://github.com/rafaelvaloto/Gamepad_Socket"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Gamepad Socket</a
+            >.
+          </p>
           <label class="input-server-help">Server URL</label
           ><input id="txt-ws-url" type="text" value="ws://localhost:26760" />
           <div class="row" style="align-items: center">
@@ -2428,11 +2440,22 @@
       const lblWsRy = document.getElementById("lbl-ws-ry");
       const lblWsHexPreview = document.getElementById("lbl-ws-hex-preview");
 
-      // Load saved WebSocket URL
+      const DEFAULT_INPUT_SERVER_URL = "ws://localhost:26760";
+
+      // Load saved WebSocket URL, replacing defaults used by older builds.
       try {
         const savedWsUrl = localStorage.getItem("dualsense_vgamepad_ws_url");
-        if (savedWsUrl && txtWsUrl) {
+        const isLegacyUrl =
+          savedWsUrl === "ws://localhost:26760" ||
+          savedWsUrl === "ws://localhost:26760";
+        if (savedWsUrl && !isLegacyUrl && txtWsUrl) {
           txtWsUrl.value = savedWsUrl;
+        } else if (txtWsUrl) {
+          txtWsUrl.value = DEFAULT_INPUT_SERVER_URL;
+          localStorage.setItem(
+            "dualsense_vgamepad_ws_url",
+            DEFAULT_INPUT_SERVER_URL,
+          );
         }
       } catch {}
 
@@ -3000,7 +3023,7 @@
           return;
         }
 
-        const url = txtWsUrl?.value?.trim() || "ws://192.168.1.18:51204";
+        const url = txtWsUrl?.value?.trim() || DEFAULT_INPUT_SERVER_URL;
         try {
           localStorage.setItem("dualsense_vgamepad_ws_url", url);
         } catch {}
