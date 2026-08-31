@@ -29,11 +29,11 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 
 ### DualSense controls with EA SPORTS FC 26
 
-![DualSense controls running with EA SPORTS FC 26](images/usage_ea_fc_26.png)
+![DualSense controls running with EA SPORTS FC 26](https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics/blob/main/Images/usage_ea_fc_26.png)
 
 ### Audio Haptics in Picture-in-Picture mode
 
-![Audio Haptics Picture-in-Picture controls with EA SPORTS FC 26](images/usage_pip_ea_fc_26.png)
+![Audio Haptics Picture-in-Picture controls with EA SPORTS FC 26](https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics/blob/main/Images/usage_pip_ea_fc_26.png)
 
 ---
 
