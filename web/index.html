@@ -1,0 +1,4380 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        const gaMeasurementId = "G-YC51CE6XFE";
+        const consentStorageKey = "ga-consent";
+
+        function loadGoogleAnalytics() {
+          if (window.__googleAnalyticsLoaded) return;
+          window.__googleAnalyticsLoaded = true;
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function () {
+            window.dataLayer.push(arguments);
+          };
+          window.gtag("js", new Date());
+          window.gtag("config", gaMeasurementId);
+
+          const script = document.createElement("script");
+          script.async = true;
+          script.src = `https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`;
+          document.head.appendChild(script);
+        }
+
+        function setupAnalyticsConsent() {
+          const banner = document.getElementById("cookie-consent");
+          const acceptButton = document.getElementById("cookie-consent-accept");
+          const rejectButton = document.getElementById("cookie-consent-reject");
+          const savedConsent = localStorage.getItem(consentStorageKey);
+
+          if (savedConsent === "accepted") {
+            loadGoogleAnalytics();
+            return;
+          }
+          if (savedConsent === "rejected") return;
+
+          banner.hidden = false;
+          acceptButton.addEventListener("click", function () {
+            localStorage.setItem(consentStorageKey, "accepted");
+            banner.hidden = true;
+            loadGoogleAnalytics();
+          });
+          rejectButton.addEventListener("click", function () {
+            localStorage.setItem(consentStorageKey, "rejected");
+            banner.hidden = true;
+          });
+        }
+
+        document.addEventListener("DOMContentLoaded", setupAnalyticsConsent);
+      })();
+    </script>
+    <title>DS5 Web Audio Haptics Bluetooth</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090d16;
+        --card: #131b2e;
+        --card-soft: #0e1526;
+        --card-inner: #19233c;
+        --border: #233152;
+        --border-light: #344670;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --accent-glow: rgba(56, 189, 248, 0.25);
+        --ok: #10b981;
+        --ok-glow: rgba(16, 185, 129, 0.25);
+        --warn: #f59e0b;
+        --danger: #ef4444;
+        --cross: #60a5fa;
+        --circle: #f87171;
+        --square: #ec4899;
+        --triangle: #34d399;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+          background-color: var(--bg-body);
+          color: var(--text-main);
+          font-family:
+                  system-ui,
+                  -apple-system,
+                  sans-serif;
+          padding: 0; /* Removido padding para o topo colar na tela se necessário, ou mantido no container */
+          display: flex;
+          justify-content: center;
+      }
+
+      .container {
+          width: 100%;
+          max-width: 480px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          padding: 20px;
+      }
+
+      code {
+        color: var(--accent);
+        font-family: "Fira Code", monospace, Consolas;
+      }
+
+      .app-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 20px;
+        width: 100%;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      /* Header */
+      .header-bar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .header-title h1 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #fff, var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .header-title p {
+        margin: 4px 0 0;
+        font-size: 0.85rem;
+        color: var(--muted);
+      }
+
+      .header-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      button {
+        padding: 9px 16px;
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        background: #1b2642;
+        color: var(--text);
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      button:hover:not(:disabled) {
+        background: #25355c;
+        border-color: var(--accent);
+        transform: translateY(-1px);
+      }
+
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      button.btn-primary {
+        background: #0284c7;
+        border-color: #38bdf8;
+        color: #fff;
+      }
+      button.btn-primary:hover:not(:disabled) {
+        background: #0369a1;
+      }
+
+      button.btn-danger {
+        background: #991b1b;
+        border-color: #ef4444;
+        color: #fff;
+      }
+      button.btn-danger:hover:not(:disabled) {
+        background: #7f1d1d;
+      }
+
+      button.btn-warn {
+        background: #b45309;
+        border-color: #f59e0b;
+        color: #fff;
+      }
+      button.btn-warn:hover:not(:disabled) {
+        background: #92400e;
+      }
+
+      button.btn-success {
+        background: #065f46;
+        border-color: #10b981;
+        color: #fff;
+      }
+      button.btn-success:hover:not(:disabled) {
+        background: #047857;
+      }
+
+      a.btn-github {
+        padding: 9px 16px;
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        background: #1e293b;
+        color: #f8fafc;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      a.btn-github:hover {
+        background: #334155;
+        border-color: var(--accent);
+        color: #fff;
+        transform: translateY(-1px);
+      }
+
+      /* Badges Bar */
+      .status-ribbon {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 10px 18px;
+        background: var(--card-soft);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 0.85rem;
+      }
+
+      .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        background: var(--card-inner);
+        border: 1px solid var(--border);
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--muted);
+      }
+      .status-dot.active {
+        background: var(--ok);
+        box-shadow: 0 0 8px var(--ok-glow);
+      }
+      .status-dot.warn {
+        background: var(--warn);
+      }
+
+      /* Main Grid Layout */
+      .main-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+      }
+
+      .left-column,
+      .right-column {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      /* Cards */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-header h2,
+      .card-header h3 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .card-header p {
+        margin: 2px 0 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .card-body {
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      /* Sub-grid of cards */
+      .inner-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .inner-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .inner-grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+      }
+
+      /* Command Map Section */
+      .map-banner {
+        font-family: "Fira Code", monospace, Consolas;
+        font-size: 0.82rem;
+        background: var(--card-soft);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        color: var(--text);
+        line-height: 1.45;
+        white-space: pre;
+        overflow-x: auto;
+      }
+
+      /* Interactive Controls Panel */
+      .controls-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: var(--card-soft);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+      }
+
+      .control-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 12px;
+        background: var(--card-inner);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+      }
+
+      .control-row-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .control-inputs {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .control-select {
+        background: #0e1526;
+        color: var(--text);
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        padding: 5px 9px;
+        font-size: 0.8rem;
+        outline: none;
+        cursor: pointer;
+      }
+
+      .control-select:focus {
+        border-color: var(--accent);
+      }
+
+      .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      input[type="color"].led-picker {
+        -webkit-appearance: none;
+        border: 1px solid var(--border-light);
+        border-radius: 8px;
+        width: 36px;
+        height: 30px;
+        padding: 0;
+        background: none;
+        cursor: pointer;
+      }
+
+      input[type="color"].led-picker::-webkit-color-swatch-wrapper {
+        padding: 2px;
+      }
+
+      input[type="color"].led-picker::-webkit-color-swatch {
+        border: none;
+        border-radius: 5px;
+      }
+
+      .color-preset-btn {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        cursor: pointer;
+        padding: 0;
+        transition:
+          transform 0.1s ease,
+          border-color 0.1s ease;
+      }
+
+      .color-preset-btn:hover {
+        transform: scale(1.2);
+        border-color: #fff;
+      }
+
+      .checkbox-container {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        cursor: pointer;
+        user-select: none;
+        color: var(--text);
+      }
+
+      .checkbox-container input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+
+      /* Analogs & Triggers visual cards */
+      .meter-card {
+        background: var(--card-inner);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .meter-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .meter-val {
+        color: var(--accent);
+        font-family: monospace;
+        font-weight: 700;
+      }
+
+      .progress-bar-bg {
+        height: 10px;
+        background: #0b1120;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0284c7, var(--accent));
+        width: 0%;
+        transition: width 0.05s linear;
+      }
+
+      .progress-bar-fill.right-trigger {
+        background: linear-gradient(90deg, #10b981, #34d399);
+      }
+
+      /* 2D Stick visualizer */
+      .stick-pad-container {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .stick-canvas {
+        width: 90px;
+        height: 90px;
+        background: #090e1a;
+        border: 2px solid var(--border);
+        border-radius: 50%;
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .stick-cursor {
+        width: 18px;
+        height: 18px;
+        background: var(--accent);
+        border-radius: 50%;
+        position: absolute;
+        top: calc(50% - 9px);
+        left: calc(50% - 9px);
+        box-shadow: 0 0 10px var(--accent-glow);
+        transform: translate(0, 0);
+        pointer-events: none;
+      }
+
+      .stick-cursor.pressed {
+        background: var(--ok);
+        box-shadow: 0 0 12px var(--ok-glow);
+      }
+
+      .stick-data-list {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.8rem;
+        font-family: monospace;
+      }
+
+      /* Digital Buttons Grid */
+      .pill-btn {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 10px;
+        border-radius: 8px;
+        background: var(--card-inner);
+        border: 1px solid var(--border);
+        font-size: 0.8rem;
+        font-family: monospace;
+        transition: all 0.1s ease;
+      }
+
+      .pill-btn.active {
+        background: var(--accent);
+        color: #041324;
+        font-weight: 700;
+        border-color: #7dd3fc;
+        box-shadow: 0 0 10px var(--accent-glow);
+      }
+
+      .pill-btn.btn-cross.active {
+        background: var(--cross);
+        color: #000;
+      }
+      .pill-btn.btn-circle.active {
+        background: var(--circle);
+        color: #000;
+      }
+      .pill-btn.btn-square.active {
+        background: var(--square);
+        color: #fff;
+      }
+      .pill-btn.btn-triangle.active {
+        background: var(--triangle);
+        color: #000;
+      }
+
+      /* Touchpad Surface Visualizer */
+      .touchpad-surface {
+        height: 140px;
+        background: #080d1a;
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition:
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .touchpad-surface.active-touch {
+        border-color: var(--accent);
+        box-shadow: inset 0 0 24px var(--accent-glow);
+      }
+
+      .touch-dot {
+        width: 26px;
+        height: 26px;
+        background: radial-gradient(circle, #38bdf8 20%, #0284c7 80%);
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        position: absolute;
+        box-shadow:
+          0 0 16px rgba(56, 189, 248, 0.9),
+          0 0 30px rgba(56, 189, 248, 0.5);
+        display: none;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        transition:
+          left 0.03s linear,
+          top 0.03s linear;
+      }
+
+      .touch-dot-coord {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        font-family: monospace;
+        background: rgba(0, 0, 0, 0.85);
+        color: #7dd3fc;
+        padding: 1px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+        border: 1px solid rgba(56, 189, 248, 0.4);
+      }
+
+      .touchpad-idle-hint {
+        color: var(--muted);
+        font-size: 0.78rem;
+        pointer-events: none;
+      }
+
+      /* Sensors Data Grid */
+      .sensor-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 10px;
+        background: var(--card-inner);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.8rem;
+      }
+
+      .sensor-label {
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      /* Logs */
+      .log-container {
+        background: #080d19;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-family: "Fira Code", monospace, Consolas;
+        font-size: 0.8rem;
+        color: #cbd5e1;
+        height: 250px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        line-height: 1.45;
+      }
+
+      .log-container::-webkit-scrollbar {
+        width: 6px;
+      }
+      .log-container::-webkit-scrollbar-thumb {
+        background: var(--border-light);
+        border-radius: 3px;
+      }
+
+      .lang-container {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #1b2642;
+        border: 1px solid var(--border-light);
+        border-radius: 10px;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        color: var(--text);
+      }
+
+      .lang-dropdown {
+        background: #131b2e;
+        color: var(--accent);
+        border: 1px solid var(--border-light);
+        border-radius: 6px;
+        padding: 3px 8px;
+        outline: none;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+
+      .lang-dropdown:focus {
+        border-color: var(--accent);
+      }
+
+      /* Picture-in-Picture (PiP) Button */
+      button.btn-pip {
+        background: #1e293b;
+        border-color: #3b82f6;
+        color: #93c5fd;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+      }
+      button.btn-pip:hover:not(:disabled) {
+        background: #2563eb;
+        border-color: #60a5fa;
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+        transform: translateY(-1px);
+      }
+      button.btn-pip.active {
+        background: #0284c7;
+        border-color: #38bdf8;
+        color: #ffffff;
+        box-shadow: 0 0 14px rgba(56, 189, 248, 0.5);
+      }
+
+      /* Floating In-Page PiP Widget (Overlay Fallback / Floating HUD) */
+      .in-page-pip-overlay {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 360px;
+        background: rgba(13, 19, 34, 0.95);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(59, 130, 246, 0.4);
+        border-radius: 18px;
+        box-shadow:
+          0 10px 32px rgba(0, 0, 0, 0.6),
+          0 0 16px rgba(59, 130, 246, 0.25);
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        animation: pipFadeIn 0.2s ease-out;
+        user-select: none;
+      }
+
+      @keyframes pipFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(16px) scale(0.96);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* PiP Container & Shared Components */
+      .pip-container {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px 16px;
+        color: #f8fafc;
+        font-family:
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        background: #0d1322;
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+      }
+
+      /* Main view: compact controller HUD, matching the PiP experience. */
+      .compact-dashboard {
+        width: 100%;
+        margin: 0;
+        background: #0d1322;
+        border: 1px solid rgba(59, 130, 246, 0.22);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        align-items: stretch;
+        gap: 18px;
+      }
+
+      .dashboard-grid > .main-grid {
+        display: contents;
+      }
+
+      .dashboard-grid .left-column,
+      .dashboard-grid .right-column {
+        display: contents;
+      }
+
+      .dashboard-grid .compact-dashboard,
+      .dashboard-grid .card {
+        min-width: 0;
+        height: 100%;
+      }
+
+      .app-container > footer {
+        margin-top: auto !important;
+      }
+
+      .dashboard-grid .compact-dashboard {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      .dashboard-grid .left-column > .card:first-child {
+        grid-column: 1;
+        grid-row: 1;
+      }
+      .dashboard-grid .right-column > .card:first-child {
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .dashboard-grid .right-column > .card:last-child {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      /* Header keeps only the primary connection controls. */
+      #lang-select,
+      .header-controls .lang-container,
+      #btn-pip,
+      #btn-clear-logs {
+        display: none !important;
+      }
+
+      .compact-dashboard #btn-audio-haptics,
+      .card-header #btn-clear-logs {
+        display: inline-flex !important;
+        margin-left: auto;
+        padding: 5px 9px;
+        font-size: 0.72rem;
+      }
+
+      .compact-dashboard .pip-actions-bar {
+        flex-wrap: wrap;
+        margin-top: 5px;
+        padding-top: 15px;
+      }
+
+      @media (max-width: 1100px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .compact-dashboard #btn-audio-haptics,
+        .compact-dashboard #btn-pip {
+          display: inline-flex !important;
+          flex: 1 1 0;
+          min-width: 0;
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .dashboard-grid .compact-dashboard,
+        .dashboard-grid .left-column > .card:first-child,
+        .dashboard-grid .right-column > .card:first-child,
+        .dashboard-grid .right-column > .card:last-child {
+          grid-column: 1;
+          grid-row: auto;
+          height: auto;
+        }
+      }
+
+      /* Keep the footer quiet while the complete responsive card grid remains available. */
+      .main-grid .left-column > .card:nth-child(2),
+      .main-grid .left-column > .card:nth-child(3) {
+        display: none !important;
+      }
+
+      .compact-dashboard .pip-container {
+        padding: 12px 14px;
+        gap: 10px;
+      }
+
+      .compact-dashboard .pip-header {
+        padding-bottom: 6px;
+      }
+
+      .compact-dashboard .pip-close-btn {
+        display: none;
+      }
+
+      .compact-dashboard .pip-actions-bar {
+        padding-top: 15px;
+        justify-content: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        margin-top: 10px;
+        gap: 10px;
+      }
+
+      .compact-dashboard .pip-container {
+        position: relative;
+      }
+      .compact-pip-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(7, 12, 24, 0.72);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+      }
+      .compact-dashboard:hover .compact-pip-overlay,
+      .compact-dashboard:focus-within .compact-pip-overlay {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .compact-pip-overlay button {
+        padding: 12px 20px;
+        font-weight: 700;
+      }
+      .compact-pip-hint {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 0 2px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .compact-pip-hint button {
+        min-width: 210px;
+        padding: 10px 20px;
+        border-color: #10b981;
+        background: #065f46;
+        color: #d1fae5;
+        opacity: 0.9;
+        cursor: default;
+      }
+
+      .pip-control-btn {
+        min-width: 92px;
+        justify-content: center;
+        padding: 10px 20px;
+        font-size: 0.78rem;
+      }
+
+      .pip-control-btn.pip-control-play {
+        background: #075985;
+        border-color: #38bdf8;
+      }
+
+      .pip-control-btn.pip-control-stop {
+        background: #7f1d1d;
+        border-color: #f87171;
+      }
+
+      .pip-control-btn.pip-control-audio {
+        background: #b45309;
+        border-color: #f59e0b;
+        color: #fff;
+      }
+
+      .pip-control-btn.pip-control-audio.active {
+        background: #065f46;
+        border-color: #10b981;
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+      }
+
+      .compact-dashboard #btn-audio-haptics {
+        min-width: 210px;
+        justify-content: center;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        letter-spacing: 0.15px;
+        box-shadow:
+          0 0 0 1px rgba(245, 158, 11, 0.18),
+          0 5px 16px rgba(245, 158, 11, 0.18);
+      }
+
+      .compact-dashboard #btn-audio-haptics:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow:
+          0 0 0 1px rgba(251, 191, 36, 0.5),
+          0 7px 20px rgba(245, 158, 11, 0.3);
+      }
+
+      .compact-dashboard #btn-pip {
+        display: inline-flex !important;
+        min-width: 210px;
+        justify-content: center;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        box-shadow:
+          0 0 0 1px rgba(59, 130, 246, 0.18),
+          0 5px 16px rgba(59, 130, 246, 0.16);
+      }
+
+      /* Play/Stop are transport controls for the PiP window only. */
+      .compact-dashboard #pip-btn-play,
+      .compact-dashboard #pip-btn-stop-loop {
+        display: none !important;
+      }
+
+      .compact-dashboard .pip-main-body {
+        padding: 9px 7px;
+      }
+
+      .compact-dashboard .pip-stick-radar {
+        width: 52px;
+        height: 52px;
+      }
+
+      .compact-dashboard .pip-btn,
+      .compact-dashboard .pip-face-btn {
+        width: 24px;
+        height: 24px;
+      }
+
+      @media (max-width: 620px) {
+        .app-container {
+          padding: 10px;
+          gap: 10px;
+        }
+        .header-bar {
+          padding: 10px 12px;
+          border-radius: 12px;
+        }
+        .header-title h1 {
+          font-size: 1.05rem;
+        }
+        .header-title p {
+          display: none;
+        }
+        .header-controls {
+          gap: 6px;
+        }
+        .header-controls button,
+        .header-controls a.btn-github {
+          padding: 7px 9px;
+          font-size: 0.72rem;
+        }
+        .lang-container {
+          padding: 4px 7px;
+          font-size: 0.72rem;
+        }
+        .status-ribbon {
+          padding: 6px 8px;
+          gap: 5px;
+          font-size: 0.7rem;
+        }
+        .status-badge {
+          padding: 3px 6px;
+        }
+      }
+
+      @media (min-width: 621px) {
+        .compact-dashboard .pip-container {
+          min-height: 300px;
+        }
+      }
+
+      .pip-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        cursor: grab;
+      }
+      .pip-header:active {
+        cursor: grabbing;
+      }
+
+      .pip-title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #38bdf8;
+        letter-spacing: 0.5px;
+      }
+
+      .pip-header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pip-battery-badge {
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 2px 8px;
+        border-radius: 12px;
+        color: #10b981;
+      }
+
+      .pip-close-btn {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 2px 6px;
+        border-radius: 6px;
+        line-height: 1;
+        transition: all 0.15s ease;
+      }
+      .pip-close-btn:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+
+      /* PiP Triggers & Shoulders */
+      .pip-triggers-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .pip-trigger-col {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 10px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .pip-trigger-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.75rem;
+      }
+
+      .pip-btn-pill {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.72rem;
+        transition: all 0.12s ease;
+      }
+      .pip-btn-pill.active {
+        background: #0284c7;
+        border-color: #38bdf8;
+        color: #fff;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.5);
+      }
+
+      .pip-meter-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .pip-meter-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #0284c7, #38bdf8);
+        border-radius: 4px;
+        transition: width 0.05s ease-out;
+      }
+
+      /* PiP Main Controller Matrix */
+      .pip-main-body {
+        display: grid;
+        grid-template-columns: 74px 1fr 74px;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 10px 8px;
+      }
+
+      /* D-Pad & Face Button 3x3 Grids */
+      .pip-dpad-grid,
+      .pip-face-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 22px);
+        grid-template-rows: repeat(3, 22px);
+        gap: 2px;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .pip-btn {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        color: #94a3b8;
+        transition: all 0.1s ease;
+      }
+
+      .pip-dpad-btn.active {
+        background: #0284c7;
+        border-color: #38bdf8;
+        color: #fff;
+        box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+        transform: scale(1.08);
+      }
+
+      .pip-face-btn {
+        width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #94a3b8;
+        transition: all 0.1s ease;
+      }
+
+      .pip-btn-cross.active {
+        background: #2563eb;
+        border-color: #60a5fa;
+        color: #fff;
+        box-shadow: 0 0 10px #3b82f6;
+        transform: scale(1.12);
+      }
+      .pip-btn-circle.active {
+        background: #dc2626;
+        border-color: #f87171;
+        color: #fff;
+        box-shadow: 0 0 10px #ef4444;
+        transform: scale(1.12);
+      }
+      .pip-btn-square.active {
+        background: #db2777;
+        border-color: #f472b6;
+        color: #fff;
+        box-shadow: 0 0 10px #ec4899;
+        transform: scale(1.12);
+      }
+      .pip-btn-triangle.active {
+        background: #059669;
+        border-color: #34d399;
+        color: #fff;
+        box-shadow: 0 0 10px #10b981;
+        transform: scale(1.12);
+      }
+
+      /* Center Column (System Buttons & Sticks) */
+      .pip-center-col {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .pip-system-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .pip-sys-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        padding: 1px 4px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        color: #64748b;
+        transition: all 0.1s ease;
+      }
+      .pip-sys-btn.active {
+        background: #38bdf8;
+        border-color: #7dd3fc;
+        color: #0f172a;
+        box-shadow: 0 0 6px rgba(56, 189, 248, 0.6);
+      }
+
+      .pip-ps-btn {
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+      }
+
+      .pip-sticks-row {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+      }
+
+      .pip-stick-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .pip-stick-radar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: #070a13;
+        border: 1px solid rgba(56, 189, 248, 0.25);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      }
+
+      .pip-radar-cross {
+        position: absolute;
+        width: 100%;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.06);
+      }
+      .pip-stick-radar::before {
+        content: "";
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .pip-stick-dot {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #38bdf8;
+        box-shadow: 0 0 6px #0284c7;
+        transition: transform 0.04s ease-out;
+      }
+      .pip-stick-dot.pressed {
+        background: #f43f5e;
+        box-shadow: 0 0 10px #f43f5e;
+        transform: scale(1.25);
+      }
+
+      .pip-stick-sub {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.65rem;
+      }
+      .pip-stick-click {
+        background: rgba(255, 255, 255, 0.06);
+        padding: 1px 4px;
+        border-radius: 3px;
+        font-weight: 700;
+        color: #64748b;
+      }
+      .pip-stick-click.active {
+        background: #f43f5e;
+        color: #fff;
+      }
+
+      .pip-coords {
+        font-family: monospace;
+        color: #94a3b8;
+        font-size: 0.6rem;
+      }
+
+      /* PiP Quick Actions Bar */
+      .pip-actions-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .pip-action-group {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .pip-act-btn {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #cbd5e1;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.12s ease;
+      }
+      .pip-act-btn:hover {
+        background: #1e293b;
+        border-color: #38bdf8;
+        color: #fff;
+      }
+      .pip-act-danger {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #f87171;
+      }
+      .pip-act-danger:hover {
+        background: #dc2626;
+        border-color: #ef4444;
+        color: #fff;
+      }
+
+      .pip-color-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        padding: 0;
+        transition: transform 0.12s ease;
+      }
+      .pip-color-dot:hover {
+        transform: scale(1.25);
+      }
+      .pip-col-blue {
+        background: #0066ff;
+      }
+      .pip-col-red {
+        background: #ff0000;
+      }
+      .pip-col-green {
+        background: #00ff66;
+      }
+      .pip-col-purple {
+        background: #aa00ff;
+      }
+
+      .cookie-consent {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 100000;
+        max-width: 430px;
+        padding: 18px;
+        background: var(--card);
+        color: var(--text);
+        border: 1px solid var(--border-light);
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      }
+      .cookie-consent[hidden] {
+        display: none;
+      }
+      .cookie-consent p {
+        margin: 0 0 14px;
+        line-height: 1.45;
+        font-size: 0.86rem;
+      }
+      .cookie-consent-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      @media (max-width: 520px) {
+        .cookie-consent {
+          right: 10px;
+          bottom: 10px;
+          left: 10px;
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+        .inner-grid-3,
+        .inner-grid-4 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+    <style id="compact-layout">
+      :root {
+        --bg-body: #0f1115;
+        --bg-card: #1c2028;
+        --border: #2d3340;
+        --text-main: #e2e8f0;
+        --text-muted: #94a3b8;
+        --primary: #0284c7;
+        --primary-hover: #0369a1;
+        --danger: #dc2626;
+        --success: #16a34a;
+        --radius: 6px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      body {
+        background: var(--bg-body);
+        color: var(--text-main);
+        font:
+          14px system-ui,
+          -apple-system,
+          sans-serif;
+        display: flex;
+        justify-content: center;
+      }
+      .container {
+        width: 100%;
+        max-width: 480px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+      }
+      .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px;
+        overflow: visible;
+        box-shadow: none;
+        display: block;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .status-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+          font-size: 0.85rem;
+          color: var(--text-muted);
+          padding: 12px 16px;
+      }
+      .status-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          min-width: 0;
+      }
+      .status-item strong {
+          color: var(--text-main);
+      }
+      .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+      }
+      .dot.gray {
+          background-color: var(--text-muted);
+      }
+      .status-item strong {
+        color: var(--text-main);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 8px;
+        border-radius: 50%;
+        background: var(--text-muted);
+      }
+      .dot.active {
+        background: var(--success);
+      }
+      .flow-control {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+      .row > * {
+        flex: 1;
+        min-width: 0;
+      }
+      .btn {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: transparent;
+        color: var(--text-main);
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        justify-content: center;
+        transform: none !important;
+      }
+      .btn-primary {
+        background: var(--primary) !important;
+        border-color: var(--primary) !important;
+        color: #fff !important;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--primary-hover) !important;
+      }
+      .btn-danger {
+        background: var(--danger) !important;
+        border-color: var(--danger) !important;
+        color: #fff !important;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      select,
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        background: var(--bg-body);
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        padding: 8px;
+        border-radius: var(--radius);
+        outline: none;
+      }
+      .audio-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+      .audio-card {
+        position: relative;
+        overflow: hidden;
+      }
+      .audio-card > :not(.audio-card-overlay) {
+        pointer-events: none;
+      }
+      .audio-card-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(7, 12, 24, 0.82);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.18s ease;
+      }
+      .audio-card:hover .audio-card-overlay,
+      .audio-card:focus-within .audio-card-overlay {
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .audio-card-overlay #btn-pip {
+        display: inline-flex !important;
+        width: auto;
+      }
+      .audio-pip-card {
+        width: 100%;
+        padding: 18px;
+      }
+      .audio-pip-card .pip-control-audio {
+        width: 100%;
+        margin: 14px 0;
+      }
+      .audio-control {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+      .audio-control input[type="range"] {
+        width: 100%;
+        accent-color: #93c5fd;
+      }
+      .audio-control-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        grid-column: span 2;
+      }
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+      }
+      .color-picker {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      #picker-led-color,
+      .color-preset-btn {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        border: 2px solid transparent;
+        border-radius: 50%;
+        overflow: hidden;
+        cursor: pointer;
+      }
+      #picker-led-color::-webkit-color-swatch-wrapper {
+        padding: 0;
+      }
+      #picker-led-color::-webkit-color-swatch {
+        border: 0;
+        border-radius: 50%;
+      }
+      .input-server-help {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        line-height: 1.4;
+      }
+      .technical {
+        display: none !important;
+      }
+      dialog {
+        width: min(94vw, 760px);
+        max-height: 82vh;
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg-card);
+        color: var(--text-main);
+      }
+      dialog::backdrop {
+        background: #000b;
+      }
+      #log-box {
+        max-height: 60vh;
+        overflow: auto;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: #090d16;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        font: 12px monospace;
+      }
+      .dialog-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      @media (max-width: 380px) {
+        .container {
+          padding: 12px;
+          gap: 12px;
+        }
+        .card {
+          padding: 12px;
+        }
+        .status-bar {
+          font-size: 0.78rem;
+          padding: 10px;
+          gap: 6px;
+        }
+        .audio-grid {
+          grid-template-columns: 1fr;
+        }
+        .audio-control-row {
+          grid-column: span 1;
+        }
+        .row.trigger-selects {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+        <div class="card">
+            <div class="status-bar">
+                <div class="status-item">
+                    <span id="dot-audio-haptics" class="dot"></span><span>Audio</span>
+                </div>
+                <div class="status-item">
+                    🔋<strong id="lbl-battery">--%</strong>
+                </div>
+                <div class="status-item">
+                    ⏱️ <span data-i18n="status.rate">Rate</span>: <strong>100 Hz</strong>
+                </div>
+            </div>
+        </div>
+      <section class="card flow-control">
+        <h2>
+          🔌 <span data-i18n="controls.connectionFlow">Connection Flow</span>
+        </h2>
+        <button
+          id="btn-load"
+          class="btn btn-primary"
+          data-i18n="header.btnLoadWasm"
+        >
+          1) Load WASM
+        </button>
+        <button
+          id="btn-request"
+          class="btn btn-primary"
+          disabled
+          data-i18n="header.btnConnectHid"
+        >
+          2) Connect DualSense (WebHID)
+        </button>
+        <div class="row">
+          <button
+            id="btn-start"
+            class="btn btn-primary"
+            disabled
+            data-i18n="header.btnStartLoop"
+          >
+            3) Play</button
+          ><button
+            id="btn-stop"
+            class="btn btn-danger"
+            disabled
+            data-i18n="header.btnStopLoop"
+          >
+            4) Stop
+          </button>
+        </div>
+        <button id="btn-show-logs" class="btn">📄 Show Logs</button>
+      </section>
+
+      <section class="card">
+        <h2>
+          🔫 <span data-i18n="controls.triggerEffectsTitle">Triggers</span>
+        </h2>
+        <div class="row trigger-selects" style="margin-bottom: 12px">
+          <select id="sel-trigger-effect">
+            <option value="none" data-i18n="controls.effectNone">
+              None / Off
+            </option>
+            <option value="feedback" data-i18n="controls.effectFeedback">
+              Rigid Feedback (R2)
+            </option>
+            <option value="bow" data-i18n="controls.effectBow">
+              Bow Tension (R2)
+            </option>
+            <option value="weapon" data-i18n="controls.effectWeapon">
+              Weapon Semi-Auto (R2)
+            </option>
+            <option value="autogun" data-i18n="controls.effectAutoGun">
+              Automatic Gun Buzz (R2)
+            </option>
+          </select>
+          <select id="sel-trigger-hand">
+            <option value="1" data-i18n="controls.rightTrigger">
+              Right (R2)
+            </option>
+            <option value="0" data-i18n="controls.leftTrigger">
+              Left (L2)
+            </option>
+            <option value="2" data-i18n="controls.bothTriggers">
+              Both (L2 + R2)
+            </option>
+          </select>
+        </div>
+        <div class="row">
+          <button
+            id="btn-apply-trigger"
+            class="btn btn-primary"
+            data-i18n="controls.applyTrigger"
+          >
+            Apply Effect</button
+          ><button
+            id="btn-reset-trigger"
+            class="btn"
+            data-i18n="controls.resetTriggers"
+          >
+            Reset
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>💡 <span data-i18n="controls.lightbarTitle">Lightbar</span></h2>
+        <div class="color-picker">
+          <input id="picker-led-color" type="color" value="#38bdf8" /><button
+            class="color-preset-btn"
+            data-color="#ef4444"
+            style="background: #ef4444"
+          ></button
+          ><button
+            class="color-preset-btn"
+            data-color="#eab308"
+            style="background: #eab308"
+          ></button
+          ><button
+            class="color-preset-btn"
+            data-color="#22c55e"
+            style="background: #22c55e"
+          ></button
+          ><button
+            class="color-preset-btn"
+            data-color="#3b82f6"
+            style="background: #3b82f6"
+          ></button
+          ><button
+            class="color-preset-btn"
+            data-color="#a855f7"
+            style="background: #a855f7"
+          ></button
+          ><button
+            class="color-preset-btn"
+            data-color="#fff"
+            style="background: #fff"
+          ></button
+          ><button
+            class="color-preset-btn"
+            data-color="#000"
+            style="background: #000; border-color: #333"
+          ></button>
+        </div>
+      </section>
+
+      <section class="card audio-card">
+        <h2>
+          🔊
+          <span data-i18n="controls.audioSettingsTitle"
+            >Audio &amp; Haptics</span
+          >
+        </h2>
+        <div class="audio-grid">
+          <div class="audio-control">
+            <label data-i18n="controls.volume">Volume (<output id="input-audio-volume-value">100</output>)</label
+            ><input
+              id="input-audio-volume"
+              type="range"
+              min="0"
+              max="100"
+              value="100"
+            />
+          </div>
+          <div class="audio-control">
+            <label
+              ><span data-i18n="controls.gain">Gain</span> (<output
+                id="input-audio-gain-value"
+                >1.0</output
+              >)</label
+            ><input
+              id="input-audio-gain"
+              type="range"
+              min="1"
+              max="2"
+              value="1"
+              step=".1"
+            />
+          </div>
+          <label class="checkbox-group"
+            ><input id="switch-speaker" type="checkbox" /><span
+              data-i18n="controls.headsetOnly"
+              >Headset only</span
+            ></label
+          >
+          <label class="checkbox-group"
+            ><input id="switch-audio-haptics" type="checkbox" /><span
+              data-i18n="controls.modeAudioOnly"
+              >Audio only</span
+            ></label
+          >
+          <div class="audio-control-row" style="display: none;">
+            <label data-i18n="controls.reduceVibration">Reduce Vibration</label
+            ><input
+              id="input-rumble-reduce"
+              type="number"
+              min="0"
+              max="15"
+              value="0"
+              style="width: 80px"
+            />
+          </div>
+        </div>
+        <div class="audio-card-overlay">
+          <button
+            id="btn-pip"
+            class="btn btn-primary"
+            data-i18n="header.btnPip"
+          >
+            🪟 Picture-in-Picture
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>🎮 Input Server</h2>
+        <div class="flow-control">
+          <p
+            class="input-server-help"
+            data-i18n="controls.inputServerHint"
+          >
+            For web games or games without native PlayStation 5 controller
+            support, connect the socket and install the ViGEmBus driver to
+            emulate a virtual gamepad.
+          </p>
+          <label class="input-server-help">Server URL</label
+          ><input id="txt-ws-url" type="text" value="ws://localhost:26760" />
+          <div class="row" style="align-items: center">
+            <button id="btn-ws-connect" class="btn btn-primary">Connect</button
+            ><strong
+              id="lbl-ws-status"
+              class="input-server-help"
+              style="text-align: right"
+              >Disconnected</strong
+            >
+          </div>
+        </div>
+      </section>
+
+      <div class="technical">
+        <select id="lang-select">
+          <option value="en">English</option>
+          <option value="pt-BR">Português</option>
+          <option value="es">Español</option>
+        </select>
+        <span id="dot-wasm"></span><span id="lbl-wasm"></span
+        ><span id="dot-hid"></span><span id="lbl-device"></span
+        ><span id="dot-touch"></span><span id="lbl-touch"></span
+        ><span id="lbl-audio-haptics"></span><span id="lbl-audio-mode"></span>
+        <button id="btn-apply-led"></button><button id="btn-test-soft"></button
+        ><button id="btn-test-heavy"></button
+        ><button id="btn-test-both"></button><button id="btn-stop-vibe"></button
+        ><button id="btn-stop-all"></button> <span id="lbl-l1"></span
+        ><span id="lbl-l2"></span><span id="bar-l2"></span
+        ><span id="lbl-l2-th"></span><span id="lbl-r1"></span
+        ><span id="lbl-r2"></span><span id="bar-r2"></span
+        ><span id="lbl-r2-th"></span><span id="lbl-r2-active"></span
+        ><span id="lbl-deadzone"></span> <span id="lbl-lstick-coords"></span
+        ><span id="stick-left-dot"></span><span id="lbl-l3"></span
+        ><span id="lbl-la-up"></span><span id="lbl-la-down"></span
+        ><span id="lbl-la-left"></span><span id="lbl-la-right"></span
+        ><span id="lbl-rstick-coords"></span><span id="stick-right-dot"></span
+        ><span id="lbl-r3"></span><span id="lbl-ra-up"></span
+        ><span id="lbl-ra-down"></span><span id="lbl-ra-left"></span
+        ><span id="lbl-ra-right"></span> <span id="lbl-is-touching"></span
+        ><span id="lbl-touch-id"></span><span id="lbl-touch-dir"></span
+        ><span id="lbl-touch-pos"></span><span id="lbl-touch-rel"></span
+        ><span id="lbl-touch-rad"></span><span id="touch-dot-1"></span
+        ><span id="touch-dot-coord"></span><span id="touch-hint"></span
+        ><span id="lbl-touch-status"></span><span id="touchpad-area"></span>
+        <span id="pill-cross"></span><span id="v-cross"></span
+        ><span id="pill-circle"></span><span id="v-circle"></span
+        ><span id="pill-square"></span><span id="v-square"></span
+        ><span id="pill-triangle"></span><span id="v-triangle"></span
+        ><span id="pill-up"></span><span id="v-up"></span
+        ><span id="pill-down"></span><span id="v-down"></span
+        ><span id="pill-left"></span><span id="v-left"></span
+        ><span id="pill-right"></span><span id="v-right"></span
+        ><span id="pill-ps"></span><span id="v-ps"></span
+        ><span id="pill-share"></span><span id="v-share"></span
+        ><span id="pill-options"></span><span id="v-options"></span
+        ><span id="pill-touch-btn"></span><span id="v-touch-btn"></span
+        ><span id="pill-mute"></span><span id="v-mute"></span
+        ><span id="pill-phone"></span><span id="v-phone"></span
+        ><span id="pill-fn1"></span><span id="v-fn1"></span
+        ><span id="pill-fn2"></span><span id="v-fn2"></span
+        ><span id="pill-padd-l"></span><span id="v-padd-l"></span
+        ><span id="pill-padd-r"></span><span id="v-padd-r"></span>
+        <span id="dot-ws"></span
+        ><input id="chk-ws-autostream" type="checkbox" checked /><span
+          id="lbl-ws-state-detail"
+        ></span
+        ><span id="badge-ws-rate"></span><span id="lbl-ws-pkts"></span
+        ><span id="lbl-ws-seq"></span><span id="lbl-ws-buttons"></span
+        ><span id="lbl-ws-btn-names"></span><span id="lbl-ws-lt"></span
+        ><span id="lbl-ws-rt"></span><span id="lbl-ws-lx"></span
+        ><span id="lbl-ws-ly"></span><span id="lbl-ws-rx"></span
+        ><span id="lbl-ws-ry"></span><span id="lbl-ws-hex-preview"></span>
+      </div>
+      <div id="in-page-pip" style="display: none"></div>
+    </main>
+
+    <dialog id="log-dialog">
+      <div id="log-box">Waiting for WASM module initialization...</div>
+      <div class="dialog-actions">
+        <button id="btn-clear-logs" class="btn">Clear</button
+        ><button id="btn-close-logs" class="btn">Close</button>
+      </div>
+    </dialog>
+    <div id="cookie-consent" hidden>
+      <span data-i18n="cookie.message"></span
+      ><button id="cookie-consent-accept">Accept</button
+      ><button id="cookie-consent-reject">Reject</button>
+    </div>
+    <script src="src/lib/GamepadCoreHost.js"></script>
+    <script type="module">
+      import { GamepadClientApplication } from "./dist/main.js";
+      // ==========================================
+      // I18N Translation System
+      // ==========================================
+      import { uiTranslations } from "./dist/i18n/ui-translations.js";
+      const translations = uiTranslations;
+      function detectBrowserLocale() {
+        const browserLocales =
+          Array.isArray(navigator.languages) && navigator.languages.length > 0
+            ? navigator.languages
+            : [navigator.language || "en"];
+
+        for (const browserLocale of browserLocales) {
+          const normalized = browserLocale.toLowerCase();
+          if (normalized.startsWith("pt")) return "pt-BR";
+          if (normalized.startsWith("es")) return "es";
+          if (normalized.startsWith("en")) return "en";
+        }
+
+        return "en";
+      }
+
+      const savedLocale = localStorage.getItem("dualsense_i18n_lang");
+      // English is the default; a previously selected language is preserved.
+      let currentLocale =
+        savedLocale && translations[savedLocale] ? savedLocale : "en";
+      if (!translations[currentLocale]) currentLocale = "en";
+
+      function t(keyPath, params, locale = currentLocale) {
+        const dict = translations[locale] || translations.en;
+        const keys = keyPath.split(".");
+        let current = dict;
+        for (const k of keys) {
+          if (current && typeof current === "object" && k in current) {
+            current = current[k];
+          } else {
+            current = undefined;
+            break;
+          }
+        }
+        if (current === undefined && locale !== "en") {
+          let fallback = translations.en;
+          for (const k of keys) {
+            if (fallback && typeof fallback === "object" && k in fallback) {
+              fallback = fallback[k];
+            } else {
+              fallback = undefined;
+              break;
+            }
+          }
+          current = fallback;
+        }
+        if (typeof current !== "string") return keyPath;
+        if (params) {
+          return current.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, varName) => {
+            return varName in params
+              ? String(params[varName])
+              : `{{${varName}}}`;
+          });
+        }
+        return current;
+      }
+
+      function applyTranslations(locale = currentLocale) {
+        currentLocale = locale;
+        document.documentElement.lang = locale;
+        localStorage.setItem("dualsense_i18n_lang", locale);
+        if (langSelect) langSelect.value = locale;
+
+        document.querySelectorAll("[data-i18n]").forEach((el) => {
+          const key = el.getAttribute("data-i18n");
+          if (key) el.textContent = t(key);
+        });
+
+        // Update dynamic badges based on state
+        lblWasm.textContent = hostModule
+          ? t("status.ready")
+          : t("status.notLoaded");
+        lblDevice.textContent =
+          deviceIds.size > 0
+            ? cachedDevices[0]?.productName || t("status.connected")
+            : t("status.none");
+        lblTouch.textContent = isTouchActive
+          ? t("status.active")
+          : t("status.inactive");
+        if (lblAudioHaptics) {
+          lblAudioHaptics.textContent = isAudioHapticsEnabled
+            ? t("status.active")
+            : t("status.inactive");
+        }
+        if (lblWsStatus) {
+          lblWsStatus.textContent =
+            wsSocket && wsSocket.readyState === WebSocket.OPEN
+              ? t("status.connected")
+              : wsSocket && wsSocket.readyState === WebSocket.CONNECTING
+                ? t("status.connecting")
+                : t("status.disconnected");
+        }
+        if (btnWsConnect) {
+          btnWsConnect.textContent =
+            wsSocket && wsSocket.readyState === WebSocket.OPEN
+              ? t("vgamepad.disconnect")
+              : wsSocket && wsSocket.readyState === WebSocket.CONNECTING
+                ? t("vgamepad.connecting")
+                : t("vgamepad.connect");
+        }
+        lblTouchStatus.textContent = `${t("touchpad.fingers")}: ${lastFingerCount}`;
+        touchHint.textContent = t("touchpad.touchingHint");
+      }
+
+      // UI Elements
+      const langSelect = document.getElementById("lang-select");
+      const logBox = document.getElementById("log-box");
+      const btnLoad = document.getElementById("btn-load");
+      const btnRequest = document.getElementById("btn-request");
+      const btnStart = document.getElementById("btn-start");
+      const btnStop = document.getElementById("btn-stop");
+      const btnPip = document.getElementById("btn-pip");
+      const btnClearLogs = document.getElementById("btn-clear-logs");
+      const inPagePip = document.getElementById("in-page-pip");
+
+      // Status Badges
+      const dotWasm = document.getElementById("dot-wasm");
+      const lblWasm = document.getElementById("lbl-wasm");
+      const dotHid = document.getElementById("dot-hid");
+      const lblDevice = document.getElementById("lbl-device");
+      const dotTouch = document.getElementById("dot-touch");
+      const lblTouch = document.getElementById("lbl-touch");
+      const dotAudioHaptics = document.getElementById("dot-audio-haptics");
+      const lblAudioHaptics = document.getElementById("lbl-audio-haptics");
+      const lblBattery = document.getElementById("lbl-battery");
+
+      // Analogs & Triggers
+      const lblL1 = document.getElementById("lbl-l1");
+      const lblL2 = document.getElementById("lbl-l2");
+      const barL2 = document.getElementById("bar-l2");
+      const lblL2Th = document.getElementById("lbl-l2-th");
+      const lblR1 = document.getElementById("lbl-r1");
+      const lblR2 = document.getElementById("lbl-r2");
+      const barR2 = document.getElementById("bar-r2");
+      const lblR2Th = document.getElementById("lbl-r2-th");
+      const lblR2Active = document.getElementById("lbl-r2-active");
+      const lblDeadzone = document.getElementById("lbl-deadzone");
+
+      // 2D Sticks
+      const lblLstickCoords = document.getElementById("lbl-lstick-coords");
+      const stickLeftDot = document.getElementById("stick-left-dot");
+      const lblL3 = document.getElementById("lbl-l3");
+      const lblLaUp = document.getElementById("lbl-la-up");
+      const lblLaDown = document.getElementById("lbl-la-down");
+      const lblLaLeft = document.getElementById("lbl-la-left");
+      const lblLaRight = document.getElementById("lbl-la-right");
+
+      const lblRstickCoords = document.getElementById("lbl-rstick-coords");
+      const stickRightDot = document.getElementById("stick-right-dot");
+      const lblR3 = document.getElementById("lbl-r3");
+      const lblRaUp = document.getElementById("lbl-ra-up");
+      const lblRaDown = document.getElementById("lbl-ra-down");
+      const lblRaLeft = document.getElementById("lbl-ra-left");
+      const lblRaRight = document.getElementById("lbl-ra-right");
+
+      // Buttons
+      const pillCross = document.getElementById("pill-cross");
+      const vCross = document.getElementById("v-cross");
+      const pillCircle = document.getElementById("pill-circle");
+      const vCircle = document.getElementById("v-circle");
+      const pillSquare = document.getElementById("pill-square");
+      const vSquare = document.getElementById("v-square");
+      const pillTriangle = document.getElementById("pill-triangle");
+      const vTriangle = document.getElementById("v-triangle");
+
+      const pillUp = document.getElementById("pill-up");
+      const vUp = document.getElementById("v-up");
+      const pillDown = document.getElementById("pill-down");
+      const vDown = document.getElementById("v-down");
+      const pillLeft = document.getElementById("pill-left");
+      const vLeft = document.getElementById("v-left");
+      const pillRight = document.getElementById("pill-right");
+      const vRight = document.getElementById("v-right");
+
+      const pillPs = document.getElementById("pill-ps");
+      const vPs = document.getElementById("v-ps");
+      const pillShare = document.getElementById("pill-share");
+      const vShare = document.getElementById("v-share");
+      const pillOptions = document.getElementById("pill-options");
+      const vOptions = document.getElementById("v-options");
+      const pillTouchBtn = document.getElementById("pill-touch-btn");
+      const vTouchBtn = document.getElementById("v-touch-btn");
+      const pillMute = document.getElementById("pill-mute");
+      const vMute = document.getElementById("v-mute");
+      const pillPhone = document.getElementById("pill-phone");
+      const vPhone = document.getElementById("v-phone");
+
+      const pillFn1 = document.getElementById("pill-fn1");
+      const vFn1 = document.getElementById("v-fn1");
+      const pillFn2 = document.getElementById("pill-fn2");
+      const vFn2 = document.getElementById("v-fn2");
+      const pillPaddL = document.getElementById("pill-padd-l");
+      const vPaddL = document.getElementById("v-padd-l");
+      const pillPaddR = document.getElementById("pill-padd-r");
+      const vPaddR = document.getElementById("v-padd-r");
+
+      // Touchpad
+      const lblIsTouching = document.getElementById("lbl-is-touching");
+      const lblTouchId = document.getElementById("lbl-touch-id");
+      const lblTouchDir = document.getElementById("lbl-touch-dir");
+      const lblTouchPos = document.getElementById("lbl-touch-pos");
+      const lblTouchRel = document.getElementById("lbl-touch-rel");
+      const lblTouchRad = document.getElementById("lbl-touch-rad");
+      const touchDot1 = document.getElementById("touch-dot-1");
+      const touchDotCoord = document.getElementById("touch-dot-coord");
+      const touchHint = document.getElementById("touch-hint");
+      const lblTouchStatus = document.getElementById("lbl-touch-status");
+      const touchpadArea = document.getElementById("touchpad-area");
+
+      // Interactive Controls Elements
+      const selTriggerEffect = document.getElementById("sel-trigger-effect");
+      const selTriggerHand = document.getElementById("sel-trigger-hand");
+      const btnApplyTrigger = document.getElementById("btn-apply-trigger");
+      const btnResetTrigger = document.getElementById("btn-reset-trigger");
+      const pickerLedColor = document.getElementById("picker-led-color");
+      const btnApplyLed = document.getElementById("btn-apply-led");
+      const switchSpeaker = document.getElementById("switch-speaker");
+      const switchAudioHaptics = document.getElementById(
+        "switch-audio-haptics",
+      );
+      const lblAudioMode = document.getElementById("lbl-audio-mode");
+      const inputRumbleReduce = document.getElementById("input-rumble-reduce");
+      const inputAudioVolume = document.getElementById("input-audio-volume");
+      const inputAudioGain = document.getElementById("input-audio-gain");
+      const inputAudioVolumeValue = document.getElementById(
+        "input-audio-volume-value",
+      );
+      const inputAudioGainValue = document.getElementById(
+        "input-audio-gain-value",
+      );
+      const btnTestSoft = document.getElementById("btn-test-soft");
+      const btnTestHeavy = document.getElementById("btn-test-heavy");
+      const btnTestBoth = document.getElementById("btn-test-both");
+      const btnStopVibe = document.getElementById("btn-stop-vibe");
+      const btnStopAll = document.getElementById("btn-stop-all");
+
+      // VirtualGamePad Streaming Elements
+      const dotWs = document.getElementById("dot-ws");
+      const lblWsStatus = document.getElementById("lbl-ws-status");
+      const txtWsUrl = document.getElementById("txt-ws-url");
+      const btnWsConnect = document.getElementById("btn-ws-connect");
+      const chkWsAutoStream = document.getElementById("chk-ws-autostream");
+      const lblWsStateDetail = document.getElementById("lbl-ws-state-detail");
+      const badgeWsRate = document.getElementById("badge-ws-rate");
+      const lblWsPkts = document.getElementById("lbl-ws-pkts");
+      const lblWsSeq = document.getElementById("lbl-ws-seq");
+      const lblWsButtons = document.getElementById("lbl-ws-buttons");
+      const lblWsBtnNames = document.getElementById("lbl-ws-btn-names");
+      const lblWsLt = document.getElementById("lbl-ws-lt");
+      const lblWsRt = document.getElementById("lbl-ws-rt");
+      const lblWsLx = document.getElementById("lbl-ws-lx");
+      const lblWsLy = document.getElementById("lbl-ws-ly");
+      const lblWsRx = document.getElementById("lbl-ws-rx");
+      const lblWsRy = document.getElementById("lbl-ws-ry");
+      const lblWsHexPreview = document.getElementById("lbl-ws-hex-preview");
+
+      // Load saved WebSocket URL
+      try {
+        const savedWsUrl = localStorage.getItem("dualsense_vgamepad_ws_url");
+        if (savedWsUrl && txtWsUrl) {
+          txtWsUrl.value = savedWsUrl;
+        }
+      } catch {}
+
+      // State Variables
+      let hostModule = null;
+      let api = null;
+      let discoveryTimer = null;
+      let inputTimer = null;
+      let bannerPrinted = false;
+      let inputPtr = 0;
+      let triggerBufferPtr = 0;
+      let nextHandle = 1;
+      let nextDeviceId = 1;
+      let bridgesInitialized = false;
+      let isTouchActive = false;
+      let isAudioHapticsEnabled = false;
+      let lastFingerCount = 0;
+      let wsSocket = null;
+      let wsSequence = 0;
+      let wsPacketsSent = 0;
+      let wsLastPacketRateTimer = null;
+      let wsPacketsInSec = 0;
+      let wsCurrentRate = 0;
+      let gamepadApp = null;
+      let audioVolume = 100;
+      let audioGain = 1.0;
+      const deviceIds = new Set();
+      const previousInput = new Map();
+      const cachedDevices = [];
+      const byPath = new Map();
+      const byHandle = new Map();
+      const callbackPtrs = [];
+
+      function applyAudioSettings() {
+        const ids = Array.from(deviceIds);
+        if (ids.length === 0) {
+          log(t("logs.audioNoDevice"));
+          return;
+        }
+
+        const isSpeaker = !switchSpeaker?.checked ? 1 : 0;
+        const rumbleMode = !switchAudioHaptics?.checked ? 0xfc : 0xff;
+        const rumbleReduce = Math.min(
+          15,
+          Math.max(0, Number(inputRumbleReduce?.value ?? 0) || 0),
+        );
+
+        for (const deviceId of ids) {
+          api?.dualsenseSettings?.(
+            deviceId,
+            0,
+            1,
+            isSpeaker,
+            0,
+            audioVolume,
+            rumbleMode,
+            rumbleReduce,
+            0,
+          );
+          api?.updateOutput?.(deviceId);
+        }
+
+        gamepadApp?.setAudioHapticsSettings({
+          bIsSpeaker: isSpeaker,
+          audioVolume,
+          gain: audioGain,
+          rumbleMode,
+          rumbleReduce,
+        });
+
+        //log(`🔊 Audio: speaker=${isSpeaker}, mode=0x${rumbleMode.toString(16).toUpperCase()}, reduce=${rumbleReduce}.`);
+      }
+
+      const FRAME_SECONDS = 0.01;
+      const FRAME_MS = 10;
+      const SONY_VENDOR = 0x054c;
+      const DEVICE_TYPE_BY_PRODUCT_ID = {
+        0x0ce6: 1, // DualSense
+        0x0df2: 2, // DualSense Edge
+        0x05c4: 3, // DualShock 4
+        0x09cc: 3, // DualShock 4 (rev)
+      };
+      const CONNECTION_USB = 1;
+      const DESCRIPTOR_SIZE = 532;
+      const PATH_SIZE = 512;
+      const OFF_HANDLE = 0;
+      const OFF_DEVICE_TYPE = 8;
+      const OFF_CONNECTION = 12;
+      const OFF_CONNECTED = 16;
+      const OFF_PATH = 20;
+      const INPUT_DESCRIPTOR_SIZE = 148;
+
+      // Trigger Payloads
+      const TRIGGER_FEEDBACK = new Uint8Array([
+        0x21, 0xfe, 0x03, 0xf8, 0xff, 0xff, 0x3f, 0x00, 0x00, 0x00,
+      ]);
+      const TRIGGER_BOW = new Uint8Array([
+        0x22, 0x22, 0x01, 0x3f, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      ]);
+      const TRIGGER_WEAPON = new Uint8Array([
+        0x25, 0xc0, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      ]);
+      const TRIGGER_AUTOMATIC_GUN = new Uint8Array([
+        0x26, 0x00, 0x03, 0x00, 0x00, 0x00, 0x3f, 0x00, 0x00, 0x0a,
+      ]);
+
+      // Log Buffer com limite de linhas e renderização em lote desacoplada (evita travar a UI e o áudio)
+      const MAX_LOG_LINES = 150;
+      const logLines = [];
+      let logRenderPending = false;
+
+      function flushLogRender() {
+        logRenderPending = false;
+        logBox.textContent = logLines.join("\n") + "\n";
+        logBox.scrollTop = logBox.scrollHeight;
+      }
+
+      function log(message) {
+        const time = new Date().toLocaleTimeString();
+        logLines.push(`[${time}] ${message}`);
+        if (logLines.length > MAX_LOG_LINES) {
+          logLines.shift();
+        }
+        if (!logRenderPending) {
+          logRenderPending = true;
+          requestAnimationFrame(flushLogRender);
+        }
+      }
+
+      function readCString(ptr) {
+        if (!ptr || !hostModule || !hostModule.HEAPU8) return "";
+        let end = ptr;
+        while (hostModule.HEAPU8[end] !== 0 && end < hostModule.HEAPU8.length) {
+          end++;
+        }
+        return new TextDecoder().decode(hostModule.HEAPU8.subarray(ptr, end));
+      }
+
+      langSelect.addEventListener("change", (e) => {
+        applyTranslations(e.target.value);
+      });
+
+      btnClearLogs.addEventListener("click", () => {
+        logLines.length = 0;
+        logBox.textContent = "";
+      });
+
+      // 1) Load WASM
+      btnLoad.addEventListener("click", async () => {
+        try {
+          const initFactory = window.InitGamepadCoreHost;
+          if (typeof initFactory !== "function") {
+            throw new Error("InitGamepadCoreHost not found on window.");
+          }
+
+          hostModule = await initFactory({
+            locateFile: (path) => `src/lib/${path}`,
+            print: (text) => log(`[WASM:stdout] ${text}`),
+            printErr: (text) => log(`[WASM:stderr] ${text}`),
+          });
+
+          api = bindNativeApi(hostModule);
+          gamepadApp = GamepadClientApplication.fromNativeRuntime(
+            hostModule,
+            api,
+            deviceIds,
+          );
+          gamepadApp.setAudioHapticsStateListener((enabled) => {
+            isAudioHapticsEnabled = enabled;
+            dotAudioHaptics.classList.toggle("active", enabled);
+            lblAudioHaptics.textContent = enabled
+              ? t("status.active")
+              : t("status.inactive");
+            syncPipControls();
+          });
+          inputPtr = hostModule._malloc(INPUT_DESCRIPTOR_SIZE);
+          triggerBufferPtr = hostModule._malloc(64);
+
+          if (
+            api.setLogCallback &&
+            typeof hostModule.addFunction === "function"
+          ) {
+            const logFnPtr = hostModule.addFunction((level, messagePtr) => {
+              const text = readCString(messagePtr);
+              // Completely ignore high-frequency repetitive audio streaming logs
+              if (
+                text.includes("GCH_AudioSubmitSamples") ||
+                text.includes("GCH_GetProcessAudioHaptics") ||
+                text.includes("GCH_ProcessAudioHaptics")
+              ) {
+                return;
+              }
+
+              log(`[Native:${level}] ${text}`);
+              console.log(`[Native:${level}] ${text}`);
+            }, "vii");
+            api.setLogCallback(logFnPtr);
+          }
+
+          dotWasm.classList.add("active");
+          lblWasm.textContent = t("status.ready");
+          btnLoad.disabled = true;
+          btnRequest.disabled = false;
+          syncPipControls();
+
+          log(t("logs.wasmLoaded"));
+        } catch (err) {
+          log(t("logs.wasmFailed", { error: String(err) }));
+        }
+      });
+
+      // 2) Request WebHID
+      btnRequest.addEventListener("click", async () => {
+        if (!("hid" in navigator)) {
+          log(t("logs.webHidNotSupported"));
+          return;
+        }
+        try {
+          const devices = await navigator.hid.requestDevice({
+            filters: [{ vendorId: SONY_VENDOR }],
+          });
+          for (const d of devices) cacheDevice(d);
+          lblDevice.textContent =
+            cachedDevices.length > 0
+              ? cachedDevices[0].productName || t("status.connected")
+              : t("status.none");
+          dotHid.classList.add("active");
+          syncPipControls();
+          log(
+            t("logs.webHidConnected", {
+              name: devices.map((d) => d.productName).join(", "),
+            }),
+          );
+        } catch (err) {
+          log(t("logs.webHidFailed", { error: String(err) }));
+        }
+      });
+
+      // 3) Start Loop
+      btnStart.addEventListener("click", async () => {
+        try {
+          await refreshAuthorizedDevices();
+          await initializeBridges();
+          startLoops();
+          btnStart.disabled = true;
+          btnStop.disabled = false;
+          syncPipControls();
+          log(t("logs.loopStarted"));
+        } catch (err) {
+          log(`❌ Error starting loop: ${String(err)}`);
+        }
+      });
+
+      // 4) Stop Loop
+      btnStop.addEventListener("click", async () => {
+        stopLoops();
+        await stopAudioHapticsFromUi();
+        syncPipControls();
+        log(t("logs.loopStopped"));
+      });
+
+      function syncPipControls() {
+        const hasController = cachedDevices.length > 0 || deviceIds.size > 0;
+        const loopIsRunning = inputTimer !== null;
+        btnStart.disabled = !hasController || loopIsRunning;
+        btnStop.disabled = !hasController || !loopIsRunning;
+        btnPip.disabled = !hasController || !loopIsRunning;
+
+        const targets = [compactHud, pipWindow?.document, inPagePip].filter(
+          Boolean,
+        );
+        for (const target of targets) {
+          const play = target.querySelector?.("#pip-btn-play");
+          const stop = target.querySelector?.("#pip-btn-stop-loop");
+          const audio = target.querySelector?.("#pip-btn-audio");
+          if (play) play.disabled = btnStart.disabled;
+          if (stop) stop.disabled = btnStop.disabled;
+          if (audio) {
+            audio.disabled = !hasController || !loopIsRunning;
+            setAudioButtonState(audio);
+          }
+          const pipVolume = target.querySelector?.("#pip-audio-volume");
+          const pipGain = target.querySelector?.("#pip-audio-gain");
+          const activeElement = target.activeElement ?? document.activeElement;
+          if (pipVolume && activeElement !== pipVolume)
+            pipVolume.value = String(audioVolume);
+          if (pipGain && activeElement !== pipGain)
+            pipGain.value = String(audioGain);
+          const pipVolumeValue = target.querySelector?.(
+            "#pip-audio-volume-value",
+          );
+          const pipGainValue = target.querySelector?.("#pip-audio-gain-value");
+          if (pipVolumeValue) pipVolumeValue.value = pipVolume?.value ?? "100";
+          if (pipGainValue)
+            pipGainValue.value = Number(pipGain?.value ?? 1).toFixed(1);
+        }
+      }
+
+      function setAudioButtonState(audio) {
+        audio.classList.toggle("active", isAudioHapticsEnabled);
+        audio.setAttribute("aria-pressed", String(isAudioHapticsEnabled));
+        audio.textContent = isAudioHapticsEnabled
+          ? t("header.btnAudioHapticsOn")
+          : t("header.btnAudioHaptics");
+      }
+
+      async function toggleAudioHapticsFromPip() {
+        if (!gamepadApp) return;
+        try {
+          await gamepadApp.toggleAudioHaptics();
+          isAudioHapticsEnabled = gamepadApp.getIsAudioHapticsEnabled();
+          dotAudioHaptics.classList.toggle("active", isAudioHapticsEnabled);
+          lblAudioHaptics.textContent = isAudioHapticsEnabled
+            ? t("status.active")
+            : t("status.inactive");
+          [pipWindow?.document, inPagePip].forEach((target) => {
+            const audio = target?.querySelector?.("#pip-btn-audio");
+            if (audio) setAudioButtonState(audio);
+          });
+          syncPipControls();
+          log(
+            t(
+              isAudioHapticsEnabled
+                ? "logs.audioEnabled"
+                : "logs.audioDisabled",
+            ),
+          );
+        } catch (err) {
+          log(t("logs.audioToggleError", { error: String(err) }));
+        }
+      }
+
+      btnPip.addEventListener("click", () => {
+        togglePictureInPicture();
+      });
+
+      async function refreshAuthorizedDevices() {
+        if (!("hid" in navigator)) return;
+        const devices = await navigator.hid.getDevices();
+        cachedDevices.length = 0;
+        for (const d of devices) cacheDevice(d);
+        if (cachedDevices.length > 0) {
+          dotHid.classList.add("active");
+          lblDevice.textContent = cachedDevices[0].productName || "DualSense";
+        }
+      }
+
+      function bindNativeApi(mod) {
+        const tryWrap = (name, ret, args) => {
+          try {
+            return mod.cwrap(name, ret, args);
+          } catch {
+            return null;
+          }
+        };
+        return {
+          setLogCallback: tryWrap("GCH_SetLogCallback", null, ["number"]),
+          initializePlatformBridgeWasm: tryWrap(
+            "GCH_InitializePlatformBridgeWasm",
+            null,
+            [
+              "number",
+              "number",
+              "number",
+              "number",
+              "number",
+              "number",
+              "number",
+            ],
+          ),
+          initializeRegistryPolicyWasm: tryWrap(
+            "GCH_InitializeDeviceRegistryPolicyWasm",
+            null,
+            ["number", "number", "number", "number"],
+          ),
+          createDevice: tryWrap("GCH_CreateDevice", null, ["number"]),
+          discoverDevices: tryWrap("GCH_DiscoverDevices", null, ["number"]),
+          updateInput: tryWrap("GCH_UpdateInput", null, ["number", "number"]),
+          getInputState: tryWrap("GCH_GetInputState", null, [
+            "number",
+            "number",
+          ]),
+          enableGyroscopeValues: tryWrap("GCH_EnableGyroscopeValues", null, [
+            "number",
+            "number",
+          ]),
+          enableTouch: tryWrap("GCH_EnableTouch", null, ["number", "number"]),
+          resetGyroOrientation: tryWrap("GCH_ResetGyroOrientation", null, [
+            "number",
+          ]),
+          batteryLevelDevice: tryWrap("GCH_BatteryLevelDevice", "number", [
+            "number",
+          ]),
+          setVibration: tryWrap("GCH_SetVibration", null, [
+            "number",
+            "number",
+            "number",
+          ]),
+          lightbar: tryWrap("GCH_Lightbar", null, [
+            "number",
+            "number",
+            "number",
+            "number",
+          ]),
+          resetLights: tryWrap("GCH_ResetLights", null, ["number"]),
+          updateOutput: tryWrap("GCH_UpdateOutput", null, ["number"]),
+          customTrigger: tryWrap("GCH_CustomTrigger", "number", [
+            "number",
+            "number",
+            "number",
+            "number",
+          ]),
+          stopTrigger: tryWrap("GCH_StopTrigger", null, ["number", "number"]),
+          audioSubmitSamples: tryWrap("GCH_AudioSubmitSamples", "number", [
+            "number",
+            "number",
+            "number",
+            "number",
+          ]),
+          initializeAudio: tryWrap("GCH_InitializeAudio", null, [
+            "number",
+            "number",
+          ]),
+          getProcessAudioHaptics:
+            tryWrap("GCH_GetProcessAudioHaptics", "number", ["number"]) ||
+            tryWrap("GCH_ProcessAudioHaptics", "number", ["number"]),
+          processAudioHaptics:
+            tryWrap("GCH_GetProcessAudioHaptics", "number", ["number"]) ||
+            tryWrap("GCH_ProcessAudioHaptics", "number", ["number"]),
+          dualsenseSettings: tryWrap("GCH_DualSenseSettings", null, [
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+            "number",
+          ]),
+        };
+      }
+
+      async function initializeBridges() {
+        if (bridgesInitialized) return;
+
+        const readPtr = hostModule.addFunction(onRead, "ijiii");
+        const writePtr = hostModule.addFunction(onWrite, "ijiii");
+        const detectPtr = hostModule.addFunction(() => 0, "iii");
+        const createPtr = hostModule.addFunction(onCreateHandle, "ii");
+        const invalidatePtr = hostModule.addFunction(onInvalidateHandle, "vj");
+        const configPtr = hostModule.addFunction(() => {}, "vjiii");
+        const hapticsPtr = hostModule.addFunction(() => {}, "vjiii");
+        callbackPtrs.push(
+          readPtr,
+          writePtr,
+          detectPtr,
+          createPtr,
+          invalidatePtr,
+          configPtr,
+          hapticsPtr,
+        );
+
+        const allocPtr = hostModule.addFunction(onAllocDevice, "i");
+        const dispatchPtr = hostModule.addFunction(onDispatchDevice, "vi");
+        const disconnectPtr = hostModule.addFunction(onDisconnectDevice, "vi");
+        callbackPtrs.push(allocPtr, dispatchPtr, disconnectPtr);
+
+        api.initializePlatformBridgeWasm(
+          readPtr,
+          writePtr,
+          detectPtr,
+          createPtr,
+          invalidatePtr,
+          configPtr,
+          hapticsPtr,
+        );
+        api.initializeRegistryPolicyWasm(
+          0,
+          allocPtr,
+          dispatchPtr,
+          disconnectPtr,
+        );
+        bridgesInitialized = true;
+        log(t("logs.bridgeConnected"));
+      }
+
+      const VIRTUAL_GAMEPAD_BUTTONS = {
+        DPAD_UP: 0x0001,
+        DPAD_DOWN: 0x0002,
+        DPAD_LEFT: 0x0004,
+        DPAD_RIGHT: 0x0008,
+        START: 0x0010,
+        BACK: 0x0020,
+        LEFT_THUMB: 0x0040,
+        RIGHT_THUMB: 0x0080,
+        LEFT_SHOULDER: 0x0100,
+        RIGHT_SHOULDER: 0x0200,
+        GUIDE: 0x0400,
+        A: 0x1000,
+        B: 0x2000,
+        X: 0x4000,
+        Y: 0x8000,
+      };
+
+      function updateWsUIState(status, message = "") {
+        if (status === "connected") {
+          dotWs?.classList.add("active");
+          if (lblWsStatus) {
+            lblWsStatus.textContent = t("status.connected");
+            lblWsStatus.style.color = "var(--ok)";
+          }
+          if (lblWsStateDetail) {
+            lblWsStateDetail.textContent = message || t("vgamepad.connected");
+            lblWsStateDetail.style.color = "var(--ok)";
+          }
+          if (btnWsConnect) {
+            btnWsConnect.textContent = t("vgamepad.disconnect");
+            btnWsConnect.className = "btn-danger";
+          }
+        } else if (status === "connecting") {
+          dotWs?.classList.remove("active");
+          if (lblWsStatus) {
+            lblWsStatus.textContent = t("status.connecting");
+            lblWsStatus.style.color = "var(--warn)";
+          }
+          if (lblWsStateDetail) {
+            lblWsStateDetail.textContent = t("vgamepad.connecting");
+            lblWsStateDetail.style.color = "var(--warn)";
+          }
+          if (btnWsConnect) {
+            btnWsConnect.textContent = t("vgamepad.connecting");
+            btnWsConnect.className = "btn-warn";
+          }
+        } else {
+          dotWs?.classList.remove("active");
+          if (lblWsStatus) {
+            lblWsStatus.textContent = t("status.disconnected");
+            lblWsStatus.style.color = "inherit";
+          }
+          if (lblWsStateDetail) {
+            lblWsStateDetail.textContent =
+              message || t("vgamepad.notConnected");
+            lblWsStateDetail.style.color = "var(--muted)";
+          }
+          if (btnWsConnect) {
+            btnWsConnect.textContent = t("vgamepad.connect");
+            btnWsConnect.className = "btn-primary";
+          }
+        }
+      }
+
+      function toggleWsConnection() {
+        if (
+          wsSocket &&
+          (wsSocket.readyState === WebSocket.OPEN ||
+            wsSocket.readyState === WebSocket.CONNECTING)
+        ) {
+          try {
+            wsSocket.close();
+          } catch {}
+          wsSocket = null;
+          updateWsUIState("disconnected");
+          log("🔌 Desconectado do servidor VirtualGamePad.");
+          return;
+        }
+
+        const url = txtWsUrl?.value?.trim() || "ws://192.168.1.18:51204";
+        try {
+          localStorage.setItem("dualsense_vgamepad_ws_url", url);
+        } catch {}
+
+        updateWsUIState("connecting");
+        log(`📡 Conectando ao servidor VirtualGamePad: ${url}...`);
+
+        try {
+          wsSocket = new WebSocket(url);
+          wsSocket.binaryType = "arraybuffer";
+
+          wsSocket.onopen = () => {
+            updateWsUIState("connected", `Conectado: ${url}`);
+            log(
+              `✅ Conectado ao servidor VirtualGamePad (${url}). Pronto para transmitir.`,
+            );
+            if (!wsLastPacketRateTimer) {
+              wsLastPacketRateTimer = setInterval(() => {
+                wsCurrentRate = wsPacketsInSec;
+                wsPacketsInSec = 0;
+                if (badgeWsRate)
+                  badgeWsRate.textContent = `${wsCurrentRate} pkts/s`;
+              }, 1000);
+            }
+          };
+
+          wsSocket.onclose = () => {
+            updateWsUIState("disconnected");
+            log("🔌 Conexão WebSocket com VirtualGamePad encerrada.");
+          };
+
+          wsSocket.onerror = () => {
+            updateWsUIState("disconnected", "Falha na conexão");
+            log(`❌ Erro no WebSocket ao conectar a ${url}`);
+          };
+        } catch (err) {
+          updateWsUIState("disconnected", String(err));
+          log(`❌ Falha ao instanciar WebSocket: ${String(err)}`);
+        }
+      }
+
+      btnWsConnect?.addEventListener("click", toggleWsConnection);
+
+      function sendVirtualGamepadInput(state) {
+        if (!wsSocket || wsSocket.readyState !== WebSocket.OPEN) return;
+        if (!chkWsAutoStream || !chkWsAutoStream.checked) return;
+
+        let buttons = 0;
+        const activeNames = [];
+        if (state.bDpadUp) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_UP;
+          activeNames.push("Up");
+        }
+        if (state.bDpadDown) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_DOWN;
+          activeNames.push("Down");
+        }
+        if (state.bDpadLeft) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_LEFT;
+          activeNames.push("Left");
+        }
+        if (state.bDpadRight) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.DPAD_RIGHT;
+          activeNames.push("Right");
+        }
+        if (state.bStart) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.START;
+          activeNames.push("Start");
+        }
+        if (state.bShare) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.BACK;
+          activeNames.push("Back");
+        }
+        if (state.bLeftStick) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.LEFT_THUMB;
+          activeNames.push("L3");
+        }
+        if (state.bRightStick) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.RIGHT_THUMB;
+          activeNames.push("R3");
+        }
+        if (state.bLeftShoulder) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.LEFT_SHOULDER;
+          activeNames.push("L1");
+        }
+        if (state.bRightShoulder) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.RIGHT_SHOULDER;
+          activeNames.push("R1");
+        }
+        if (state.bPSButton) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.GUIDE;
+          activeNames.push("Guide");
+        }
+        if (state.bCross) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.A;
+          activeNames.push("A/Cross");
+        }
+        if (state.bCircle) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.B;
+          activeNames.push("B/Circle");
+        }
+        if (state.bSquare) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.X;
+          activeNames.push("X/Square");
+        }
+        if (state.bTriangle) {
+          buttons |= VIRTUAL_GAMEPAD_BUTTONS.Y;
+          activeNames.push("Y/Triangle");
+        }
+
+        const clampU8 = (val) =>
+          Math.round(Math.max(0, Math.min(1, val)) * 255);
+        const clampI16 = (val) => {
+          const c = Math.max(-1, Math.min(1, val));
+          return Math.round(c * (c >= 0 ? 32767 : 32768));
+        };
+
+        const seq = wsSequence++ >>> 0;
+        const leftTrigger = clampU8(state.leftTriggerAnalog);
+        const rightTrigger = clampU8(state.rightTriggerAnalog);
+        const leftX = clampI16(state.leftAnalogX);
+        const leftY = clampI16(state.leftAnalogY);
+        const rightX = clampI16(state.rightAnalogX);
+        const rightY = clampI16(state.rightAnalogY);
+
+        const packet = new ArrayBuffer(24);
+        const view = new DataView(packet);
+
+        view.setUint32(0, seq, true);
+        view.setUint16(4, buttons, true);
+        view.setUint8(6, leftTrigger);
+        view.setUint8(7, rightTrigger);
+        view.setInt16(8, leftX, true);
+        view.setInt16(10, leftY, true);
+        view.setInt16(12, rightX, true);
+        view.setInt16(14, rightY, true);
+
+        wsSocket.send(packet);
+        wsPacketsSent++;
+        wsPacketsInSec++;
+
+        if (lblWsPkts) lblWsPkts.textContent = wsPacketsSent.toLocaleString();
+        if (lblWsSeq) lblWsSeq.textContent = `#${seq}`;
+        if (lblWsButtons)
+          lblWsButtons.textContent = `0x${buttons.toString(16).toUpperCase().padStart(4, "0")}`;
+        if (lblWsBtnNames)
+          lblWsBtnNames.textContent =
+            activeNames.length > 0 ? activeNames.join(", ") : "None";
+        if (lblWsLt) lblWsLt.textContent = String(leftTrigger);
+        if (lblWsRt) lblWsRt.textContent = String(rightTrigger);
+        if (lblWsLx) lblWsLx.textContent = String(leftX);
+        if (lblWsLy) lblWsLy.textContent = String(leftY);
+        if (lblWsRx) lblWsRx.textContent = String(rightX);
+        if (lblWsRy) lblWsRy.textContent = String(rightY);
+
+        if (lblWsHexPreview) {
+          const u8 = new Uint8Array(packet);
+          let hexStr = "";
+          for (let i = 0; i < u8.length; i++) {
+            hexStr += u8[i].toString(16).toUpperCase().padStart(2, "0") + " ";
+          }
+          lblWsHexPreview.textContent = hexStr.trim();
+        }
+      }
+
+      function startLoops() {
+        stopLoops();
+
+        createAllAuthorizedDevices().then(() => {
+          log(t("logs.devicesReady", { count: deviceIds.size }));
+        });
+
+        inputTimer = setInterval(() => {
+          const ids = Array.from(deviceIds);
+          for (const id of ids) {
+            try {
+              const isSpeaker = !switchSpeaker?.checked ? 1 : 0;
+              const rumbleMode = !switchAudioHaptics?.checked ? 0xfc : 0xff;
+              const rumbleReduce = Math.min(
+                15,
+                Math.max(0, Number(inputRumbleReduce?.value ?? 0) || 0),
+              );
+              api?.dualsenseSettings?.(
+                id,
+                0,
+                1,
+                isSpeaker,
+                0,
+                audioVolume,
+                rumbleMode,
+                rumbleReduce,
+                0,
+              );
+
+              api.updateInput?.(id, FRAME_SECONDS);
+            } catch (e) {
+              log(`❌ GCH_UpdateInput error: ${String(e)}`);
+            }
+          }
+          for (const id of ids) {
+            try {
+              const state = readInputState(id);
+              handleInput(id, state);
+              updateUI(state);
+            } catch (e) {
+              log(`❌ Input error: ${String(e)}`);
+            }
+          }
+        }, FRAME_MS);
+      }
+
+      function stopLoops() {
+        if (inputTimer) {
+          clearInterval(inputTimer);
+          inputTimer = null;
+        }
+      }
+
+      async function createAllAuthorizedDevices() {
+        if (!api.createDevice) return;
+        let created = 0;
+        const descPtr = hostModule._malloc(DESCRIPTOR_SIZE);
+
+        try {
+          for (const device of cachedDevices) {
+            if (device.vendorId !== SONY_VENDOR) continue;
+            const path = makePath(device, created);
+
+            if (!device.opened) {
+              try {
+                await device.open();
+                log(`✅ Device opened: ${device.productName || path}`);
+              } catch (e) {
+                log(`❌ Failed to open ${path}: ${String(e)}`);
+                continue;
+              }
+            }
+
+            if (!byPath.has(path)) {
+              const entry = {
+                device,
+                path,
+                handle: 0,
+                packet: new Uint8Array(0),
+                listener: null,
+              };
+              byPath.set(path, entry);
+              entry.listener = (event) => {
+                const body = new Uint8Array(
+                  event.data.buffer,
+                  event.data.byteOffset,
+                  event.data.byteLength,
+                );
+                const packet = new Uint8Array(body.length + 1);
+                packet[0] = event.reportId;
+                packet.set(body, 1);
+                entry.packet = packet;
+              };
+              device.addEventListener("inputreport", entry.listener);
+            }
+
+            const entry = byPath.get(path);
+            if (!entry.handle) {
+              entry.handle = nextHandle++;
+              byHandle.set(entry.handle, entry);
+            }
+
+            const deviceType = DEVICE_TYPE_BY_PRODUCT_ID[device.productId] ?? 1;
+            writeU64(descPtr + OFF_HANDLE, entry.handle);
+            hostModule.setValue(descPtr + OFF_DEVICE_TYPE, deviceType, "i32"); // 1 = DualSense, 2 = DualSense Edge
+            hostModule.setValue(
+              descPtr + OFF_CONNECTION,
+              CONNECTION_USB,
+              "i32",
+            ); // 1 = USB
+            hostModule.setValue(descPtr + OFF_CONNECTED, 1, "i32");
+
+            const pathBytes = pathToBytes(path);
+            for (let i = 0; i < PATH_SIZE; i++) {
+              hostModule.setValue(
+                descPtr + OFF_PATH + i,
+                pathBytes[i] || 0,
+                "i8",
+              );
+            }
+
+            api.createDevice(descPtr);
+            created++;
+          }
+        } finally {
+          hostModule._free(descPtr);
+        }
+      }
+
+      function onAllocDevice() {
+        return nextDeviceId++;
+      }
+
+      function onDispatchDevice(deviceId) {
+        if (!deviceIds.has(deviceId)) {
+          deviceIds.add(deviceId);
+          audioVolume = 100;
+          audioGain = 1.0;
+          gamepadApp?.setAudioHapticsSettings({ audioVolume: 100, gain: 1.0 });
+          syncPipControls();
+          printStartupBanner();
+          log(t("logs.deviceDispatched", { id: deviceId }));
+
+          // Enable Touchpad
+          if (api.enableTouch) {
+            api.enableTouch(deviceId, 1);
+            isTouchActive = true;
+            dotTouch.classList.add("active");
+            lblTouch.textContent = t("status.active");
+            log(t("logs.touchActive", { id: deviceId }));
+          }
+
+          // Enable Audio Haptics mode if currently active
+          //   if (isAudioHapticsEnabled && api.dualsenseSettings) {
+          // api.dualsenseSettings(deviceId, 0, 0, 1, 0, audioVolume, 0xFC, 0, 0);
+          //       api.updateOutput?.(deviceId);
+          //   }
+        }
+      }
+
+      function onDisconnectDevice(deviceId) {
+        deviceIds.delete(deviceId);
+        previousInput.delete(deviceId);
+        syncPipControls();
+        log(t("logs.deviceDisconnected", { id: deviceId }));
+      }
+
+      function onCreateHandle(descPtr) {
+        if (!descPtr) return 0;
+        const path = readPath(descPtr + OFF_PATH);
+        const entry = byPath.get(path);
+        if (!entry) return 0;
+        if (!entry.device.opened) {
+          entry.device.open().catch(console.error);
+        }
+        hostModule.setValue(descPtr + OFF_CONNECTED, 1, "i32");
+        return 1;
+      }
+
+      function onRead(handle, bufferPtr, length, bytesReadPtr) {
+        const h = typeof handle === "bigint" ? Number(handle) : handle;
+        const entry = byHandle.get(h);
+        if (
+          !entry ||
+          !bufferPtr ||
+          length <= 0 ||
+          !entry.packet ||
+          entry.packet.length === 0
+        ) {
+          writeI32(bytesReadPtr, 0);
+          return 0;
+        }
+        const bytes = Math.min(length, entry.packet.length);
+        for (let i = 0; i < bytes; i++) {
+          hostModule.setValue(bufferPtr + i, entry.packet[i], "i8");
+        }
+        writeI32(bytesReadPtr, bytes);
+        return bytes > 0 ? 1 : 0;
+      }
+
+      function onWrite(handle, bufferPtr, length, bytesWrittenPtr) {
+        const h = typeof handle === "bigint" ? Number(handle) : handle;
+        const entry = byHandle.get(h);
+        if (!entry || !bufferPtr || length <= 0 || !entry.device.opened) {
+          writeI32(bytesWrittenPtr, 0);
+          return 0;
+        }
+        const data = new Uint8Array(length);
+        for (let i = 0; i < length; i++) {
+          data[i] = hostModule.getValue(bufferPtr + i, "i8") & 0xff;
+        }
+        const reportId = data[0] || 0;
+        const payload = data.subarray(1);
+        entry.device
+          .sendReport(reportId, payload)
+          .catch((e) => log(`sendReport failed: ${String(e)}`));
+        writeI32(bytesWrittenPtr, length);
+        return 1;
+      }
+
+      function onInvalidateHandle(handle) {
+        const h = typeof handle === "bigint" ? Number(handle) : handle;
+        const entry = byHandle.get(h);
+        if (!entry) return;
+        byHandle.delete(h);
+        entry.handle = 0;
+        if (entry.listener) {
+          entry.device.removeEventListener("inputreport", entry.listener);
+        }
+      }
+
+      // Leitura completa de FInputContext (148 bytes)
+      function readInputState(deviceId) {
+        api.getInputState?.(deviceId, inputPtr);
+        const b = inputPtr;
+        const rf = (o) => hostModule.getValue(b + o, "float");
+        const ri32 = (o) => hostModule.getValue(b + o, "i32");
+        const rb = (o) => (hostModule.getValue(b + o, "i8") & 0xff) !== 0;
+        const ru8 = (o) => hostModule.getValue(b + o, "i8") & 0xff;
+
+        return {
+          analogDeadZone: rf(0),
+
+          leftAnalogX: rf(4),
+          leftAnalogY: rf(8),
+          rightAnalogX: rf(12),
+          rightAnalogY: rf(16),
+          leftTriggerAnalog: rf(20),
+          rightTriggerAnalog: rf(24),
+
+          gyroscopeX: rf(28),
+          gyroscopeY: rf(32),
+          gyroscopeZ: rf(36),
+
+          accelerometerX: rf(40),
+          accelerometerY: rf(44),
+          accelerometerZ: rf(48),
+
+          gravityX: rf(52),
+          gravityY: rf(56),
+          gravityZ: rf(60),
+
+          tiltX: rf(64),
+          tiltY: rf(68),
+          tiltZ: rf(72),
+
+          touchId: ri32(76),
+          touchFingerCount: ri32(80),
+          directionRaw: ru8(84),
+          bIsTouching: rb(85),
+
+          touchRadiusX: rf(88),
+          touchRadiusY: rf(92),
+          touchPositionX: rf(96),
+          touchPositionY: rf(100),
+          touchRelativeX: rf(104),
+          touchRelativeY: rf(108),
+
+          bCross: rb(112),
+          bSquare: rb(113),
+          bTriangle: rb(114),
+          bCircle: rb(115),
+          bDpadUp: rb(116),
+          bDpadDown: rb(117),
+          bDpadLeft: rb(118),
+          bDpadRight: rb(119),
+
+          bLeftAnalogRight: rb(120),
+          bLeftAnalogUp: rb(121),
+          bLeftAnalogDown: rb(122),
+          bLeftAnalogLeft: rb(123),
+          bRightAnalogLeft: rb(124),
+          bRightAnalogDown: rb(125),
+          bRightAnalogUp: rb(126),
+          bRightAnalogRight: rb(127),
+
+          bLeftTriggerThreshold: rb(128),
+          bRightTriggerThreshold: rb(129),
+          bLeftShoulder: rb(130),
+          bRightShoulder: rb(131),
+          bLeftStick: rb(132),
+          bRightStick: rb(133),
+          bPSButton: rb(134),
+          bShare: rb(135),
+          bStart: rb(136),
+          bTouch: rb(137),
+          bMute: rb(138),
+          bHasPhoneConnected: rb(139),
+
+          bFn1: rb(140),
+          bFn2: rb(141),
+          bPaddleLeft: rb(142),
+          bPaddleRight: rb(143),
+
+          batteryLevel: rf(144),
+        };
+      }
+
+      const TRIGGER_EFFECT_MAP = {
+        none: null,
+        feedback: TRIGGER_FEEDBACK,
+        bow: TRIGGER_BOW,
+        weapon: TRIGGER_WEAPON,
+        autogun: TRIGGER_AUTOMATIC_GUN,
+      };
+
+      function handleInput(deviceId, state) {
+        previousInput.set(deviceId, state);
+      }
+
+      function getActiveDeviceId() {
+        const ids = Array.from(deviceIds);
+        return ids.length > 0 ? ids[0] : 1;
+      }
+
+      btnApplyTrigger?.addEventListener("click", () => {
+        const id = getActiveDeviceId();
+        const effectKey = selTriggerEffect?.value || "none";
+        const hand = parseInt(selTriggerHand?.value ?? "1", 10);
+        const payload = TRIGGER_EFFECT_MAP[effectKey];
+
+        if (!payload) {
+          stopTriggers(id);
+          return;
+        }
+
+        if (hand === 2) {
+          setTriggerEffect(
+            id,
+            payload,
+            0,
+            `Trigger Effect: ${effectKey.toUpperCase()} (L2)`,
+          );
+          setTriggerEffect(
+            id,
+            payload,
+            1,
+            `Trigger Effect: ${effectKey.toUpperCase()} (R2)`,
+          );
+        } else {
+          const handName = hand === 0 ? "L2" : "R2";
+          setTriggerEffect(
+            id,
+            payload,
+            hand,
+            `Trigger Effect: ${effectKey.toUpperCase()} (${handName})`,
+          );
+        }
+      });
+
+      btnResetTrigger?.addEventListener("click", () => {
+        const id = getActiveDeviceId();
+        stopTriggers(id);
+      });
+
+      // LED Color Controls
+      function hexToRgb(hex) {
+        const clean = hex.replace("#", "");
+        const r = parseInt(clean.substring(0, 2), 16) || 0;
+        const g = parseInt(clean.substring(2, 4), 16) || 0;
+        const b = parseInt(clean.substring(4, 6), 16) || 0;
+        return { r, g, b };
+      }
+
+      function applySelectedColor(hexColor) {
+        const id = getActiveDeviceId();
+        const { r, g, b } = hexToRgb(hexColor);
+        api?.lightbar?.(id, r, g, b);
+        api?.updateOutput?.(id);
+        log(`💡 Device ${id}: LED Color set to RGB(${r}, ${g}, ${b})`);
+      }
+
+      // ligthbar settings
+      btnApplyLed?.addEventListener("click", () => {
+        if (pickerLedColor) applySelectedColor(pickerLedColor.value);
+      });
+
+      // audio settings
+      switchSpeaker?.addEventListener("click", () => {
+        applyAudioSettings();
+      });
+      switchAudioHaptics?.addEventListener("click", () => {
+        applyAudioSettings();
+      });
+      inputRumbleReduce.addEventListener("input", () => {
+        applyAudioSettings();
+      });
+      inputAudioVolume?.addEventListener("input", () => {
+        audioVolume = Math.min(
+          100,
+          Math.max(0, Number(inputAudioVolume.value) || 0),
+        );
+        inputAudioVolumeValue.textContent = String(audioVolume);
+        applyAudioSettings();
+        syncPipControls();
+      });
+      inputAudioGain?.addEventListener("input", () => {
+        audioGain = Math.min(
+          2.0,
+          Math.max(1.0, Number(inputAudioGain.value) || 1.0),
+        );
+        inputAudioGainValue.textContent = audioGain.toFixed(1);
+        applyAudioSettings();
+        syncPipControls();
+      });
+
+      pickerLedColor?.addEventListener("input", (e) => {
+        applySelectedColor(e.target.value);
+      });
+
+      document.querySelectorAll(".color-preset-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const color = e.target.getAttribute("data-color");
+          if (color) {
+            if (pickerLedColor) pickerLedColor.value = color;
+            applySelectedColor(color);
+          }
+        });
+      });
+
+      // Vibration Testing Controls
+      btnTestSoft?.addEventListener("click", () => {
+        const id = getActiveDeviceId();
+        api?.setVibration?.(id, 0, 64);
+        api?.updateOutput?.(id);
+        log(`📳 Device ${id}: Soft Rumble Test (Right Motor = 64)`);
+      });
+
+      btnTestHeavy?.addEventListener("click", () => {
+        const id = getActiveDeviceId();
+        api?.setVibration?.(id, 64, 0);
+        api?.updateOutput?.(id);
+        log(`📳 Device ${id}: Heavy Rumble Test (Left Motor = 64)`);
+      });
+
+      btnTestBoth?.addEventListener("click", () => {
+        const id = getActiveDeviceId();
+        api?.setVibration?.(id, 64, 64);
+        api?.updateOutput?.(id);
+        log(`📳 Device ${id}: Both Motors Rumble Test (Left=64, Right=64)`);
+      });
+
+      btnStopVibe?.addEventListener("click", () => {
+        const id = getActiveDeviceId();
+        api?.setVibration?.(id, 0, 0);
+        api?.updateOutput?.(id);
+        log(`📳 Device ${id}: Vibration Stopped.`);
+      });
+
+      btnStopAll?.addEventListener("click", () => {
+        const id = getActiveDeviceId();
+        stopTriggers(id);
+        api?.setVibration?.(id, 0, 0);
+        api?.lightbar?.(id, 0, 0, 0);
+        api?.resetLights?.(id);
+        api?.updateOutput?.(id);
+        log(
+          `🛑 Device ${id}: All vibration, trigger effects, and lights stopped.`,
+        );
+      });
+
+      function setTriggerEffect(deviceId, payload, hand, msg) {
+        if (!api.customTrigger || !api.updateOutput) {
+          log(`⚠️ ${msg} (GCH_CustomTrigger not available)`);
+          return;
+        }
+        for (let i = 0; i < payload.length; i++) {
+          hostModule.setValue(triggerBufferPtr + i, payload[i], "i8");
+        }
+        const ok = api.customTrigger(
+          deviceId,
+          triggerBufferPtr,
+          payload.length,
+          hand,
+        );
+        api.updateOutput(deviceId);
+        log(
+          ok
+            ? t("logs.triggerSuccess", { id: deviceId, msg })
+            : t("logs.triggerFailed", { id: deviceId, msg }),
+        );
+      }
+
+      function stopTriggers(deviceId) {
+        api.stopTrigger?.(deviceId, 0);
+        api.stopTrigger?.(deviceId, 1);
+        api.updateOutput?.(deviceId);
+        log(t("logs.triggersReset", { id: deviceId }));
+      }
+
+      function setBasicOutput(deviceId, left, right, r, g, b, msg) {
+        api.setVibration?.(deviceId, left, right);
+        api.lightbar?.(deviceId, r, g, b);
+        api.updateOutput?.(deviceId);
+        log(`✨ Device ${deviceId}: ${msg}`);
+      }
+
+      function isPressed(cur, prev) {
+        return cur && !prev;
+      }
+
+      // UI Updates
+      function updateUI(s) {
+        // Gatilhos
+        lblL1.textContent = s.bLeftShoulder ? "1" : "0";
+        lblL1.style.color = s.bLeftShoulder ? "var(--ok)" : "inherit";
+        lblL2.textContent = s.leftTriggerAnalog.toFixed(3);
+        barL2.style.width = `${Math.min(100, Math.max(0, s.leftTriggerAnalog * 100))}%`;
+        lblL2Th.textContent = String(s.bLeftTriggerThreshold);
+        lblL2Th.style.color = s.bLeftTriggerThreshold ? "var(--ok)" : "inherit";
+
+        lblR1.textContent = s.bRightShoulder ? "1" : "0";
+        lblR1.style.color = s.bRightShoulder ? "var(--ok)" : "inherit";
+        lblR2.textContent = s.rightTriggerAnalog.toFixed(3);
+        barR2.style.width = `${Math.min(100, Math.max(0, s.rightTriggerAnalog * 100))}%`;
+        lblR2Th.textContent = String(s.bRightTriggerThreshold);
+        lblR2Th.style.color = s.bRightTriggerThreshold
+          ? "var(--ok)"
+          : "inherit";
+        lblR2Active.textContent = s.rightTriggerAnalog.toFixed(2);
+        lblDeadzone.textContent = s.analogDeadZone.toFixed(2);
+
+        // Left Stick
+        lblLstickCoords.textContent = `(${s.leftAnalogX.toFixed(2)}, ${s.leftAnalogY.toFixed(2)})`;
+        stickLeftDot.style.transform = `translate(${s.leftAnalogX * 32}px, ${-s.leftAnalogY * 32}px)`;
+        stickLeftDot.classList.toggle("pressed", s.bLeftStick);
+        lblL3.textContent = s.bLeftStick ? "1" : "0";
+        lblL3.style.color = s.bLeftStick ? "var(--ok)" : "inherit";
+        lblLaUp.textContent = s.bLeftAnalogUp ? "1" : "0";
+        lblLaUp.style.color = s.bLeftAnalogUp ? "var(--ok)" : "inherit";
+        lblLaDown.textContent = s.bLeftAnalogDown ? "1" : "0";
+        lblLaDown.style.color = s.bLeftAnalogDown ? "var(--ok)" : "inherit";
+        lblLaLeft.textContent = s.bLeftAnalogLeft ? "1" : "0";
+        lblLaLeft.style.color = s.bLeftAnalogLeft ? "var(--ok)" : "inherit";
+        lblLaRight.textContent = s.bLeftAnalogRight ? "1" : "0";
+        lblLaRight.style.color = s.bLeftAnalogRight ? "var(--ok)" : "inherit";
+
+        // Right Stick
+        lblRstickCoords.textContent = `(${s.rightAnalogX.toFixed(2)}, ${s.rightAnalogY.toFixed(2)})`;
+        stickRightDot.style.transform = `translate(${s.rightAnalogX * 32}px, ${-s.rightAnalogY * 32}px)`;
+        stickRightDot.classList.toggle("pressed", s.bRightStick);
+        lblR3.textContent = s.bRightStick ? "1" : "0";
+        lblR3.style.color = s.bRightStick ? "var(--ok)" : "inherit";
+        lblRaUp.textContent = s.bRightAnalogUp ? "1" : "0";
+        lblRaUp.style.color = s.bRightAnalogUp ? "var(--ok)" : "inherit";
+        lblRaDown.textContent = s.bRightAnalogDown ? "1" : "0";
+        lblRaDown.style.color = s.bRightAnalogDown ? "var(--ok)" : "inherit";
+        lblRaLeft.textContent = s.bRightAnalogLeft ? "1" : "0";
+        lblRaLeft.style.color = s.bRightAnalogLeft ? "var(--ok)" : "inherit";
+        lblRaRight.textContent = s.bRightAnalogRight ? "1" : "0";
+        lblRaRight.style.color = s.bRightAnalogRight ? "var(--ok)" : "inherit";
+
+        // Digital Buttons
+        updatePill(pillCross, vCross, s.bCross);
+        updatePill(pillCircle, vCircle, s.bCircle);
+        updatePill(pillSquare, vSquare, s.bSquare);
+        updatePill(pillTriangle, vTriangle, s.bTriangle);
+
+        updatePill(pillUp, vUp, s.bDpadUp);
+        updatePill(pillDown, vDown, s.bDpadDown);
+        updatePill(pillLeft, vLeft, s.bDpadLeft);
+        updatePill(pillRight, vRight, s.bDpadRight);
+
+        updatePill(pillPs, vPs, s.bPSButton);
+        updatePill(pillShare, vShare, s.bShare);
+        updatePill(pillOptions, vOptions, s.bStart);
+        updatePill(pillTouchBtn, vTouchBtn, s.bTouch);
+        updatePill(pillMute, vMute, s.bMute);
+        updatePill(pillPhone, vPhone, s.bHasPhoneConnected);
+
+        updatePill(pillFn1, vFn1, s.bFn1);
+        updatePill(pillFn2, vFn2, s.bFn2);
+        updatePill(pillPaddL, vPaddL, s.bPaddleLeft);
+        updatePill(pillPaddR, vPaddR, s.bPaddleRight);
+
+        // Touchpad
+        lblIsTouching.textContent = String(s.bIsTouching);
+        lblIsTouching.style.color = s.bIsTouching ? "var(--ok)" : "inherit";
+        lblTouchId.textContent = String(s.touchId);
+        lblTouchDir.textContent = String(s.directionRaw);
+        lblTouchPos.textContent = `(${s.touchPositionX.toFixed(1)}, ${s.touchPositionY.toFixed(1)})`;
+        lblTouchRel.textContent = `(${s.touchRelativeX.toFixed(1)}, ${s.touchRelativeY.toFixed(1)})`;
+        lblTouchRad.textContent = `(${s.touchRadiusX.toFixed(1)}, ${s.touchRadiusY.toFixed(1)})`;
+        lastFingerCount = s.touchFingerCount;
+        lblTouchStatus.textContent = `${t("touchpad.fingers")}: ${s.touchFingerCount}`;
+
+        const isTouching = Boolean(
+          s.bIsTouching ||
+          s.touchFingerCount > 0 ||
+          s.touchPositionX !== 0 ||
+          s.touchPositionY !== 0,
+        );
+
+        if (
+          isTouching &&
+          (s.touchPositionX > 0 || s.touchPositionY > 0 || s.bIsTouching)
+        ) {
+          touchDot1.style.display = "block";
+          let nx = 0;
+          let ny = 0;
+          if (s.touchPositionX > 1.5 || s.touchPositionY > 1.5) {
+            // DualSense hardware touchpad resolution is 1920 x 1080
+            nx = Math.min(1, Math.max(0, s.touchPositionX / 1920));
+            ny = Math.min(1, Math.max(0, s.touchPositionY / 1080));
+          } else if (
+            s.touchPositionX >= 0 &&
+            s.touchPositionX <= 1.0 &&
+            s.touchPositionY >= 0 &&
+            s.touchPositionY <= 1.0
+          ) {
+            nx = s.touchPositionX;
+            ny = s.touchPositionY;
+          } else {
+            nx = Math.min(1, Math.max(0, (s.touchPositionX + 1) / 2));
+            ny = Math.min(1, Math.max(0, (s.touchPositionY + 1) / 2));
+          }
+          touchDot1.style.left = `${(nx * 100).toFixed(2)}%`;
+          touchDot1.style.top = `${(ny * 100).toFixed(2)}%`;
+          if (touchDotCoord) {
+            touchDotCoord.textContent = `${s.touchPositionX.toFixed(0)}, ${s.touchPositionY.toFixed(0)}`;
+          }
+          touchHint.style.display = "none";
+          touchpadArea?.classList.add("active-touch");
+        } else {
+          touchDot1.style.display = "none";
+          touchHint.style.display = "block";
+          touchpadArea?.classList.remove("active-touch");
+        }
+
+        // Bateria
+        lblBattery.textContent = `${s.batteryLevel.toFixed(0)}%`;
+
+        // Atualizar PiP (Picture-in-Picture)
+        updatePipUI(s);
+      }
+
+      function updatePill(pill, valEl, isPressed) {
+        valEl.textContent = isPressed ? "1" : "0";
+        pill.classList.toggle("active", isPressed);
+      }
+
+      // ==========================================
+      // Picture-in-Picture (PiP) Minimalist HUD
+      // ==========================================
+      let pipWindow = null;
+
+      function getAudioPipTemplateHTML() {
+        return `
+          <section class="audio-pip-card">
+            <div class="pip-header">
+              <div class="pip-title">
+                <span>🔊</span>
+                <span>${t("controls.audioSettingsTitle")}</span>
+              </div>
+              <button id="pip-close-btn" class="pip-close-btn" title="Close PiP">✕</button>
+            </div>
+
+            <button id="pip-btn-audio" class="pip-control-btn pip-control-audio">
+              ${t("header.btnAudioHaptics")}
+            </button>
+
+            <div class="audio-grid">
+              <div class="audio-control">
+                <label>${t("controls.volume")} (<output id="pip-audio-volume-value">${audioVolume}</output>)</label>
+                <input id="pip-audio-volume" type="range" min="0" max="100" value="${audioVolume}" step="1">
+              </div>
+
+              <div class="audio-control">
+                <label>${t("controls.gain")} (<output id="pip-audio-gain-value">${audioGain.toFixed(1)}</output>)</label>
+                <input id="pip-audio-gain" type="range" min="1" max="2" value="${audioGain}" step="0.1">
+              </div>
+
+              <label class="checkbox-group">
+                <input id="pip-switch-speaker" type="checkbox" ${switchSpeaker.checked ? "checked" : ""}>
+                <span>${t("controls.headsetOnly")}</span>
+              </label>
+
+              <label class="checkbox-group">
+                <input id="pip-switch-audio-haptics" type="checkbox" ${switchAudioHaptics.checked ? "checked" : ""}>
+                <span>${t("controls.modeAudioOnly")}</span>
+              </label>
+
+              <div class="audio-control-row" style="display: none;">
+                <label>${t("controls.reduceVibration")}</label>
+                <input id="pip-rumble-reduce" type="number" min="0" max="15" value="${inputRumbleReduce.value}">
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      function getPipTemplateHTML(includeControls = true) {
+        const controls = includeControls
+          ? `
+        <div class="pip-actions-bar">
+          <button id="pip-btn-play" class="pip-control-btn pip-control-play">▶ Play</button>
+          <button id="pip-btn-stop-loop" class="pip-control-btn pip-control-stop">■ Stop</button>
+          <button id="pip-btn-audio" class="pip-control-btn pip-control-audio">🎵 Audio Haptics</button>
+        </div>
+        <div class="pip-actions-bar">
+          <label class="pip-audio-slider">Vol <input id="pip-audio-volume" type="range" min="0" max="100" value="100" step="1"><output id="pip-audio-volume-value">100</output></label>
+          <label class="pip-audio-slider">Gain <input id="pip-audio-gain" type="range" min="1.0" max="2.0" value="1.0" step="0.1"><output id="pip-audio-gain-value">1.0</output></label>
+        </div>`
+          : `<div class="compact-pip-hint"><button type="button" disabled data-i18n="controls.audioHapticsPipHint">${t("controls.audioHapticsPipHint")}</button></div><div class="compact-pip-overlay"><button id="compact-pip-open" class="btn-pip" data-i18n="controls.openPictureInPicture">${t("controls.openPictureInPicture")}</button></div>`;
+        return `
+        <div class="pip-header" id="pip-drag-handle">
+          <div class="pip-title">
+            <span>🎮</span>
+            <span>DualSense Mini</span>
+          </div>
+          <div class="pip-header-right">
+            <span id="pip-battery" class="pip-battery-badge">🔋 --%</span>
+            <button id="pip-close-btn" class="pip-close-btn" title="Close PiP">✕</button>
+          </div>
+        </div>
+
+        <div class="pip-triggers-row">
+          <div class="pip-trigger-col">
+            <div class="pip-trigger-top">
+              <span id="pip-btn-l1" class="pip-btn-pill">L1</span>
+              <span class="pip-label">L2: <strong id="pip-l2-val">0.00</strong></span>
+            </div>
+            <div class="pip-meter-track"><div id="pip-l2-bar" class="pip-meter-fill"></div></div>
+          </div>
+          <div class="pip-trigger-col">
+            <div class="pip-trigger-top">
+              <span class="pip-label">R2: <strong id="pip-r2-val">0.00</strong></span>
+              <span id="pip-btn-r1" class="pip-btn-pill">R1</span>
+            </div>
+            <div class="pip-meter-track"><div id="pip-r2-bar" class="pip-meter-fill"></div></div>
+          </div>
+        </div>
+
+        <div class="pip-main-body">
+          <!-- D-Pad Column -->
+          <div class="pip-dpad-grid">
+            <div></div>
+            <div id="pip-dpad-up" class="pip-dpad-btn pip-btn">▲</div>
+            <div></div>
+            <div id="pip-dpad-left" class="pip-dpad-btn pip-btn">◀</div>
+            <div class="pip-dpad-center"></div>
+            <div id="pip-dpad-right" class="pip-dpad-btn pip-btn">▶</div>
+            <div></div>
+            <div id="pip-dpad-down" class="pip-dpad-btn pip-btn">▼</div>
+            <div></div>
+          </div>
+
+          <!-- Center Column: System Buttons & Sticks -->
+          <div class="pip-center-col">
+            <div class="pip-system-row">
+              <span id="pip-btn-share" class="pip-sys-btn" title="Share / Create">◪</span>
+              <span id="pip-btn-touch" class="pip-sys-btn" title="Touchpad">TOUCH</span>
+              <span id="pip-btn-ps" class="pip-sys-btn pip-ps-btn" title="PS">PS</span>
+              <span id="pip-btn-mute" class="pip-sys-btn" title="Mute">🎙️</span>
+              <span id="pip-btn-options" class="pip-sys-btn" title="Options">☰</span>
+            </div>
+            
+            <div class="pip-sticks-row">
+              <div class="pip-stick-box">
+                <div class="pip-stick-radar">
+                  <div class="pip-radar-cross"></div>
+                  <div id="pip-lstick-dot" class="pip-stick-dot"></div>
+                </div>
+                <div class="pip-stick-sub">
+                  <span id="pip-btn-l3" class="pip-stick-click">L3</span>
+                  <span id="pip-lstick-coords" class="pip-coords">0.0, 0.0</span>
+                </div>
+              </div>
+
+              <div class="pip-stick-box">
+                <div class="pip-stick-radar">
+                  <div class="pip-radar-cross"></div>
+                  <div id="pip-rstick-dot" class="pip-stick-dot"></div>
+                </div>
+                <div class="pip-stick-sub">
+                  <span id="pip-btn-r3" class="pip-stick-click">R3</span>
+                  <span id="pip-rstick-coords" class="pip-coords">0.0, 0.0</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Face Buttons Column -->
+          <div class="pip-face-grid">
+            <div></div>
+            <div id="pip-btn-triangle" class="pip-face-btn pip-btn-triangle">△</div>
+            <div></div>
+            <div id="pip-btn-square" class="pip-face-btn pip-btn-square">□</div>
+            <div class="pip-dpad-center"></div>
+            <div id="pip-btn-circle" class="pip-face-btn pip-btn-circle">○</div>
+            <div></div>
+            <div id="pip-btn-cross" class="pip-face-btn pip-btn-cross">✕</div>
+            <div></div>
+          </div>
+        </div>
+        ${controls}
+      `;
+      }
+
+      async function stopAudioHapticsFromUi() {
+        try {
+          await gamepadApp?.disableAudioHaptics();
+        } catch (err) {
+          log(t("logs.audioStopError", { error: String(err) }));
+        }
+      }
+
+      function setupPipEvents(targetDocOrEl, isNativeWindow) {
+        const q = (sel) => targetDocOrEl.querySelector(sel);
+        const qAll = (sel) => targetDocOrEl.querySelectorAll(sel);
+
+        q("#pip-btn-play")?.addEventListener("click", () => btnStart.click());
+        q("#pip-btn-stop-loop")?.addEventListener("click", () => {
+          toggleAudioHapticsFromPip();
+          btnStop.click();
+        });
+        q("#pip-btn-audio")?.addEventListener("click", () =>
+          toggleAudioHapticsFromPip(),
+        );
+        q("#compact-pip-open")?.addEventListener("click", () =>
+          togglePictureInPicture(),
+        );
+
+        const pipVolume = q("#pip-audio-volume");
+        const pipGain = q("#pip-audio-gain");
+        const pipSpeaker = q("#pip-switch-speaker");
+        const pipAudioMode = q("#pip-switch-audio-haptics");
+        const pipRumbleReduce = q("#pip-rumble-reduce");
+        const syncAudioSettingsFromPip = () => {
+          if (pipVolume)
+            audioVolume = Math.min(100, Math.max(0, Number(pipVolume.value)));
+          if (pipGain)
+            audioGain = Math.min(2.0, Math.max(1.0, Number(pipGain.value)));
+          if (pipSpeaker) switchSpeaker.checked = pipSpeaker.checked;
+          if (pipAudioMode)
+            switchAudioHaptics.checked = pipAudioMode.checked;
+          if (pipRumbleReduce)
+            inputRumbleReduce.value = String(
+              Math.min(15, Math.max(0, Number(pipRumbleReduce.value) || 0)),
+            );
+
+          inputAudioVolume.value = String(audioVolume);
+          inputAudioGain.value = String(audioGain);
+          inputAudioVolumeValue.textContent = String(audioVolume);
+          inputAudioGainValue.textContent = audioGain.toFixed(1);
+
+          applyAudioSettings();
+
+          const volumeValue = q("#pip-audio-volume-value");
+          const gainValue = q("#pip-audio-gain-value");
+          if (volumeValue) volumeValue.value = `${pipVolume?.value ?? 100}`;
+          if (gainValue)
+            gainValue.value = Number(pipGain?.value ?? 1).toFixed(1);
+        };
+        pipVolume?.addEventListener("input", syncAudioSettingsFromPip);
+        pipGain?.addEventListener("input", syncAudioSettingsFromPip);
+        pipSpeaker?.addEventListener("change", syncAudioSettingsFromPip);
+        pipAudioMode?.addEventListener("change", syncAudioSettingsFromPip);
+        pipRumbleReduce?.addEventListener("input", syncAudioSettingsFromPip);
+
+        // Close Button
+        const closeBtn = q("#pip-close-btn");
+        if (closeBtn) {
+          closeBtn.addEventListener("click", async () => {
+            await stopAudioHapticsFromUi();
+            if (isNativeWindow && pipWindow) {
+              pipWindow.close();
+              pipWindow = null;
+            } else {
+              inPagePip.style.display = "none";
+            }
+            btnPip.classList.remove("active");
+          });
+        }
+
+        // Quick Vibe Soft
+        const btnSoft = q("#pip-btn-soft-vibe");
+        if (btnSoft) {
+          btnSoft.addEventListener("click", () => {
+            const id = getActiveDeviceId();
+            setBasicOutput(id, 0, 64, 255, 255, 0, "Soft Rumble (Yellow)");
+          });
+        }
+
+        // Quick Vibe Heavy
+        const btnHeavy = q("#pip-btn-heavy-vibe");
+        if (btnHeavy) {
+          btnHeavy.addEventListener("click", () => {
+            const id = getActiveDeviceId();
+            setBasicOutput(id, 64, 0, 255, 0, 0, "Heavy Rumble (Red)");
+          });
+        }
+
+        // Quick Stop All
+        const btnStopPiP = q("#pip-btn-stop");
+        if (btnStopPiP) {
+          btnStopPiP.addEventListener("click", () => {
+            const id = getActiveDeviceId();
+            stopTriggers(id);
+            setBasicOutput(id, 0, 0, 0, 0, 0, "All Stopped");
+            api?.resetLights?.(id);
+            api?.updateOutput?.(id);
+          });
+        }
+
+        // LED Color Dots
+        qAll(".pip-color-dot").forEach((dot) => {
+          dot.addEventListener("click", () => {
+            const hex = dot.getAttribute("data-color");
+            if (!hex) return;
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            const id = getActiveDeviceId();
+            api?.lightbar?.(id, r, g, b);
+            api?.updateOutput?.(id);
+          });
+        });
+
+        // Draggable support for In-Page Overlay
+        if (!isNativeWindow) {
+          const handle = q("#pip-drag-handle");
+          if (handle) {
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let initialLeft = 0;
+            let initialTop = 0;
+
+            handle.addEventListener("mousedown", (e) => {
+              if (e.target.closest("#pip-close-btn")) return;
+              isDragging = true;
+              startX = e.clientX;
+              startY = e.clientY;
+              const rect = inPagePip.getBoundingClientRect();
+              initialLeft = rect.left;
+              initialTop = rect.top;
+              inPagePip.style.bottom = "auto";
+              inPagePip.style.right = "auto";
+              inPagePip.style.left = `${initialLeft}px`;
+              inPagePip.style.top = `${initialTop}px`;
+              e.preventDefault();
+            });
+
+            window.addEventListener("mousemove", (e) => {
+              if (!isDragging) return;
+              const dx = e.clientX - startX;
+              const dy = e.clientY - startY;
+              const maxLeft = window.innerWidth - inPagePip.offsetWidth - 10;
+              const maxTop = window.innerHeight - inPagePip.offsetHeight - 10;
+              const newLeft = Math.max(10, Math.min(maxLeft, initialLeft + dx));
+              const newTop = Math.max(10, Math.min(maxTop, initialTop + dy));
+              inPagePip.style.left = `${newLeft}px`;
+              inPagePip.style.top = `${newTop}px`;
+            });
+
+            window.addEventListener("mouseup", () => {
+              isDragging = false;
+            });
+          }
+        }
+      }
+
+      async function togglePictureInPicture() {
+        if (pipWindow) {
+          pipWindow.close();
+          pipWindow = null;
+          btnPip.classList.remove("active");
+          return;
+        }
+        if (inPagePip.style.display !== "none") {
+          inPagePip.style.display = "none";
+          btnPip.classList.remove("active");
+          return;
+        }
+
+        // Try native Document Picture-in-Picture API first
+        if ("documentPictureInPicture" in window) {
+          try {
+            pipWindow = await window.documentPictureInPicture.requestWindow({
+              width: 468,
+              height: 344,
+            });
+
+            // Copy all styles into the new PiP window
+            document
+              .querySelectorAll('style, link[rel="stylesheet"]')
+              .forEach((styleSheet) => {
+                pipWindow.document.head.appendChild(styleSheet.cloneNode(true));
+              });
+
+            pipWindow.document.title = "DualSense Mini HUD";
+            pipWindow.document.body.style.margin = "0";
+            pipWindow.document.body.style.background = "#0d1322";
+
+            const root = pipWindow.document.createElement("div");
+            root.id = "pip-root";
+            root.className = "pip-container";
+            root.innerHTML = getAudioPipTemplateHTML();
+            pipWindow.document.body.appendChild(root);
+
+            setupPipEvents(pipWindow.document, true);
+            syncPipControls();
+
+            pipWindow.addEventListener("pagehide", () => {
+              stopAudioHapticsFromUi();
+              pipWindow = null;
+              btnPip.classList.remove("active");
+            });
+
+            btnPip.classList.add("active");
+            log(t("logs.pipOpened"));
+            return;
+          } catch (err) {
+            log(t("logs.pipFallback", { error: String(err) }));
+          }
+        }
+
+        // Fallback / In-Page floating overlay
+        inPagePip.innerHTML = `<div class="pip-container">${getAudioPipTemplateHTML()}</div>`;
+        inPagePip.style.display = "flex";
+        setupPipEvents(inPagePip, false);
+        syncPipControls();
+        btnPip.classList.add("active");
+        log(t("logs.pipOverlayOpened"));
+      }
+
+      function updatePipUI(s) {
+        const compactHud = document.getElementById("compact-hud");
+        if (compactHud) updatePipTargetUI(s, compactHud);
+        if (pipWindow && pipWindow.document)
+          updatePipTargetUI(s, pipWindow.document);
+        else if (inPagePip && inPagePip.style.display !== "none")
+          updatePipTargetUI(s, inPagePip);
+      }
+
+      function updatePipTargetUI(s, doc) {
+        if (!doc) return;
+
+        const q = (id) =>
+          doc.getElementById
+            ? doc.getElementById(id)
+            : doc.querySelector(`#${id}`);
+
+        // Battery
+        const elBat = q("pip-battery");
+        if (elBat) elBat.textContent = `🔋 ${s.batteryLevel.toFixed(0)}%`;
+
+        // Triggers
+        const elL1 = q("pip-btn-l1");
+        if (elL1) elL1.classList.toggle("active", s.bLeftShoulder);
+        const elL2Val = q("pip-l2-val");
+        if (elL2Val) elL2Val.textContent = s.leftTriggerAnalog.toFixed(2);
+        const elL2Bar = q("pip-l2-bar");
+        if (elL2Bar)
+          elL2Bar.style.width = `${Math.min(100, Math.max(0, s.leftTriggerAnalog * 100))}%`;
+
+        const elR1 = q("pip-btn-r1");
+        if (elR1) elR1.classList.toggle("active", s.bRightShoulder);
+        const elR2Val = q("pip-r2-val");
+        if (elR2Val) elR2Val.textContent = s.rightTriggerAnalog.toFixed(2);
+        const elR2Bar = q("pip-r2-bar");
+        if (elR2Bar)
+          elR2Bar.style.width = `${Math.min(100, Math.max(0, s.rightTriggerAnalog * 100))}%`;
+
+        // D-Pad
+        q("pip-dpad-up")?.classList.toggle("active", s.bDpadUp);
+        q("pip-dpad-down")?.classList.toggle("active", s.bDpadDown);
+        q("pip-dpad-left")?.classList.toggle("active", s.bDpadLeft);
+        q("pip-dpad-right")?.classList.toggle("active", s.bDpadRight);
+
+        // Face Buttons
+        q("pip-btn-cross")?.classList.toggle("active", s.bCross);
+        q("pip-btn-circle")?.classList.toggle("active", s.bCircle);
+        q("pip-btn-square")?.classList.toggle("active", s.bSquare);
+        q("pip-btn-triangle")?.classList.toggle("active", s.bTriangle);
+
+        // System Buttons
+        q("pip-btn-ps")?.classList.toggle("active", s.bPSButton);
+        q("pip-btn-share")?.classList.toggle("active", s.bShare);
+        q("pip-btn-options")?.classList.toggle("active", s.bStart);
+        q("pip-btn-mute")?.classList.toggle("active", s.bMute);
+        q("pip-btn-touch")?.classList.toggle("active", s.bTouch);
+
+        // Sticks
+        const elL3 = q("pip-btn-l3");
+        if (elL3) elL3.classList.toggle("active", s.bLeftStick);
+        const elR3 = q("pip-btn-r3");
+        if (elR3) elR3.classList.toggle("active", s.bRightStick);
+
+        const elLdot = q("pip-lstick-dot");
+        if (elLdot) {
+          elLdot.style.transform = `translate(${s.leftAnalogX * 16}px, ${-s.leftAnalogY * 16}px)`;
+          elLdot.classList.toggle("pressed", s.bLeftStick);
+        }
+        const elRdot = q("pip-rstick-dot");
+        if (elRdot) {
+          elRdot.style.transform = `translate(${s.rightAnalogX * 16}px, ${-s.rightAnalogY * 16}px)`;
+          elRdot.classList.toggle("pressed", s.bRightStick);
+        }
+
+        const elLcoords = q("pip-lstick-coords");
+        if (elLcoords)
+          elLcoords.textContent = `${s.leftAnalogX.toFixed(1)}, ${s.leftAnalogY.toFixed(1)}`;
+        const elRcoords = q("pip-rstick-coords");
+        if (elRcoords)
+          elRcoords.textContent = `${s.rightAnalogX.toFixed(1)}, ${s.rightAnalogY.toFixed(1)}`;
+      }
+
+      function makePath(d, idx) {
+        return `webhid:${d.vendorId.toString(16)}:${d.productId.toString(16)}:${d.serialNumber || "noserial"}:${idx}`;
+      }
+
+      function pathToBytes(p) {
+        const raw = new TextEncoder().encode(p);
+        const fixed = new Uint8Array(PATH_SIZE);
+        fixed.set(raw.subarray(0, PATH_SIZE - 1));
+        return fixed;
+      }
+
+      function readPath(ptr) {
+        let str = "";
+        for (let i = 0; i < PATH_SIZE; i++) {
+          const c = hostModule.getValue(ptr + i, "i8") & 0xff;
+          if (c === 0) break;
+          str += String.fromCharCode(c);
+        }
+        return str.trim();
+      }
+
+      function writeU64(ptr, value) {
+        hostModule.setValue(ptr, value >>> 0, "i32");
+        hostModule.setValue(ptr + 4, 0, "i32");
+      }
+
+      function writeI32(ptr, value) {
+        if (!ptr) return;
+        hostModule.setValue(ptr, value, "i32");
+      }
+
+      function cacheDevice(device) {
+        if (device.vendorId !== SONY_VENDOR) return;
+        const key = `${device.vendorId}:${device.productId}:${device.serialNumber || ""}`;
+        if (
+          cachedDevices.some(
+            (d) =>
+              `${d.vendorId}:${d.productId}:${d.serialNumber || ""}` === key,
+          )
+        ) {
+          return;
+        }
+        cachedDevices.push(device);
+      }
+
+      function printStartupBanner() {
+        if (bannerPrinted) return;
+        bannerPrinted = true;
+        log("=======================================================");
+        log("           DUALSENSE INTEGRATION TEST");
+        log("=======================================================");
+      }
+
+      // Inicializar traduções na interface
+      const compactHud = document.getElementById("compact-hud");
+      if (compactHud) {
+        compactHud.innerHTML = getPipTemplateHTML(false);
+        setupPipEvents(compactHud, false);
+      }
+      const logCardHeader = document
+        .getElementById("log-box")
+        ?.closest(".card")
+        ?.querySelector(".card-header");
+      if (logCardHeader && btnClearLogs) {
+        logCardHeader.append(btnClearLogs);
+      }
+      syncPipControls();
+      applyTranslations(currentLocale);
+    </script>
+    <script>
+      document
+        .getElementById("btn-show-logs")
+        .addEventListener("click", () =>
+          document.getElementById("log-dialog").showModal(),
+        );
+      document
+        .getElementById("btn-close-logs")
+        .addEventListener("click", () =>
+          document.getElementById("log-dialog").close(),
+        );
+    </script>
+  </body>
+</html>
