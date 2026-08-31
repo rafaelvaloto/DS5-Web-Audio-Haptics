@@ -25,23 +25,41 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 
 ---
 
+## 🎮 Usage Examples
+
+### DualSense controls with EA SPORTS FC 26
+
+![DualSense controls running with EA SPORTS FC 26](images/usage_ea_fc_26.png)
+
+### Audio Haptics in Picture-in-Picture mode
+
+![Audio Haptics Picture-in-Picture controls with EA SPORTS FC 26](images/usage_pip_ea_fc_26.png)
+
+---
+
 ## 🕹️ Game Compatibility
 
 **Note:** This routing method relies on the game engine natively reading PlayStation hardware inputs (Raw Input / Direct HID). **It should work on any game that natively supports the DualSense controller via Bluetooth.** Games that strictly require Microsoft's XInput API (Xbox controller format) will not register commands without an external wrapper.
 
 To connect the controller to a virtual gamepad, use the [Gamepad Socket repository](https://github.com/rafaelvaloto/Gamepad_Socket).
 
-**Tested & Confirmed Games:**
+### 🌐 Web Browser Games
+
+Browser games, such as [Little Big Smasher](https://augustopolonio.itch.io/little-big-smasher), will generally require the socket connection to emulate a compatible virtual gamepad. As shown in the [demonstration video](https://youtu.be/hyBbN2aqjOc?si=5nG2WPL8PeZHLYOf), this setup works very well.
+
+### 🖥️ Native PC Games
+**Tested & Confirmed Games:** These games were tested successfully with native DualSense support, without requiring socket connection or virtual gamepad emulation.
 
 **Free Games:**
+
 - [Atlas Wars](https://store.epicgames.com/p/atlas-wars-5b83bd)
 - [Pixel Gun 3D](https://store.epicgames.com/p/pixel-gun-3d-812855)
 
 **Paid Games:**
-- [NBA THE RUN](https://store.steampowered.com/app/2866670/NBA_THE_RUN/)
 
-- [EA | FC 26]
-- 
+- NBA THE RUN
+- EA SPORTS FC 26
+
 ---
 
 ## ✨ Key Features
