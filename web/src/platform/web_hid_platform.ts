@@ -1,521 +1,245 @@
-export {};
+import { SONY_VENDOR_ID, DEVICE_TYPE_BY_PRODUCT_ID } from "../const.ts";
+import { Descriptor } from "../types.ts";
+import { NativeModule } from "../lib/GamepadCoreHost";
 
-type DeviceType = 1 | 2 | 3 | 4;
-
-interface WebHidInputReportEvent extends Event {
-  readonly reportId: number;
-  readonly data: DataView<ArrayBuffer>;
-}
-
-interface WebHidDevice {
-  readonly vendorId: number;
-  readonly productId: number;
-  readonly serialNumber?: string;
-  readonly opened: boolean;
-  open(): Promise<void>;
-  close(): Promise<void>;
-  sendReport(reportId: number, data: BufferSource): Promise<void>;
-  addEventListener(type: "inputreport", listener: (event: WebHidInputReportEvent) => void): void;
-  removeEventListener(type: "inputreport", listener: (event: WebHidInputReportEvent) => void): void;
-}
-
-interface WebHidHost {
-  __cachedDevices?: WebHidDevice[];
-  getDevices(): Promise<WebHidDevice[]>;
-  requestDevice(options: { filters: Array<{ vendorId: number }> }): Promise<WebHidDevice[]>;
-}
-
-type NavigatorWithWebHid = Navigator & { hid?: WebHidHost };
-
-export async function requestSonyWebHidAccess(): Promise<void> {
-  const nav = navigator as NavigatorWithWebHid;
-  if (!nav.hid) {
-    throw new Error("WebHID não está disponível neste navegador.");
-  }
-  const devices = await nav.hid.requestDevice({ filters: [{ vendorId: SONY_VENDOR_ID }] });
-  nav.hid.__cachedDevices = devices;
-}
-
-const SONY_VENDOR_ID = 0x054c;
-const DEVICE_TYPE_BY_PRODUCT_ID: Record<number, DeviceType> = {
-  0x0ce6: 1, // DualSense
-  0x0df2: 2, // DualSense Edge
-  0x05c4: 3, // DualShock 4
-  0x09cc: 3, // DualShock 4 (rev)
+type PlatformSignature = {
+	read: string;
+	write: string;
+	detect: string;
+	createHandle: string;
+	invalidateHandle: string;
+	configureFeatures: string;
+	processAudioHaptics: string;
 };
 
-const DESCRIPTOR_SIZE = 532;
-const PATH_SIZE = 512;
-const HANDLE_OFFSET = 0;
-const DEVICE_TYPE_OFFSET = 8;
-const CONNECTION_TYPE_OFFSET = 12;
-const IS_CONNECTED_OFFSET = 16;
-const PATH_OFFSET = 20;
-
-const CONNECTION_USB = 1;
-
-type CallbackSignatureConfig = {
-  read: string;
-  write: string;
-  detect: string;
-  createHandle: string;
-  invalidateHandle: string;
-  configureFeatures: string;
-  processAudioHaptics: string;
+// Signatures corrected to match the C++ calls without arguments/with BigInt
+const PLATFORM_SIGNATURES: PlatformSignature = {
+	read: "ijiii",
+	write: "ijiii",
+	detect: "iii",
+	createHandle: "ii",
+	invalidateHandle: "vj", // void return, i64 arg (BigInt handle)
+	configureFeatures: "i", // int return, 0 args
+	processAudioHaptics: "v", // void return, 0 args
 };
-
-const DEFAULT_SIGNATURES: CallbackSignatureConfig = {
-  read: "iiiii",
-  write: "iiiii",
-  detect: "iii",
-  createHandle: "ii",
-  invalidateHandle: "vi",
-  configureFeatures: "ii",
-  processAudioHaptics: "vii",
-};
-
-type DeviceRegistrySignatureConfig = {
-  alloc: string;
-  dispatch: string;
-  disconnect: string;
-};
-
-const DEFAULT_DEVICE_REGISTRY_SIGNATURES: DeviceRegistrySignatureConfig = {
-  alloc: "ii",
-  dispatch: "vii",
-  disconnect: "vi",
-};
-
-export interface EmscriptenLikeModule {
-  HEAPU8: Uint8Array;
-  cwrap(name: string, returnType: string | null, argTypes: string[]): (...args: number[]) => unknown;
-  addFunction(fn: (...args: number[]) => number | void, signature: string): number;
-  removeFunction(fnPtr: number): void;
-}
 
 export interface PlatformBridgeRegistration {
-  dispose(): Promise<void>;
+	dispose(): Promise<void>;
+	registerManually(device: HIDDevice, handleId: number, path: string, deviceType: number): Promise<void>;
 }
 
-export type AllocEngineDeviceCallback = (...args: number[]) => number;
-export type DispatchNewGamepadCallback = (...args: number[]) => void;
-export type DisconnectDeviceCallback = (...args: number[]) => void;
-
-export interface DeviceRegistryPolicyCallbacks {
-  alloc: AllocEngineDeviceCallback;
-  dispatch: DispatchNewGamepadCallback;
-  disconnect: DisconnectDeviceCallback;
+export function isWebHidAvailable(): boolean {
+	return typeof navigator !== "undefined" && Boolean(navigator.hid);
 }
 
-export interface DeviceRegistryPolicyRegistration {
-  dispose(): void;
+export async function requestSonyWebHidAccess(): Promise<HIDDevice[]> {
+	if (!navigator.hid) {
+		throw new Error("WebHID não está disponível neste navegador.");
+	}
+	return navigator.hid.requestDevice({ filters: [{ vendorId: SONY_VENDOR_ID }] });
 }
 
-type ManagedDevice = {
-  path: string;
-  deviceType: DeviceType;
-  device: WebHidDevice;
-  handleId: number;
-  lastInputPacket: Uint8Array;
-  inputListener?: (event: WebHidInputReportEvent) => void;
-};
+export async function listAuthorizedSonyDevices(): Promise<HIDDevice[]> {
+	if (!navigator.hid) {
+		return [];
+	}
+	const devices = await navigator.hid.getDevices();
+	return devices.filter((d) => d.vendorId === SONY_VENDOR_ID && DEVICE_TYPE_BY_PRODUCT_ID[d.productId] !== undefined);
+}
 
-export class WebHidPlatformBridge {
-  private readonly byPath = new Map<string, ManagedDevice>();
-  private readonly byHandle = new Map<number, ManagedDevice>();
-  private nextHandle = 1;
+class WebHidPlatformBridge {
+	byHandle: Map<number, any> = new Map();
 
-  async requestSonyDevices(): Promise<WebHidDevice[]> {
-    const nav = navigator as NavigatorWithWebHid;
-    if (!nav.hid) {
-      throw new Error("WebHID não está disponível neste navegador.");
-    }
+	async registerManually(device: HIDDevice, handle: number, path: string, type: number): Promise<void> {
+		if (!device.opened) {
+			await device.open();
+		}
 
-    const devices = await nav.hid.requestDevice({
-      filters: [{ vendorId: SONY_VENDOR_ID }],
-    });
-    nav.hid.__cachedDevices = devices;
-    return devices;
-  }
+		const buffer = new Uint8Array(78);
+		const entry = { device, handle, path, type, lastInputPacket: buffer, inputListener: null as any };
 
-  detect = (heap: Uint8Array, descriptorsBuffer: number, maxDevices: number): number => {
-    if (descriptorsBuffer === 0 || maxDevices <= 0) {
-      return 0;
-    }
+		entry.inputListener = (event: HIDInputReportEvent) => {
+			entry.lastInputPacket = new Uint8Array(event.data.buffer as ArrayBuffer);
+		};
 
-    const devices = this.getSupportedDevicesSync();
-    let found = 0;
+		device.addEventListener("inputreport", entry.inputListener);
+		this.byHandle.set(handle, entry);
+	}
 
-    for (const device of devices) {
-      if (found >= maxDevices) {
-        break;
-      }
-      const deviceType = DEVICE_TYPE_BY_PRODUCT_ID[device.productId];
-      if (deviceType === undefined) {
-        continue;
-      }
+	read(heap: Uint8Array, handle: number, buffer: number, length: number, bytesReadPtr: number): boolean {
+		if (handle <= 0 || buffer === 0 || length <= 0) {
+			this.writeInt32(heap, bytesReadPtr, 0);
+			return false;
+		}
 
-      const path = this.makePath(device, found);
-      const descriptorPtr = descriptorsBuffer + found * DESCRIPTOR_SIZE;
-      const descriptorView = new DataView(heap.buffer, heap.byteOffset + descriptorPtr, DESCRIPTOR_SIZE);
-      const pathBytes = this.toFixedPath(path);
+		const entry = this.byHandle.get(handle);
+		if (!entry || !entry.device.opened) {
+			this.writeInt32(heap, bytesReadPtr, 0);
+			return false;
+		}
 
-      this.writeHandleU64(descriptorView, HANDLE_OFFSET, 0);
-      descriptorView.setInt32(DEVICE_TYPE_OFFSET, deviceType, true);
-      descriptorView.setInt32(CONNECTION_TYPE_OFFSET, CONNECTION_USB, true);
-      descriptorView.setInt32(IS_CONNECTED_OFFSET, 1, true);
-      heap.set(pathBytes, descriptorPtr + PATH_OFFSET);
+		let packet = entry.lastInputPacket;
+		if (packet.length === 0) {
+			packet = new Uint8Array(78);
+			packet[0] = 0x31;
+		}
 
-      const existing = this.byPath.get(path);
-      if (existing) {
-        existing.device = device;
-      } else {
-        this.byPath.set(path, {
-          path,
-          deviceType,
-          device,
-          handleId: 0,
-          lastInputPacket: new Uint8Array(0),
-        });
-      }
+		const bytesToCopy = Math.min(length, packet.length);
+		heap.set(packet.subarray(0, bytesToCopy), buffer);
+		this.writeInt32(heap, bytesReadPtr, bytesToCopy);
 
-      found++;
-    }
+		return true;
+	}
 
-    return found;
-  };
+	write(heap: Uint8Array, handle: number, buffer: number, length: number, bytesWrittenPtr: number): boolean {
+		if (handle <= 0 || buffer === 0 || length <= 0) {
+			this.writeInt32(heap, bytesWrittenPtr, 0);
+			return false;
+		}
 
-  createHandle = (heap: Uint8Array, descriptorBuffer: number): boolean => {
-    if (descriptorBuffer === 0) {
-      return false;
-    }
+		const entry = this.byHandle.get(handle);
+		if (!entry?.device.opened) {
+			this.writeInt32(heap, bytesWrittenPtr, 0);
+			return false;
+		}
 
-    const descriptorView = new DataView(heap.buffer, heap.byteOffset + descriptorBuffer, DESCRIPTOR_SIZE);
-    const path = this.pathFromHeap(heap, descriptorBuffer + PATH_OFFSET, PATH_SIZE);
-    if (!path) {
-      return false;
-    }
+		const output = heap.slice(buffer, buffer + length);
+		const reportId = output[0] ?? 0;
+		const payload = output.subarray(1);
 
-    const entry = this.byPath.get(path);
-    if (!entry) {
-      return false;
-    }
+		entry.device.sendReport(reportId, payload).catch((error: any) => {
+			console.error("WebHID sendReport falhou:", error);
+		});
 
-    if (!entry.handleId) {
-      entry.handleId = this.nextHandle++;
-      this.byHandle.set(entry.handleId, entry);
-      this.ensureInputCapture(entry);
-    }
+		this.writeInt32(heap, bytesWrittenPtr, length);
+		return true;
+	}
 
-    this.writeHandleU64(descriptorView, HANDLE_OFFSET, entry.handleId);
-    descriptorView.setInt32(IS_CONNECTED_OFFSET, 1, true);
-    return true;
-  };
+	detect(heap: Uint8Array, descriptorsBuffer: number, maxDevices: number): number {
+		return 0;
+	}
 
-  read = (heap: Uint8Array, handle: number, buffer: number, length: number, bytesReadPtr: number): boolean => {
-    if (handle <= 0 || buffer === 0 || length <= 0) {
-      this.writeInt32(heap, bytesReadPtr, 0);
-      return false;
-    }
+	createHandle(heap: Uint8Array, descriptorBuffer: number): boolean {
+		return false;
+	}
 
-    const entry = this.byHandle.get(handle);
-    if (!entry) {
-      this.writeInt32(heap, bytesReadPtr, 0);
-      return false;
-    }
+	invalidateHandle(handle: number): void {
+		const entry = this.byHandle.get(handle);
+		if (!entry) return;
 
-    const packet = entry.lastInputPacket;
-    const bytesToCopy = Math.min(length, packet.length);
-    heap.set(packet.subarray(0, bytesToCopy), buffer);
-    this.writeInt32(heap, bytesReadPtr, bytesToCopy);
-    return bytesToCopy > 0;
-  };
+		this.byHandle.delete(handle);
+		entry.handleId = 0;
 
-  write = (heap: Uint8Array, handle: number, buffer: number, length: number, bytesWrittenPtr: number): boolean => {
-    if (handle <= 0 || buffer === 0 || length <= 0) {
-      this.writeInt32(heap, bytesWrittenPtr, 0);
-      return false;
-    }
+		if (entry.inputListener) {
+			entry.device.removeEventListener("inputreport", entry.inputListener as EventListener);
+			entry.inputListener = undefined;
+		}
+	}
 
-    const entry = this.byHandle.get(handle);
-    if (!entry?.device.opened) {
-      this.writeInt32(heap, bytesWrittenPtr, 0);
-      return false;
-    }
+	configureFeatures(): boolean {
+		return true;
+	}
 
-    const output = heap.slice(buffer, buffer + length);
-    const reportId = output[0] ?? 0;
-    const payload = output.subarray(1);
+	processAudioHaptics(): void {
+		// Implemented in the main audio loop
+	}
 
-    entry.device.sendReport(reportId, payload).catch((error: unknown) => {
-      console.error("WebHID sendReport falhou:", error);
-    });
+	async dispose(): Promise<void> {
+		for (const entry of this.byHandle.values()) {
+			if (entry.inputListener) {
+				entry.device.removeEventListener("inputreport", entry.inputListener as EventListener);
+			}
+			if (entry.device.opened) {
+				await entry.device.close().catch(() => undefined);
+			}
+		}
+		this.byHandle.clear();
+	}
 
-    this.writeInt32(heap, bytesWrittenPtr, length);
-    return true;
-  };
-
-  invalidateHandle = (handle: number): void => {
-    const entry = this.byHandle.get(handle);
-    if (!entry) {
-      return;
-    }
-
-    this.byHandle.delete(handle);
-    entry.handleId = 0;
-    if (entry.inputListener) {
-      entry.device.removeEventListener("inputreport", entry.inputListener);
-      entry.inputListener = undefined;
-    }
-  };
-
-  configureFeatures = (): boolean => {
-    return true;
-  };
-
-  processAudioHaptics = (): void => {
-
-  };
-
-  async dispose(): Promise<void> {
-    for (const entry of this.byPath.values()) {
-      if (entry.inputListener) {
-        entry.device.removeEventListener("inputreport", entry.inputListener);
-      }
-      if (entry.device.opened) {
-        await entry.device.close().catch(() => undefined);
-      }
-    }
-    this.byPath.clear();
-    this.byHandle.clear();
-  }
-
-  private getSupportedDevicesSync(): WebHidDevice[] {
-    const hid = (navigator as NavigatorWithWebHid).hid;
-    if (!hid) {
-      return [];
-    }
-
-    // getDevices é assíncrono na API; aqui usamos cache do navegador para manter callback síncrono.
-    // Se a lista estiver vazia, chame requestSonyDevices() antes da inicialização do bridge.
-    const shadow = hid.__cachedDevices;
-    if (Array.isArray(shadow)) {
-      return shadow.filter((d) => d.vendorId === SONY_VENDOR_ID && DEVICE_TYPE_BY_PRODUCT_ID[d.productId] !== undefined);
-    }
-
-    return [];
-  }
-
-  async refreshCachedDevices(): Promise<void> {
-    const nav = navigator as NavigatorWithWebHid;
-    if (!nav.hid) {
-      return;
-    }
-    const devices = await nav.hid.getDevices();
-    nav.hid.__cachedDevices = devices;
-  }
-
-  private ensureInputCapture(entry: ManagedDevice): void {
-    const device = entry.device;
-
-    if (!device.opened) {
-      device.open().catch((error: unknown) => {
-        console.error("WebHID open falhou:", error);
-      });
-    }
-
-    if (entry.inputListener) {
-      return;
-    }
-
-    entry.inputListener = (event: WebHidInputReportEvent) => {
-      const body = new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength);
-      const packet = new Uint8Array(body.length + 1);
-      packet[0] = event.reportId;
-      packet.set(body, 1);
-      entry.lastInputPacket = packet;
-    };
-
-    device.addEventListener("inputreport", entry.inputListener);
-  }
-
-  private makePath(device: WebHidDevice, index: number): string {
-    const serial = device.serialNumber?.trim() || "noserial";
-    return `webhid:${device.vendorId.toString(16)}:${device.productId.toString(16)}:${serial}:${index}`;
-  }
-
-  private toFixedPath(path: string): Uint8Array {
-    const bytes = new TextEncoder().encode(path);
-    const fixed = new Uint8Array(PATH_SIZE);
-    fixed.set(bytes.subarray(0, PATH_SIZE - 1), 0);
-    return fixed;
-  }
-
-  private pathFromHeap(heap: Uint8Array, ptr: number, maxLength: number): string {
-    const slice = heap.subarray(ptr, ptr + maxLength);
-    let end = 0;
-    while (end < slice.length && slice[end] !== 0) {
-      end++;
-    }
-    return new TextDecoder().decode(slice.subarray(0, end)).trim();
-  }
-
-  private writeInt32(heap: Uint8Array, ptr: number, value: number): void {
-    if (!ptr) {
-      return;
-    }
-    new DataView(heap.buffer, heap.byteOffset + ptr, 4).setInt32(0, value, true);
-  }
-
-  private writeHandleU64(view: DataView, offset: number, value: number): void {
-    view.setUint32(offset, value >>> 0, true);
-    view.setUint32(offset + 4, 0, true);
-  }
+	private writeInt32(heap: Uint8Array, ptr: number, value: number): void {
+		if (!ptr) return;
+		new DataView(heap.buffer, heap.byteOffset + ptr, 4).setInt32(0, value, true);
+	}
 }
 
 export async function initializeWebHidPlatformBridge(
-  module: EmscriptenLikeModule,
-  signatures: Partial<CallbackSignatureConfig> = {}
+	module: NativeModule,
+	signatures: Partial<PlatformSignature> = {}
 ): Promise<PlatformBridgeRegistration> {
-  if (typeof module.addFunction !== "function" || typeof module.removeFunction !== "function") {
-    throw new Error(
-      "Module sem addFunction/removeFunction. Recompile o WASM com EXPORTED_RUNTIME_METHODS=addFunction,removeFunction."
-    );
-  }
+	if (typeof module.addFunction !== "function" || typeof module.removeFunction !== "function") {
+		throw new Error("Module missing addFunction/removeFunction.");
+	}
 
-  const bridge = new WebHidPlatformBridge();
-  await bridge.refreshCachedDevices();
+	const bridge = new WebHidPlatformBridge();
+	const resolved = { ...PLATFORM_SIGNATURES, ...signatures };
 
-  const resolved = { ...DEFAULT_SIGNATURES, ...signatures };
+	const readPtr = module.addFunction(
+		(bighandle: bigint | number, buffer: number, length: number, bytesRead: number) => {
+			return bridge.read(module.HEAPU8, Number(bighandle), buffer, length, bytesRead) ? 1 : 0;
+		},
+		resolved.read
+	);
 
-  const readPtr = module.addFunction((handle, buffer, length, bytesRead) => {
-    return bridge.read(module.HEAPU8, handle, buffer, length, bytesRead) ? 1 : 0;
-  }, resolved.read);
+	const writePtr = module.addFunction(
+		(handle: bigint | number, buffer: number, length: number, bytesWritten: number) => {
+			return bridge.write(module.HEAPU8, Number(handle), buffer, length, bytesWritten) ? 1 : 0;
+		},
+		resolved.write
+	);
 
-  const writePtr = module.addFunction((handle, buffer, length, bytesWritten) => {
-    return bridge.write(module.HEAPU8, handle, buffer, length, bytesWritten) ? 1 : 0;
-  }, resolved.write);
+	const detectPtr = module.addFunction((descriptorsBuffer: number, maxDevices: number) => {
+		return bridge.detect(module.HEAPU8, descriptorsBuffer, maxDevices);
+	}, resolved.detect);
 
-  const detectPtr = module.addFunction((descriptorsBuffer, maxDevices) => {
-    return bridge.detect(module.HEAPU8, descriptorsBuffer, maxDevices);
-  }, resolved.detect);
+	const createHandlePtr = module.addFunction((descriptorBuffer: number) => {
+		return bridge.createHandle(module.HEAPU8, descriptorBuffer) ? 1 : 0;
+	}, resolved.createHandle);
 
-  const createHandlePtr = module.addFunction((descriptorBuffer) => {
-    return bridge.createHandle(module.HEAPU8, descriptorBuffer) ? 1 : 0;
-  }, resolved.createHandle);
+	const invalidateHandlePtr = module.addFunction((handle: bigint | number) => {
+		bridge.invalidateHandle(Number(handle));
+	}, resolved.invalidateHandle);
 
-  const invalidateHandlePtr = module.addFunction((handle) => {
-    bridge.invalidateHandle(handle);
-  }, resolved.invalidateHandle);
+	const configureFeaturesPtr = module.addFunction(() => {
+		return bridge.configureFeatures() ? 1 : 0;
+	}, resolved.configureFeatures);
 
-  const configureFeaturesPtr = module.addFunction(() => {
-    return bridge.configureFeatures() ? 1 : 0;
-  }, resolved.configureFeatures);
+	const processAudioHapticsPtr = module.addFunction(() => {
+		bridge.processAudioHaptics();
+	}, resolved.processAudioHaptics);
 
-  const processAudioHapticsPtr = module.addFunction(() => {
-    bridge.processAudioHaptics();
-  }, resolved.processAudioHaptics);
+	const initializeBridge = module.cwrap("GCH_InitializePlatformBridge", null, [
+		"number",
+		"number",
+		"number",
+		"number",
+		"number",
+		"number",
+		"number",
+	]);
 
-  const initializeBridge = module.cwrap("GCH_InitializePlatformBridge", null, [
-    "number",
-    "number",
-    "number",
-    "number",
-    "number",
-    "number",
-    "number",
-  ]);
+	initializeBridge(
+		readPtr,
+		writePtr,
+		detectPtr,
+		createHandlePtr,
+		invalidateHandlePtr,
+		configureFeaturesPtr,
+		processAudioHapticsPtr
+	);
 
-  initializeBridge(
-    readPtr,
-    writePtr,
-    detectPtr,
-    createHandlePtr,
-    invalidateHandlePtr,
-    configureFeaturesPtr,
-    processAudioHapticsPtr
-  );
-
-  return {
-    dispose: async () => {
-      module.removeFunction(readPtr);
-      module.removeFunction(writePtr);
-      module.removeFunction(detectPtr);
-      module.removeFunction(createHandlePtr);
-      module.removeFunction(invalidateHandlePtr);
-      module.removeFunction(configureFeaturesPtr);
-      module.removeFunction(processAudioHapticsPtr);
-      await bridge.dispose();
-    },
-  };
-}
-
-export function initializeDeviceRegistryPolicy(
-  module: EmscriptenLikeModule,
-  typeId: number,
-  callbacks: DeviceRegistryPolicyCallbacks,
-  signatures: Partial<DeviceRegistrySignatureConfig> = {}
-): DeviceRegistryPolicyRegistration {
-  if (typeof module.addFunction !== "function" || typeof module.removeFunction !== "function") {
-    throw new Error(
-      "Module sem addFunction/removeFunction. Recompile o WASM com EXPORTED_RUNTIME_METHODS=addFunction,removeFunction."
-    );
-  }
-
-  const resolved = { ...DEFAULT_DEVICE_REGISTRY_SIGNATURES, ...signatures };
-
-  const allocPtr = module.addFunction((...args) => {
-    return callbacks.alloc(...args);
-  }, resolved.alloc);
-
-  const dispatchPtr = module.addFunction((...args) => {
-    callbacks.dispatch(...args);
-  }, resolved.dispatch);
-
-  const disconnectPtr = module.addFunction((...args) => {
-    callbacks.disconnect(...args);
-  }, resolved.disconnect);
-
-  const initializePolicy = module.cwrap("GCH_InitializeDeviceRegistryPolicy", null, [
-    "number",
-    "number",
-    "number",
-    "number",
-  ]);
-
-  initializePolicy(typeId, allocPtr, dispatchPtr, disconnectPtr);
-
-  return {
-    dispose: () => {
-      module.removeFunction(allocPtr);
-      module.removeFunction(dispatchPtr);
-      module.removeFunction(disconnectPtr);
-    },
-  };
-}
-
-export function createInMemoryDeviceRegistryPolicy(startEngineDeviceId = 1): DeviceRegistryPolicyCallbacks {
-  let nextId = startEngineDeviceId;
-  const handlesToEngineIds = new Map<number, number>();
-
-  return {
-    alloc: (handleOrDescriptorPtr) => {
-      const key = handleOrDescriptorPtr > 0 ? handleOrDescriptorPtr : nextId;
-      const existing = handlesToEngineIds.get(key);
-      if (existing !== undefined) {
-        return existing;
-      }
-      const created = nextId++;
-      handlesToEngineIds.set(key, created);
-      return created;
-    },
-    dispatch: () => {
-      // Encaminhamento para a engine fica no callback consumidor.
-    },
-    disconnect: (handleOrDescriptorPtr) => {
-      if (handleOrDescriptorPtr > 0) {
-        handlesToEngineIds.delete(handleOrDescriptorPtr);
-      }
-    },
-  };
+	return {
+		dispose: async () => {
+			module.removeFunction(readPtr);
+			module.removeFunction(writePtr);
+			module.removeFunction(detectPtr);
+			module.removeFunction(createHandlePtr);
+			module.removeFunction(invalidateHandlePtr);
+			module.removeFunction(configureFeaturesPtr);
+			module.removeFunction(processAudioHapticsPtr);
+			await bridge.dispose();
+		},
+		registerManually: async (device: HIDDevice, handleId: number, path: string, deviceType: number) => {
+			await bridge.registerManually(device, handleId, path, deviceType);
+		},
+	};
 }
