@@ -1,5 +1,7 @@
 import { GamepadClientApplication } from "./main.ts";
 import { bootWasmAndPlatform } from "./load.ts";
+import { logLines, TRIGGERS } from "./const.ts";
+import { debounce, hexToRgb } from "./helpers.ts";
 
 // app engine instance
 let app: GamepadClientApplication | null = null;
@@ -12,7 +14,7 @@ let app: GamepadClientApplication | null = null;
 
 	try {
 		const wasmContext = await bootWasmAndPlatform("src/lib");
-		app = GamepadClientApplication.createFromContext(wasmContext, 0);
+		app = GamepadClientApplication.createFromContext(wasmContext, 1);
 
 		if (app) {
 			(e.target as HTMLButtonElement).disabled = true;
@@ -23,6 +25,25 @@ let app: GamepadClientApplication | null = null;
 	} catch (err) {
 		console.error("Failed to load the app:", err);
 	}
+});
+
+(document.getElementById("btn-show-logs") as HTMLButtonElement)?.addEventListener("click", async (e) => {
+	const logContainer = document.getElementById("log-dialog");
+	if (logContainer) {
+		logContainer.style.display = logContainer.style.display === "none" ? "block" : "none";
+	}
+});
+
+(document.getElementById("btn-close-logs") as HTMLButtonElement)?.addEventListener("click", async (e) => {
+	const logContainer = document.getElementById("log-dialog");
+	if (logContainer) {
+		logContainer.style.display = "none";
+	}
+});
+
+(document.getElementById("btn-clear-logs") as HTMLButtonElement)?.addEventListener("click", async (e) => {
+	logLines.length = 0;
+	(document.getElementById("log-box") as HTMLButtonElement).textContent = "";
 });
 
 (document.getElementById("btn-request") as HTMLButtonElement)?.addEventListener("click", async (e) => {
@@ -41,7 +62,6 @@ let app: GamepadClientApplication | null = null;
 		}
 
 		console.log(`Success! Connected controllers: ${authorizedDeviceNames.join(", ")}`);
-
 		const lblDevice = document.getElementById("lbl-device");
 		if (lblDevice) {
 			lblDevice.textContent = authorizedDeviceNames.join(", ");
@@ -82,3 +102,118 @@ let app: GamepadClientApplication | null = null;
 	(e.target as HTMLButtonElement).disabled = true;
 	(document.getElementById("btn-start") as HTMLButtonElement).disabled = false;
 });
+
+(document.getElementById("btn-stop") as HTMLButtonElement)?.addEventListener("click", (e) => {
+	if (app) {
+		app.stop();
+	}
+
+	(e.target as HTMLButtonElement).disabled = true;
+	(document.getElementById("btn-start") as HTMLButtonElement).disabled = false;
+});
+
+(document.getElementById("btn-reset-trigger") as HTMLButtonElement)?.addEventListener("click", (e) => {
+	(document.getElementById("sel-trigger-effect") as HTMLSelectElement).value = "none";
+	if (!app) {
+		console.warn("WASM não carregado.");
+		return;
+	}
+
+	if (app.devices.size === 0) {
+		console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+		return;
+	}
+
+	app?.devices.forEach((descriptor, deviceId) => {
+		app?.api?.reset(deviceId, 0);
+		app?.api?.reset(deviceId, 1);
+		app?.api?.output(deviceId);
+		console.log(`Trigger reset applied to the controller ${deviceId}.`);
+	});
+});
+
+(document.getElementById("btn-apply-trigger") as HTMLButtonElement)?.addEventListener("click", (e) => {
+	let pattern: string = (document.getElementById("sel-trigger-effect") as HTMLSelectElement).value;
+	let hand: number = Number((document.getElementById("sel-trigger-hand") as HTMLSelectElement).value);
+
+	if (!app) {
+		console.warn("WASM não carregado.");
+		return;
+	}
+
+	if (app.devices.size === 0) {
+		console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+		return;
+	}
+
+	const arr = TRIGGERS[pattern] || new Uint8Array(0);
+	const bytesLength = arr.length;
+	const bufferPtr = app.module?._malloc(bytesLength);
+
+	if (bufferPtr) {
+		try {
+			app.module?.HEAPU8.set(arr, bufferPtr);
+			app?.devices.forEach((descriptor, deviceId) => {
+				app?.api?.triggers(deviceId, bufferPtr, arr.length, hand);
+				app?.api?.output(deviceId);
+				console.log(`Trigger pattern applied to the controller ${deviceId}.`);
+			});
+		} finally {
+			app.module?._free(bufferPtr);
+		}
+	}
+});
+
+let lastColor = (document.getElementById("picker-led-color") as HTMLInputElement).value;
+(document.getElementById("picker-led-color") as HTMLInputElement)?.addEventListener(
+	"input",
+	debounce((event: Event) => {
+		if (!app) {
+			console.warn("WASM não carregado.");
+			return;
+		}
+
+		if (app.devices.size === 0) {
+			console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+			return;
+		}
+
+		const target = event.target as HTMLInputElement;
+		const hexColor = target.value;
+		if (hexColor === lastColor) {
+			return;
+		}
+
+		const rgb = hexToRgb(hexColor);
+		app?.devices.forEach((descriptor, deviceId) => {
+			app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
+			app?.api?.output(deviceId);
+			console.log(`Lightbar color applied to device ${deviceId}: ${hexColor}`);
+		});
+	}, 1000)
+);
+
+(Array.from(document.getElementsByClassName("color-preset-btn")) as HTMLButtonElement[]).forEach((btn) => {
+	btn.addEventListener("click", (e) => {
+		try {
+			app?.devices.forEach((descriptor, deviceId) => {
+				if (btn.dataset.color) {
+					const rgb = hexToRgb(btn.dataset.color);
+
+					app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
+					app?.api?.output(deviceId);
+					console.log(`Lightbar pattern applied to device ${deviceId}.`);
+				}
+			});
+		} catch (err) {
+			console.error("Failed to apply lightbar pattern:", err);
+		}
+	});
+});
+
+// (document.getElementById("btn-pip") as HTMLButtonElement).style.display = "none";
+document.getElementsByClassName("audio-card")[0]?.addEventListener("mouseover", (e) => {
+	// (document.getElementById("btn-pip") as HTMLButtonElement).style.display = "block";
+});
+
+(document.getElementById("btn-pip") as HTMLButtonElement)?.addEventListener("click", (e) => {});

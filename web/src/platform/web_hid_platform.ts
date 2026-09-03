@@ -1,6 +1,5 @@
-import { SONY_VENDOR_ID, DEVICE_TYPE_BY_PRODUCT_ID } from "../const.ts";
-import { Descriptor } from "../types.ts";
 import { NativeModule } from "../lib/GamepadCoreHost";
+import { Descriptor } from "../types.ts";
 
 type PlatformSignature = {
 	read: string;
@@ -25,105 +24,78 @@ const PLATFORM_SIGNATURES: PlatformSignature = {
 
 export interface PlatformBridgeRegistration {
 	dispose(): Promise<void>;
-	registerManually(device: HIDDevice, handleId: number, path: string, deviceType: number): Promise<void>;
-}
-
-export function isWebHidAvailable(): boolean {
-	return typeof navigator !== "undefined" && Boolean(navigator.hid);
-}
-
-export async function requestSonyWebHidAccess(): Promise<HIDDevice[]> {
-	if (!navigator.hid) {
-		throw new Error("WebHID não está disponível neste navegador.");
-	}
-	return navigator.hid.requestDevice({ filters: [{ vendorId: SONY_VENDOR_ID }] });
-}
-
-export async function listAuthorizedSonyDevices(): Promise<HIDDevice[]> {
-	if (!navigator.hid) {
-		return [];
-	}
-	const devices = await navigator.hid.getDevices();
-	return devices.filter((d) => d.vendorId === SONY_VENDOR_ID && DEVICE_TYPE_BY_PRODUCT_ID[d.productId] !== undefined);
+	registerManually(descriptor: Descriptor): Promise<void>;
 }
 
 class WebHidPlatformBridge {
-	byHandle: Map<number, any> = new Map();
+	byHandle: Map<number, Descriptor> = new Map();
 
-	async registerManually(device: HIDDevice, handle: number, path: string, type: number): Promise<void> {
-		if (!device.opened) {
-			await device.open();
-		}
-
-		const buffer = new Uint8Array(78);
-		const entry = { device, handle, path, type, lastInputPacket: buffer, inputListener: null as any };
-
-		entry.inputListener = (event: HIDInputReportEvent) => {
-			entry.lastInputPacket = new Uint8Array(event.data.buffer as ArrayBuffer);
-		};
-
-		device.addEventListener("inputreport", entry.inputListener);
-		this.byHandle.set(handle, entry);
+	async registerManually(descriptor: Descriptor): Promise<void> {
+		this.byHandle.set(descriptor.handleId, descriptor);
 	}
 
-	read(heap: Uint8Array, handle: number, buffer: number, length: number, bytesReadPtr: number): boolean {
+	read = (heap: Uint8Array, handle: number, buffer: number, length: number, bytesReadPtr: number): boolean => {
 		if (handle <= 0 || buffer === 0 || length <= 0) {
 			this.writeInt32(heap, bytesReadPtr, 0);
 			return false;
 		}
 
 		const entry = this.byHandle.get(handle);
-		if (!entry || !entry.device.opened) {
+		if (!entry) {
+			console.log("[WebHID] Invalid handle:", handle);
 			this.writeInt32(heap, bytesReadPtr, 0);
-			return false;
+			return true;
 		}
 
-		let packet = entry.lastInputPacket;
-		if (packet.length === 0) {
-			packet = new Uint8Array(78);
-			packet[0] = 0x31;
-		}
+		const packet = entry.lastInputPacket;
+		if (packet) {
+			const bytesToCopy = Math.min(length, packet.length);
+			heap.set(packet.subarray(0, bytesToCopy), buffer);
 
-		const bytesToCopy = Math.min(length, packet.length);
-		heap.set(packet.subarray(0, bytesToCopy), buffer);
-		this.writeInt32(heap, bytesReadPtr, bytesToCopy);
+			if (typeof bytesReadPtr === "number" && bytesReadPtr > 0) {
+				const view = new DataView(heap.buffer, heap.byteOffset);
+				view.setUint32(bytesReadPtr, bytesToCopy, true);
+				this.writeInt32(heap, bytesReadPtr, bytesToCopy);
+			}
+			return true;
+		}
 
 		return true;
-	}
+	};
 
 	write(heap: Uint8Array, handle: number, buffer: number, length: number, bytesWrittenPtr: number): boolean {
-		if (handle <= 0 || buffer === 0 || length <= 0) {
-			this.writeInt32(heap, bytesWrittenPtr, 0);
+		const outputPacket = new Uint8Array(heap.buffer, heap.byteOffset + buffer, length);
+		const reportId = outputPacket[0];
+		const reportData: any = outputPacket.subarray(1);
+
+		const device = this.byHandle.get(handle)?.device;
+		if (!device) {
+			console.error("[WebHID] Dispositivo não encontrado para o handle:", handle);
 			return false;
 		}
 
-		const entry = this.byHandle.get(handle);
-		if (!entry?.device.opened) {
-			this.writeInt32(heap, bytesWrittenPtr, 0);
-			return false;
+		device
+			.sendReport(reportId, reportData)
+			.catch((err: any) => console.error("[WebHID] Erro ao enviar pacote para o DualSense:", err));
+
+		if (bytesWrittenPtr !== 0) {
+			const view = new DataView(heap.buffer, heap.byteOffset);
+			view.setUint32(bytesWrittenPtr, length, true);
 		}
 
-		const output = heap.slice(buffer, buffer + length);
-		const reportId = output[0] ?? 0;
-		const payload = output.subarray(1);
-
-		entry.device.sendReport(reportId, payload).catch((error: any) => {
-			console.error("WebHID sendReport falhou:", error);
-		});
-
-		this.writeInt32(heap, bytesWrittenPtr, length);
 		return true;
 	}
 
-	detect(heap: Uint8Array, descriptorsBuffer: number, maxDevices: number): number {
+	detect = (heap: Uint8Array, descriptorsBuffer: number, maxDevices: number): number => {
 		return 0;
-	}
+	};
 
-	createHandle(heap: Uint8Array, descriptorBuffer: number): boolean {
-		return false;
-	}
+	createHandle = (heap: Uint8Array, descriptorBuffer: number): boolean => {
+		return true;
+	};
 
 	invalidateHandle(handle: number): void {
+		console.log("[WebHID] Invalidando handle:", handle);
 		const entry = this.byHandle.get(handle);
 		if (!entry) return;
 
@@ -158,6 +130,7 @@ class WebHidPlatformBridge {
 
 	private writeInt32(heap: Uint8Array, ptr: number, value: number): void {
 		if (!ptr) return;
+
 		new DataView(heap.buffer, heap.byteOffset + ptr, 4).setInt32(0, value, true);
 	}
 }
@@ -238,8 +211,8 @@ export async function initializeWebHidPlatformBridge(
 			module.removeFunction(processAudioHapticsPtr);
 			await bridge.dispose();
 		},
-		registerManually: async (device: HIDDevice, handleId: number, path: string, deviceType: number) => {
-			await bridge.registerManually(device, handleId, path, deviceType);
+		registerManually: async (descriptor: Descriptor) => {
+			await bridge.registerManually(descriptor);
 		},
 	};
 }

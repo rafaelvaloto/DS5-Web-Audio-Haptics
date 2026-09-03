@@ -403,3 +403,62 @@ input[type="range"] {
     border-color: var(--primary);
     color: #fff;
 }
+.audio-card {
+	position: relative;
+	overflow: hidden;
+}
+.audio-card > :not(.audio-card-overlay) {
+	pointer-events: none;
+}
+.audio-card-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(7, 12, 24, 0.82);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.18s ease;
+}
+.audio-card:hover .audio-card-overlay,
+.audio-card:focus-within .audio-card-overlay {
+	opacity: 1;
+	pointer-events: auto;
+}
+.audio-card-overlay #btn-pip {
+	display: inline-flex !important;
+	width: auto;
+}
+.audio-pip-card {
+	width: 100%;
+	padding: 18px;
+}
+.audio-pip-card .pip-control-audio {
+	width: 100%;
+	margin: 14px 0;
+}
+.audio-control {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-width: 0;
+}
+.audio-control input[type="range"] {
+	width: 100%;
+	accent-color: #93c5fd;
+}
+.audio-control-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 10px;
+	grid-column: span 2;
+}
+.checkbox-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	cursor: pointer;
+}
