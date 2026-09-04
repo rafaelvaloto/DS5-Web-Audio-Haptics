@@ -4,7 +4,6 @@ import { NativeModule } from "./lib/GamepadCoreHost";
 import { PlatformBridgeRegistration } from "./platform/web_hid_platform.ts";
 import { DeviceRegistryPolicy, initializeDeviceRegistryPolicy } from "./policies/device_registry_policy.ts";
 import { api, bindingAPI } from "./api.ts";
-import { t } from "./i18n";
 import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE } from "./const.ts";
 import { AudioHapticsManager } from "./stream.ts";
 
@@ -63,7 +62,7 @@ export class GamepadClientApplication {
 					app.devices.set(deviceId, app.pendingDescriptor);
 					app.pendingDescriptor = null; // Clear the pending descriptor after dispatch
 					GamepadClientApplication.pending = false;
-					GamepadClientApplication.emitLog(t("logs.deviceDispatched", { id: deviceId }));
+					// GamepadClientApplication.emitLog(, { id: deviceId }));
 				}
 			},
 			disconnect: (deviceId) => {
@@ -77,7 +76,7 @@ export class GamepadClientApplication {
 					app.devices.delete(deviceId);
 				}
 
-				GamepadClientApplication.emitLog(t("logs.deviceDisconnected", { id: deviceId }));
+				// GamepadClientApplication.emitLog(t("logs.deviceDisconnected", { id: deviceId }));
 			},
 		});
 
@@ -193,7 +192,7 @@ export class GamepadClientApplication {
 								}
 
 								this.api?.create(descriptorPtr);
-								GamepadClientApplication.emitLog(`[GamepadClient] Dispositivo injetado: ${path}`);
+								// GamepadClientApplication.emitLog(`[GamepadClient] Dispositivo injetado: ${path}`);
 							}
 						} finally {
 							this.module?._free(descriptorPtr);
@@ -216,7 +215,7 @@ export class GamepadClientApplication {
 	public run(): void {
 		if (this.inputTimer !== null) return; // avoid starting multiple timers
 
-		GamepadClientApplication.emitLog("[GamepadClient] Engine iniciada (Polling 100Hz)");
+		// GamepadClientApplication.emitLog("[GamepadClient] Engine iniciada (Polling 100Hz)");
 		this.inputTimer = window.setInterval(() => {
 			for (const [deviceId, descriptor] of this.devices.entries()) {
 				const state = this.readInputState(deviceId);
@@ -231,7 +230,7 @@ export class GamepadClientApplication {
 		if (this.inputTimer !== null) {
 			window.clearInterval(this.inputTimer);
 			this.inputTimer = null;
-			GamepadClientApplication.emitLog("[GamepadClient] Engine parada.");
+			// GamepadClientApplication.emitLog("[GamepadClient] Engine parada.");
 		}
 	}
 
