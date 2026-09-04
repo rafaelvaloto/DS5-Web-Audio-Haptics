@@ -36,13 +36,15 @@ To get the full experience, especially for browser games like those on itch.io, 
 2. **Install Drivers:** If you haven't already, install the **ViGEm Bus Driver** (prompted during setup) to allow your PC to emulate an Xbox/Virtual controller.
 3. **Run the Server:** Extract the downloaded files and execute `Gamepad_Socket.exe` to start the local server.
 
-### Part 2: Connecting the Haptics Router
-1. **Connect your Controller:** Pair your DualSense controller to your PC via Bluetooth.
-2. **Open the Router/Extension:** Go to the [Live Link](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/) or open the Browser Extension.
-3. **Connect Device:** Click the connect button and select your DualSense controller from the browser prompt.
-4. **Enable Haptics:** Click **"Audio Haptics (On)"** and select your game's tab/window in the Screen Share prompt.
-	* ⚠️ **CRITICAL:** You MUST check the **"Share audio"** option in the browser prompt for haptics to work.
-5. **Play:** Use the Picture-in-Picture mode to keep the app running in a small floating window while you play your browser games.
+### Part 2: Connection Flow & Haptic Activation
+After installing the drivers and the server, follow this flow to activate haptic feedback:
+
+1. **Bluetooth Connection:** Ensure your DualSense controller is paired and connected to your PC via Bluetooth.
+2. **Run the Server:** Execute `Gamepad_Socket.exe` and keep the server running. This background process is required to mediate communication between the hardware and your web browser.
+3. **Activate the Extension:** Open the DS5 Web Audio Haptics extension in your browser and click "Connect". Ensure the connection to the local server is successfully established.
+4. **Audio Capture:** When loading a game on itch.io (or any other platform), click to enable Audio Haptics and select the tab audio capture option in the extension's interface/browser prompt.
+	* You MUST check the **"Share audio"** option in the browser prompt. This allows the game's audio signal to be captured and converted into real-time tactile vibrations on your controller.
+5. **Play:** You can use the Picture-in-Picture mode to keep the app running in a small floating window while you play.
 
 ---
 
