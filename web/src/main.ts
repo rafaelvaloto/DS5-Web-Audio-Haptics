@@ -220,10 +220,6 @@ export class GamepadClientApplication {
 		this.inputTimer = window.setInterval(() => {
 			for (const [deviceId, descriptor] of this.devices.entries()) {
 				const state = this.readInputState(deviceId);
-				if (state.bCircle) {
-					console.log("Circle button pressed.");
-					console.log(`State for device ${deviceId}:`, descriptor);
-				}
 			}
 		}, FRAME_MS);
 	}
