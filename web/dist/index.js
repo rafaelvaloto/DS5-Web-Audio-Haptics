@@ -77,13 +77,13 @@ document.getElementById("btn-start")?.addEventListener("click", (e) => {
     console.log("🚀 Loop rodando!");
     e.target.disabled = true;
     document.getElementById("btn-stop").disabled = false;
-});
-document.getElementById("btn-stop")?.addEventListener("click", (e) => {
-    if (app) {
-        app.stop();
-    }
-    e.target.disabled = true;
-    document.getElementById("btn-start").disabled = false;
+    setTimeout(() => {
+        const battery = document.getElementById(`lbl-battery`);
+        app?.devices.forEach((descriptor, deviceId) => {
+            battery.className = `${app?.api?.battery(deviceId)}`;
+            battery.textContent = `${app?.api?.battery(deviceId)}%`;
+        });
+    }, 10000);
 });
 document.getElementById("btn-stop")?.addEventListener("click", (e) => {
     if (app) {
@@ -214,7 +214,19 @@ document.getElementById("btn-pip")?.addEventListener("click", async (e) => {
         const result = await app.toggleHaptics();
         if (result) {
             console.log("Haptics enabled.");
+            e.target.textContent = "🪟 Stop Picture-in-Picture";
+            e.target.className = "btn btn-danger";
+            Array.from(document.getElementsByClassName("shared-card-overlay")).forEach((el) => {
+                el.style.opacity = "100";
+            });
+            document.getElementById("dot-audio-haptics").className = "dot active";
             updateAudioSettings();
+        }
+        else {
+            e.target.textContent = "🪟 Start Picture-in-Picture";
+            e.target.className = "btn btn-primary";
+            document.getElementById("dot-audio-haptics").className = "dot";
+            console.log("Haptics disabled.");
         }
     }
     catch (error) {

@@ -92,15 +92,13 @@ let app: GamepadClientApplication | null = null;
 
 	(e.target as HTMLButtonElement).disabled = true;
 	(document.getElementById("btn-stop") as HTMLButtonElement).disabled = false;
-});
-
-(document.getElementById("btn-stop") as HTMLButtonElement)?.addEventListener("click", (e) => {
-	if (app) {
-		app.stop();
-	}
-
-	(e.target as HTMLButtonElement).disabled = true;
-	(document.getElementById("btn-start") as HTMLButtonElement).disabled = false;
+	setTimeout(() => {
+		const battery = document.getElementById(`lbl-battery`) as HTMLButtonElement;
+		app?.devices.forEach((descriptor, deviceId) => {
+			battery.className = `${app?.api?.battery(deviceId)}`;
+			battery.textContent = `${app?.api?.battery(deviceId)}%`;
+		});
+	}, 10000);
 });
 
 (document.getElementById("btn-stop") as HTMLButtonElement)?.addEventListener("click", (e) => {
@@ -260,7 +258,19 @@ function updateAudioSettings() {
 		const result = await app.toggleHaptics();
 		if (result) {
 			console.log("Haptics enabled.");
+			(e.target as HTMLButtonElement).textContent = "🪟 Stop Picture-in-Picture";
+			(e.target as HTMLButtonElement).className = "btn btn-danger";
+			(Array.from(document.getElementsByClassName("shared-card-overlay")) as HTMLElement[]).forEach((el) => {
+				el.style.opacity = "100";
+			});
+			(document.getElementById("dot-audio-haptics") as HTMLButtonElement).className = "dot active";
 			updateAudioSettings();
+		} else {
+			(e.target as HTMLButtonElement).textContent = "🪟 Start Picture-in-Picture";
+			(e.target as HTMLButtonElement).className = "btn btn-primary";
+			(document.getElementById("dot-audio-haptics") as HTMLButtonElement).className = "dot";
+
+			console.log("Haptics disabled.");
 		}
 	} catch (error) {
 		console.error("Screen permission denied or error:", error);
