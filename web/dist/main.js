@@ -1,6 +1,5 @@
 import { initializeDeviceRegistryPolicy } from "./policies/device_registry_policy.js";
 import { bindingAPI } from "./api.js";
-import { t } from "./i18n";
 import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE } from "./const.js";
 import { AudioHapticsManager } from "./stream.js";
 export class GamepadClientApplication {
@@ -38,7 +37,7 @@ export class GamepadClientApplication {
                     app.devices.set(deviceId, app.pendingDescriptor);
                     app.pendingDescriptor = null; // Clear the pending descriptor after dispatch
                     GamepadClientApplication.pending = false;
-                    GamepadClientApplication.emitLog(t("logs.deviceDispatched", { id: deviceId }));
+                    // GamepadClientApplication.emitLog(, { id: deviceId }));
                 }
             },
             disconnect: (deviceId) => {
@@ -51,7 +50,7 @@ export class GamepadClientApplication {
                     }
                     app.devices.delete(deviceId);
                 }
-                GamepadClientApplication.emitLog(t("logs.deviceDisconnected", { id: deviceId }));
+                // GamepadClientApplication.emitLog(t("logs.deviceDisconnected", { id: deviceId }));
             },
         });
         const media = new AudioHapticsManager({
@@ -137,7 +136,7 @@ export class GamepadClientApplication {
                             heap.set(pathBytes.subarray(0, maxPathLength), descriptorPtr + 20);
                         }
                         this.api?.create(descriptorPtr);
-                        GamepadClientApplication.emitLog(`[GamepadClient] Dispositivo injetado: ${path}`);
+                        // GamepadClientApplication.emitLog(`[GamepadClient] Dispositivo injetado: ${path}`);
                     }
                 }
                 finally {
@@ -160,14 +159,10 @@ export class GamepadClientApplication {
     run() {
         if (this.inputTimer !== null)
             return; // avoid starting multiple timers
-        GamepadClientApplication.emitLog("[GamepadClient] Engine iniciada (Polling 100Hz)");
+        // GamepadClientApplication.emitLog("[GamepadClient] Engine iniciada (Polling 100Hz)");
         this.inputTimer = window.setInterval(() => {
             for (const [deviceId, descriptor] of this.devices.entries()) {
                 const state = this.readInputState(deviceId);
-                if (state.bCircle) {
-                    console.log("Circle button pressed.");
-                    console.log(`State for device ${deviceId}:`, descriptor);
-                }
             }
         }, FRAME_MS);
     }
@@ -178,7 +173,7 @@ export class GamepadClientApplication {
         if (this.inputTimer !== null) {
             window.clearInterval(this.inputTimer);
             this.inputTimer = null;
-            GamepadClientApplication.emitLog("[GamepadClient] Engine parada.");
+            // GamepadClientApplication.emitLog("[GamepadClient] Engine parada.");
         }
     }
     /**

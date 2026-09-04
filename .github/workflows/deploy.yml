@@ -37,16 +37,16 @@ jobs:
         run: npm ci
 
       - name: Build Web Application
-        run: npm run build:web
+        run: npm run build
 
       - name: Validate GitHub Pages Artifact
         shell: bash
         run: |
           test -f web/index.html
-          test -f web/dist/main.js
-          test -f web/dist/i18n/ui-translations.js
-          test -f web/src/lib/GamepadCoreHost.js
-          test -f web/src/lib/GamepadCoreHost.wasm
+          test -f web/dist/*.js
+          test -f web/dist/i18n/*.js
+          test -f web/dist/lib/*.js
+          test -f web/dist/lib/*.wasm
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
