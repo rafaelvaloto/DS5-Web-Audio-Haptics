@@ -68,13 +68,18 @@ Browser games generally require the socket connection to emulate a compatible vi
 * *Example:* [Little Big Smasher](https://augustopolonio.itch.io/little-big-smasher)
 
 ### 🖥️ Native PC Games
-**Tested & Confirmed Games:** These games were tested successfully with native DualSense support, without requiring the socket connection or virtual gamepad emulation.
+
+**Tested & Confirmed Games:** These games were tested successfully as they feature **native DualSense support over Bluetooth**.
+
+**Important:** You do **not** need to install any additional drivers or use the Gamepad Socket for these titles. However, if you are playing through Steam, you **must disable Steam Input** for the game to correctly recognize the DualSense controller natively.
 
 **Free Games:**
+
 - [Atlas Wars](https://store.epicgames.com/p/atlas-wars-5b83bd)
 - [Pixel Gun 3D](https://store.epicgames.com/p/pixel-gun-3d-812855)
 
 **Paid Games:**
+
 - NBA THE RUN
 - EA SPORTS FC 26
 
