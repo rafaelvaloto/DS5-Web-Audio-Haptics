@@ -65,7 +65,11 @@ export class AudioHapticsManager {
         }
         const nextStream = await navigator.mediaDevices.getDisplayMedia({
             video: true,
-            audio: true,
+            audio: {
+                echoCancellation: false,
+                noiseSuppression: false,
+                autoGainControl: false,
+            },
         });
         if (nextStream.getAudioTracks().length === 0) {
             nextStream.getTracks().forEach((track) => track.stop());
@@ -121,7 +125,7 @@ export class AudioHapticsManager {
                     console.error("Error eject PiP:", pipError);
                 }
             });
-            // Sincroniza o encerramento do compartilhamento de tela com o desligamento da engine e do PiP
+            // Sincroniza o desligamento da engine e do PiP
             nextStream.getVideoTracks()[0]?.addEventListener("ended", () => {
                 if (document.pictureInPictureElement === videoElement) {
                     document.exitPictureInPicture().catch((error) => {

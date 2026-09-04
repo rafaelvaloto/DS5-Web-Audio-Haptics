@@ -115,10 +115,13 @@ export class AudioHapticsManager implements AudioHapticsController {
 		if (typeof navigator === "undefined" || !navigator.mediaDevices?.getDisplayMedia) {
 			throw new Error("getDisplayMedia não é suportado neste ambiente.");
 		}
-
 		const nextStream = await navigator.mediaDevices.getDisplayMedia({
 			video: true,
-			audio: true,
+			audio: {
+				echoCancellation: false,
+				noiseSuppression: false,
+				autoGainControl: false,
+			},
 		});
 
 		if (nextStream.getAudioTracks().length === 0) {

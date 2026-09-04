@@ -176,6 +176,31 @@ Array.from(document.getElementsByClassName("color-preset-btn")).forEach((btn) =>
         }
     });
 });
+function updateAudioSettings() {
+    if (!app) {
+        console.warn("WASM não carregado.");
+        return;
+    }
+    if (app.devices.size === 0) {
+        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+        return;
+    }
+    const volume = Number(document.getElementById("input-audio-volume")?.value);
+    const gain = Number(document.getElementById("input-audio-gain")?.value);
+    const bHeadSetOnly = Number(document.getElementById("switch-speaker")?.checked);
+    const bIsAudioOnly = Number(document.getElementById("switch-audio-haptics")?.checked);
+    for (const [deviceId, descriptor] of app.devices) {
+        app?.audioSettings(deviceId, 0, // enable haptics
+        1, Number(!bHeadSetOnly), 0, // trigger reduce
+        0x7c, // audio volume
+        !bIsAudioOnly ? 0xfc : 0xff, // audio gain
+        0, // audio device
+        0, Number(gain), Number(volume) // reserved
+        ).catch((err) => {
+            console.error(`Failed to apply audio settings for device ${deviceId}:`, err);
+        });
+    }
+}
 document.getElementById("btn-pip")?.addEventListener("click", async (e) => {
     try {
         if (!app) {
@@ -188,51 +213,14 @@ document.getElementById("btn-pip")?.addEventListener("click", async (e) => {
         }
         const result = await app.toggleHaptics();
         if (result) {
-            for (const [deviceId, descriptor] of app.devices) {
-                await app?.audioSettings(deviceId, 0, // enable haptics
-                1, // rumble mode
-                1, // rumble reduce
-                0, // trigger reduce
-                100, // audio volume
-                0xfc, // audio gain
-                0, // audio device
-                0 // reserved
-                );
-            }
             console.log("Haptics enabled.");
+            updateAudioSettings();
         }
     }
     catch (error) {
         console.error("Screen permission denied or error:", error);
     }
 });
-function updateAudioSettings() {
-    if (!app) {
-        console.warn("WASM não carregado.");
-        return;
-    }
-    if (app.devices.size === 0) {
-        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
-        return;
-    }
-    const volume = Number(document.getElementById("input-audio-volume")?.value);
-    const gain = Number(document.getElementById("input-audio-gain")?.value);
-    const bIsSpeaker = Number(document.getElementById("switch-speaker")?.checked);
-    const bIsAudioOnly = Number(document.getElementById("switch-audio-haptics")?.checked);
-    for (const [deviceId, descriptor] of app.devices) {
-        app?.audioSettings(deviceId, 0, // enable haptics
-        1, // rumble mode
-        bIsSpeaker, // rumble reduce
-        0, // trigger reduce
-        volume, // audio volume
-        bIsAudioOnly ? 0xfc : 0xff, // audio gain
-        0, // audio device
-        0, volume, gain // reserved
-        ).catch((err) => {
-            console.error(`Failed to apply audio settings for device ${deviceId}:`, err);
-        });
-    }
-}
 document.getElementById("input-audio-gain")?.addEventListener("input", debounce((event) => {
     const gainValueDisplay = document.getElementById("input-audio-gain-value");
     if (gainValueDisplay) {
