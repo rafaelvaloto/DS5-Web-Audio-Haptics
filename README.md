@@ -2,7 +2,8 @@
 
 Transform your browser into a real-time haptic feedback router. This tool captures live game audio via Screen Share and translates it into high-fidelity haptics via Bluetooth for PlayStation **DualSense** controllers—no cables or custom dongles required!
 
-*[☕ Buy me a coffee or support the project!](https://github.com/sponsors/rafaelvaloto/button)*
+
+*[☕ Buy me a coffee or support the project!](https://github.com/sponsors/rafaelvaloto)*
 
 ---
 
