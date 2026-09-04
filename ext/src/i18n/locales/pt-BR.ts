@@ -57,6 +57,8 @@ export const ptBR: TranslationDictionary = {
     },
   },
   controls: {
+    inputServerHint:
+      "Para jogos web ou jogos sem suporte nativo ao controle PlayStation 5, conecte o socket e instale o driver ViGEmBus para emular um gamepad virtual.",
     triggerEffectsTitle: "Efeitos de Gatilhos Adaptáveis",
     selectTriggerEffect: "Escolha o Efeito do Gatilho",
     targetTrigger: "Gatilho Alvo",

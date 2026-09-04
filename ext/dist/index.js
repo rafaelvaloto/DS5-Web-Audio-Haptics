@@ -1,20 +1,293 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+import { GamepadClientApplication } from "./main.js";
+import { bootWasmAndPlatform } from "./load.js";
+import { logLines, TRIGGERS } from "./const.js";
+import { debounce, hexToRgb } from "./helpers.js";
+import { AudioHapticsManager } from "./stream.js";
+// app engine instance
+let app = null;
+const deviceChannel = new BroadcastChannel("dualsense_channel");
+document.getElementById("btn-load")?.addEventListener("click", async (e) => {
+    if (app) {
+        // skip if already loaded
+        return;
+    }
+    try {
+        const wasmContext = await bootWasmAndPlatform("src/lib");
+        app = GamepadClientApplication.createFromContext(wasmContext, 1);
+        if (app) {
+            e.target.disabled = true;
+            document.getElementById("btn-request").disabled = false;
+            deviceChannel.onmessage = async (event) => {
+                if (event.data.type === "DEVICE_AUTHORIZED") {
+                    app?.devices.clear();
+                    try {
+                        const devices = await navigator.hid.getDevices();
+                        if (devices.length > 0) {
+                            devices.forEach((d) => {
+                                app?.createDeviceFromDescriptor(d, app.nextManualHandle++, 1, 1, true, d.productName);
+                            });
+                            const btnRequest = document.getElementById("btn-request");
+                            const btnStart = document.getElementById("btn-start");
+                            if (btnRequest)
+                                btnRequest.disabled = true;
+                            if (btnStart)
+                                btnStart.disabled = false;
+                        }
+                    }
+                    catch (err) {
+                        console.error("Failed to get authorized devices:", err);
+                    }
+                }
+            };
+        }
+    }
+    catch (err) {
+        console.error("Failed to load the app:", err);
+    }
+});
+document.getElementById("btn-show-logs")?.addEventListener("click", async (e) => {
+    const logContainer = document.getElementById("log-dialog");
+    if (logContainer) {
+        logContainer.style.display = logContainer.style.display !== "block" ? "block" : "none";
+    }
+});
+document.getElementById("btn-close-logs")?.addEventListener("click", async (e) => {
+    const logContainer = document.getElementById("log-dialog");
+    if (logContainer) {
+        logContainer.style.display = "none";
+    }
+});
+document.getElementById("btn-clear-logs")?.addEventListener("click", async (e) => {
+    logLines.length = 0;
+    document.getElementById("log-box").textContent = "";
+});
+document.getElementById("btn-request")?.addEventListener("click", async (e) => {
+    if (!app) {
+        console.warn("Você precisa carregar o WASM primeiro (clique em Load).");
+        return;
+    }
+    if (chrome.runtime.openOptionsPage) {
+        await chrome.runtime.openOptionsPage();
+    }
+});
+document.getElementById("btn-start")?.addEventListener("click", (e) => {
+    if (!app) {
+        console.warn("WASM não carregado.");
+        return;
+    }
+    if (app.devices.size === 0) {
+        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+        return;
+    }
+    app.run();
+    console.log("🚀 Loop rodando!");
+    e.target.disabled = true;
+    document.getElementById("btn-stop").disabled = false;
+    setTimeout(() => {
+        const battery = document.getElementById(`lbl-battery`);
+        app?.devices.forEach((descriptor, deviceId) => {
+            battery.className = `${app?.api?.battery(deviceId)}`;
+            battery.textContent = `${app?.api?.battery(deviceId)}%`;
+        });
+    }, 10000);
+});
+document.getElementById("btn-stop")?.addEventListener("click", (e) => {
+    if (app) {
+        app.stop();
+    }
+    e.target.disabled = true;
+    document.getElementById("btn-start").disabled = false;
+});
+document.getElementById("btn-reset-trigger")?.addEventListener("click", (e) => {
+    document.getElementById("sel-trigger-effect").value = "none";
+    if (!app) {
+        console.warn("WASM não carregado.");
+        return;
+    }
+    if (app.devices.size === 0) {
+        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+        return;
+    }
+    app?.devices.forEach((descriptor, deviceId) => {
+        app?.api?.reset(deviceId, 0);
+        app?.api?.reset(deviceId, 1);
+        app?.api?.output(deviceId);
+        console.log(`Trigger reset applied to the controller ${deviceId}.`);
     });
-};
-export * from "./platform/web_hid_platform.js";
-export * from "./i18n/index.js";
-export function startGamepadClientLoop() {
-    return __awaiter(this, arguments, void 0, function* (typeId = 0) {
-        const main = yield import("./main.js");
-        return main.startGamepadClientLoop(typeId);
+});
+document.getElementById("btn-apply-trigger")?.addEventListener("click", (e) => {
+    let pattern = document.getElementById("sel-trigger-effect").value;
+    let hand = Number(document.getElementById("sel-trigger-hand").value);
+    if (!app) {
+        console.warn("WASM não carregado.");
+        return;
+    }
+    if (app.devices.size === 0) {
+        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+        return;
+    }
+    const arr = TRIGGERS[pattern] || new Uint8Array(0);
+    const bytesLength = arr.length;
+    const bufferPtr = app.module?._malloc(bytesLength);
+    if (bufferPtr) {
+        try {
+            app.module?.HEAPU8.set(arr, bufferPtr);
+            app?.devices.forEach((descriptor, deviceId) => {
+                app?.api?.triggers(deviceId, bufferPtr, arr.length, hand);
+                app?.api?.output(deviceId);
+                console.log(`Trigger pattern applied to the controller ${deviceId}.`);
+            });
+        }
+        finally {
+            app.module?._free(bufferPtr);
+        }
+    }
+});
+let lastColor = document.getElementById("picker-led-color")?.value || "#ffffff";
+document.getElementById("picker-led-color")?.addEventListener("input", debounce((event) => {
+    if (!app) {
+        console.warn("WASM não carregado.");
+        return;
+    }
+    if (app.devices.size === 0) {
+        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+        return;
+    }
+    const target = event.target;
+    const hexColor = target.value;
+    if (hexColor === lastColor) {
+        return;
+    }
+    const rgb = hexToRgb(hexColor);
+    app?.devices.forEach((descriptor, deviceId) => {
+        AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
+        app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
+        app?.api?.output(deviceId);
+        console.log(`Lightbar color applied to device ${deviceId}: ${hexColor}`);
     });
+}, 1000));
+Array.from(document.getElementsByClassName("color-preset-btn")).forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+        try {
+            app?.devices.forEach((descriptor, deviceId) => {
+                if (btn.dataset.color) {
+                    const rgb = hexToRgb(btn.dataset.color);
+                    AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
+                    app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
+                    app?.api?.output(deviceId);
+                    console.log(`Lightbar pattern applied to device ${deviceId}.`);
+                }
+            });
+        }
+        catch (err) {
+            console.error("Failed to apply lightbar pattern:", err);
+        }
+    });
+});
+function updateAudioSettings() {
+    if (!app) {
+        console.warn("WASM não carregado.");
+        return;
+    }
+    if (app.devices.size === 0) {
+        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+        return;
+    }
+    const volume = Number(document.getElementById("input-audio-volume")?.value);
+    const gain = Number(document.getElementById("input-audio-gain")?.value);
+    const bHeadSetOnly = Number(document.getElementById("switch-speaker")?.checked);
+    const bIsAudioOnly = Number(document.getElementById("switch-audio-haptics")?.checked);
+    for (const [deviceId, descriptor] of app.devices) {
+        app?.audioSettings(deviceId, 0, // enable haptics
+        1, Number(!bHeadSetOnly), 0, // trigger reduce
+        0x7c, // audio volume
+        !bIsAudioOnly ? 0xfc : 0xff, // audio gain
+        0, // audio device
+        0, Number(gain), Number(volume) // reserved
+        ).catch((err) => {
+            console.error(`Failed to apply audio settings for device ${deviceId}:`, err);
+        });
+    }
 }
-startGamepadClientLoop(0).catch((err) => {
-    console.error("Error starting gamepad client loop:", err);
+document.getElementById("btn-pip")?.addEventListener("click", async (e) => {
+    try {
+        if (!app) {
+            console.warn("WASM não carregado.");
+            return;
+        }
+        if (app.devices.size === 0) {
+            console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+            return;
+        }
+        const result = await app.toggleHaptics();
+        if (result) {
+            console.log("Haptics enabled.");
+            e.target.textContent = "🪟 Stop Picture-in-Picture";
+            e.target.className = "btn btn-danger";
+            Array.from(document.getElementsByClassName("shared-card-overlay")).forEach((el) => {
+                el.style.opacity = "100";
+            });
+            document.getElementById("dot-audio-haptics").className = "dot active";
+            updateAudioSettings();
+        }
+        else {
+            e.target.textContent = "🪟 Start Picture-in-Picture";
+            e.target.className = "btn btn-primary";
+            document.getElementById("dot-audio-haptics").className = "dot";
+            console.log("Haptics disabled.");
+        }
+    }
+    catch (error) {
+        console.error("Screen permission denied or error:", error);
+    }
+});
+document.getElementById("input-audio-gain")?.addEventListener("input", debounce((event) => {
+    const gainValueDisplay = document.getElementById("input-audio-gain-value");
+    if (gainValueDisplay) {
+        gainValueDisplay.textContent = Number(event.target.value).toFixed(1);
+    }
+    updateAudioSettings();
+}, 400));
+document.getElementById("input-audio-volume")?.addEventListener("input", debounce((event) => {
+    const volumeValueDisplay = document.getElementById("input-audio-volume-value");
+    if (volumeValueDisplay) {
+        volumeValueDisplay.textContent = event.target.value;
+    }
+    updateAudioSettings();
+}, 400));
+document.getElementById("switch-audio-haptics")?.addEventListener("change", (e) => {
+    updateAudioSettings();
+});
+document.getElementById("switch-speaker")?.addEventListener("change", (e) => {
+    updateAudioSettings();
+});
+document.getElementById("btn-ws-connect")?.addEventListener("click", (e) => {
+    try {
+        if (!app) {
+            console.warn("WASM não carregado.");
+            return;
+        }
+        if (app.devices.size === 0) {
+            console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+            return;
+        }
+        app.wsConnect();
+        setTimeout(() => {
+            if (app?.wsIsConnect()) {
+                console.log("WebSocket is connected.");
+                e.target.textContent = "Disconnect";
+                e.target.className = "btn btn-danger";
+                document.getElementById("lbl-ws-status").textContent = "Connected";
+            }
+            else {
+                console.warn("WebSocket connection failed.");
+                e.target.textContent = "Connect";
+                e.target.className = "btn btn-primary";
+                document.getElementById("lbl-ws-status").textContent = "Disconnected";
+            }
+        }, 1000);
+    }
+    catch (error) {
+        console.error("Screen permission denied or error:", error);
+    }
 });

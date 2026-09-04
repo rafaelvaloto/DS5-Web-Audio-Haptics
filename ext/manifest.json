@@ -1,24 +1,21 @@
 ﻿{
-  "manifest_version": 3,
-  "name": "DS5 Web Audio Haptics Extension",
-  "version": "1.0",
-  "permissions": ["activeTab", "sidePanel", "windows"],
-  "host_permissions": [
-    "http://localhost/*",
-    "http://127.0.0.1/*"
-  ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
-  "side_panel": {
-    "default_path": "index.html"
-  },
-  "options_page": "options.html",
-  "action": {
-    "default_title": "Open DS5 Web Audio Haptics Extension"
-  },
-  "web_accessible_resources": []
+	"manifest_version": 3,
+	"name": "DS5 Web Audio Haptics Extension",
+	"version": "1.0",
+	"permissions": ["sidePanel"],
+	"host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
+	"content_security_policy": {
+		"extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
+	},
+	"background": {
+		"service_worker": "background.js"
+	},
+	"side_panel": {
+		"default_path": "index.html"
+	},
+	"options_page": "options.html",
+	"action": {
+		"default_title": "Open DS5 Web Audio Haptics Extension"
+	},
+	"web_accessible_resources": []
 }

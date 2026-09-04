@@ -55,6 +55,7 @@ export const es = {
         },
     },
     controls: {
+        inputServerHint: "Para juegos web o juegos sin soporte nativo para el control PlayStation 5, conecta el socket e instala el controlador ViGEmBus para emular un gamepad virtual.",
         triggerEffectsTitle: "Efectos de Gatillos Adaptativos",
         selectTriggerEffect: "Elija el Efecto del Gatillo",
         targetTrigger: "Gatillo Objetivo",

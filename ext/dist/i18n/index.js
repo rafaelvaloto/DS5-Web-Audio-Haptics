@@ -61,16 +61,14 @@ export function getSupportedLanguages() {
  * Get translation dictionary for active or specified locale.
  */
 export function getDictionary(locale = currentLocale) {
-    var _a;
-    return (_a = translations[locale]) !== null && _a !== void 0 ? _a : translations[DEFAULT_LOCALE];
+    return translations[locale] ?? translations[DEFAULT_LOCALE];
 }
 /**
  * Translates a dot-separated key (e.g., 'header.title' or 'commands.cross')
  * with optional parameter replacement (e.g. {{name}}).
  */
 export function t(keyPath, params, locale = currentLocale) {
-    var _a;
-    const dict = (_a = translations[locale]) !== null && _a !== void 0 ? _a : translations[DEFAULT_LOCALE];
+    const dict = translations[locale] ?? translations[DEFAULT_LOCALE];
     const keys = keyPath.split(".");
     let current = dict;
     for (const k of keys) {
