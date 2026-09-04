@@ -154,13 +154,12 @@ export class GamepadClientApplication {
             return;
         });
     }
-    // ...
     /**
      * Inicia o loop da engine (Polling)
      */
     run() {
         if (this.inputTimer !== null)
-            return; // Já está rodando
+            return; // avoid starting multiple timers
         GamepadClientApplication.emitLog("[GamepadClient] Engine iniciada (Polling 100Hz)");
         this.inputTimer = window.setInterval(() => {
             for (const [deviceId, descriptor] of this.devices.entries()) {
@@ -170,11 +169,6 @@ export class GamepadClientApplication {
                     console.log(`State for device ${deviceId}:`, descriptor);
                 }
             }
-            // if (this.isNowEnabled) {
-            // 	for (const [deviceId, descriptor] of this.devices.entries()) {
-            // 		this.api?.audioProcess(deviceId);
-            // 	}
-            // }
         }, FRAME_MS);
     }
     /**

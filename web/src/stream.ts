@@ -184,7 +184,7 @@ export class AudioHapticsManager implements AudioHapticsController {
 				}
 			});
 
-			// Sincroniza o encerramento do compartilhamento de tela com o desligamento da engine e do PiP
+			// Sincroniza o desligamento da engine e do PiP
 			nextStream.getVideoTracks()[0]?.addEventListener("ended", () => {
 				if (document.pictureInPictureElement === videoElement) {
 					document.exitPictureInPicture().catch((error) => {
