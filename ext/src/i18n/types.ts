@@ -55,10 +55,6 @@ export interface TranslationDictionary {
       title: string;
       subtitle: string;
     };
-    inputServer?: {
-      title: string;
-      subtitle: string;
-    };
   };
   controls?: {
     triggerEffectsTitle: string;
@@ -86,9 +82,6 @@ export interface TranslationDictionary {
     effectBow: string;
     effectWeapon: string;
     effectAutoGun: string;
-    inputServerUrl?: string;
-    connectInputServer?: string;
-    disconnectInputServer?: string;
     inputServerHint?: string;
     inputServerRepository?: string;
   };
@@ -173,6 +166,5 @@ export interface TranslationDictionary {
     rumbleApplied: string;
     allStopped: string;
     notConnected: string;
-    inputServerNeedsWasm?: string;
   };
 }

@@ -57,6 +57,8 @@ export const en: TranslationDictionary = {
     },
   },
   controls: {
+    inputServerHint:
+      "For web games or games without native PlayStation 5 controller support, connect the socket and install the ViGEmBus driver to emulate a virtual gamepad.",
     triggerEffectsTitle: "Adaptive Trigger Effects",
     selectTriggerEffect: "Choose Trigger Effect",
     targetTrigger: "Target Trigger",

@@ -17,11 +17,10 @@
     <h1 data-i18n="options.title">DualSense Pairing</h1>
     <p data-i18n="options.description">Authorize Chrome to read your DualSense controller. After pairing, close this page and use the side panel.</p>
     <p id="wasm-status" data-i18n="options.loading">Loading controller engine...</p>
-    <button id="btn-request" type="button" data-i18n="options.connect">Connect DualSense</button>
+    <button id="btn-request-options" type="button" data-i18n="options.connect">Connect DualSense</button>
     <p id="status" aria-live="polite"></p>
     <p id="authorized" data-i18n="options.none">No authorized controller found.</p>
 </main>
-<script src="./src/lib/GamepadCoreHost.js"></script>
-<script type="module" src="options.js"></script>
+<script type="module" src="./dist/options.js"></script>
 </body>
 </html>
