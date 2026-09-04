@@ -241,3 +241,33 @@ document.getElementById("switch-audio-haptics")?.addEventListener("change", (e) 
 document.getElementById("switch-speaker")?.addEventListener("change", (e) => {
     updateAudioSettings();
 });
+document.getElementById("btn-ws-connect")?.addEventListener("click", (e) => {
+    try {
+        if (!app) {
+            console.warn("WASM não carregado.");
+            return;
+        }
+        if (app.devices.size === 0) {
+            console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+            return;
+        }
+        app.wsConnect();
+        setTimeout(() => {
+            if (app?.wsIsConnect()) {
+                console.log("WebSocket is connected.");
+                e.target.textContent = "Disconnect";
+                e.target.className = "btn btn-danger";
+                document.getElementById("lbl-ws-status").textContent = "Connected";
+            }
+            else {
+                console.warn("WebSocket connection failed.");
+                e.target.textContent = "Connect";
+                e.target.className = "btn btn-primary";
+                document.getElementById("lbl-ws-status").textContent = "Disconnected";
+            }
+        }, 1000);
+    }
+    catch (error) {
+        console.error("Screen permission denied or error:", error);
+    }
+});

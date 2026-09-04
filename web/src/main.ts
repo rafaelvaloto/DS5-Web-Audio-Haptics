@@ -6,6 +6,7 @@ import { DeviceRegistryPolicy, initializeDeviceRegistryPolicy } from "./policies
 import { api, bindingAPI } from "./api.ts";
 import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE } from "./const.ts";
 import { AudioHapticsManager } from "./stream.ts";
+import { DualSenseSocketBridge } from "./wsocket.ts";
 
 export class GamepadClientApplication {
 	private readonly inputBufferPtr: number;
@@ -21,6 +22,8 @@ export class GamepadClientApplication {
 	public readonly devices = new Map<number, Descriptor>();
 	public readonly platform: PlatformBridgeRegistration | null;
 	public readonly registry: DeviceRegistryPolicy | null = null;
+
+	public readonly dsExtensionBridge = new DualSenseSocketBridge();
 
 	// log static listeners
 	private static readonly logListeners = new Set<(message: string, level?: number) => void>();
@@ -40,6 +43,18 @@ export class GamepadClientApplication {
 		this.inputBufferPtr = module._malloc(INPUT_DESCRIPTOR_SIZE);
 
 		this.media?.setApi(this.api);
+	}
+
+	public wsConnect(): void {
+		if (this.dsExtensionBridge.isConnected()) {
+			this.dsExtensionBridge.disconnect();
+			return;
+		}
+		this.dsExtensionBridge.connect();
+	}
+
+	public wsIsConnect(): boolean {
+		return this.dsExtensionBridge.isConnected();
 	}
 
 	// ...
@@ -219,6 +234,7 @@ export class GamepadClientApplication {
 		this.inputTimer = window.setInterval(() => {
 			for (const [deviceId, descriptor] of this.devices.entries()) {
 				const state = this.readInputState(deviceId);
+				this.dsExtensionBridge.send(state);
 			}
 		}, FRAME_MS);
 	}
