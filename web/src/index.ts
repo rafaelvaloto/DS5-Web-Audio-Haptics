@@ -2,6 +2,7 @@ import { GamepadClientApplication } from "./main.ts";
 import { bootWasmAndPlatform } from "./load.ts";
 import { logLines, TRIGGERS } from "./const.ts";
 import { debounce, hexToRgb } from "./helpers.ts";
+import { AudioHapticsManager } from "./stream.ts";
 
 // app engine instance
 let app: GamepadClientApplication | null = null;
@@ -184,6 +185,7 @@ let lastColor = (document.getElementById("picker-led-color") as HTMLInputElement
 
 		const rgb = hexToRgb(hexColor);
 		app?.devices.forEach((descriptor, deviceId) => {
+			AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
 			app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
 			app?.api?.output(deviceId);
 			console.log(`Lightbar color applied to device ${deviceId}: ${hexColor}`);
@@ -197,6 +199,7 @@ let lastColor = (document.getElementById("picker-led-color") as HTMLInputElement
 			app?.devices.forEach((descriptor, deviceId) => {
 				if (btn.dataset.color) {
 					const rgb = hexToRgb(btn.dataset.color);
+					AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
 
 					app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
 					app?.api?.output(deviceId);

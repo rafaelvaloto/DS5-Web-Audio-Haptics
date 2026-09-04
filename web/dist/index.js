@@ -2,6 +2,7 @@ import { GamepadClientApplication } from "./main.js";
 import { bootWasmAndPlatform } from "./load.js";
 import { logLines, TRIGGERS } from "./const.js";
 import { debounce, hexToRgb } from "./helpers.js";
+import { AudioHapticsManager } from "./stream.js";
 // app engine instance
 let app = null;
 document.getElementById("btn-load")?.addEventListener("click", async (e) => {
@@ -154,6 +155,7 @@ document.getElementById("picker-led-color")?.addEventListener("input", debounce(
     }
     const rgb = hexToRgb(hexColor);
     app?.devices.forEach((descriptor, deviceId) => {
+        AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
         app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
         app?.api?.output(deviceId);
         console.log(`Lightbar color applied to device ${deviceId}: ${hexColor}`);
@@ -165,6 +167,7 @@ Array.from(document.getElementsByClassName("color-preset-btn")).forEach((btn) =>
             app?.devices.forEach((descriptor, deviceId) => {
                 if (btn.dataset.color) {
                     const rgb = hexToRgb(btn.dataset.color);
+                    AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
                     app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
                     app?.api?.output(deviceId);
                     console.log(`Lightbar pattern applied to device ${deviceId}.`);
