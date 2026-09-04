@@ -1,19 +1,24 @@
 import { initializeDeviceRegistryPolicy } from "./policies/device_registry_policy.js";
 import { bindingAPI } from "./api.js";
 import { t } from "./i18n";
-import { FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE } from "./const.js";
+import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE } from "./const.js";
+import { AudioHapticsManager } from "./stream.js";
 export class GamepadClientApplication {
-    constructor(module, platform, registry, logFnPtr) {
+    constructor(module, platform, registry, media, logFnPtr) {
         this.inputTimer = null;
         this.nextManualHandle = 100;
+        this.isNowEnabled = false;
         this.pendingDescriptor = null;
+        this.media = null;
         this.devices = new Map();
         this.registry = null;
         this.module = module;
         this.platform = platform;
         this.registry = registry;
+        this.media = media;
         this.api = bindingAPI(module);
         this.inputBufferPtr = module._malloc(INPUT_DESCRIPTOR_SIZE);
+        this.media?.setApi(this.api);
     }
     // ...
     static createFromContext(context, typeId = 1) {
@@ -49,7 +54,13 @@ export class GamepadClientApplication {
                 GamepadClientApplication.emitLog(t("logs.deviceDisconnected", { id: deviceId }));
             },
         });
-        return (ref.value = new GamepadClientApplication(module, platform, registry, null));
+        const media = new AudioHapticsManager({
+            module: module,
+            onChange: (status) => {
+                console.log(`[Engine] Status do Áudio/Haptics: ${status ? "Ativado" : "Desativado"}`);
+            },
+        });
+        return (ref.value = new GamepadClientApplication(module, platform, registry, media, null));
     }
     /**
      * Request access to HID devices (e.g., Sony DualSense) via the WebHID API.
@@ -159,7 +170,12 @@ export class GamepadClientApplication {
                     console.log(`State for device ${deviceId}:`, descriptor);
                 }
             }
-        }, 16);
+            // if (this.isNowEnabled) {
+            // 	for (const [deviceId, descriptor] of this.devices.entries()) {
+            // 		this.api?.audioProcess(deviceId);
+            // 	}
+            // }
+        }, FRAME_MS);
     }
     /**
      * Para o loop da engine
@@ -273,6 +289,19 @@ export class GamepadClientApplication {
             bPaddleRight: rb(143),
             batteryLevel: rf(144),
         };
+    }
+    async toggleHaptics() {
+        try {
+            this.isNowEnabled = await this.media?.toggle();
+            return this.isNowEnabled;
+        }
+        catch (err) {
+            console.error("[Engine] Erro ao iniciar captura de áudio:", err);
+            return false;
+        }
+    }
+    async audioSettings(device, isMic, isHeadset, isSpeaker, micVolume, audioVolume, rumbleMode, rumbleReduce, triggerReduce, gain = 1.0, volume = 100) {
+        this.media?.applySettings(device, isMic, isHeadset, isSpeaker, micVolume, audioVolume, rumbleMode, rumbleReduce, triggerReduce, gain, volume);
     }
     /**
      * Registra um ouvinte para receber os logs.

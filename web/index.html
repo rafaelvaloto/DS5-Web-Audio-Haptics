@@ -209,10 +209,7 @@
 
     <section class="card audio-card">
         <h2>
-            🔊
-            <span data-i18n="controls.audioSettingsTitle"
-            >Audio &amp; Haptics</span
-            >
+            🔊<span data-i18n="controls.audioSettingsTitle">Audio Controls</span>
         </h2>
         <div class="audio-grid">
             <div class="audio-control">
@@ -256,16 +253,22 @@
             >Audio only</span
             ></label>
         </div>
-        <div class="audio-card-overlay">
-            <button
-                    id="btn-pip"
-                    class="btn btn-primary"
-                    data-i18n="header.btnPip"
-            >
-                🪟 Picture-in-Picture
-            </button>
-        </div>
     </section>
+
+	<section class="card shared-card">
+		<h2>
+			🪟 <span data-i18n="controls.sharedPiPTitle">Enable Audio Haptics Bluetooth</span>
+		</h2>
+		<div class="shared-card-overlay">
+			<button
+				id="btn-pip"
+				class="btn btn-primary"
+				data-i18n="header.btnPip"
+			>
+				🪟 Picture-in-Picture
+			</button>
+		</div>
+	</section>
 
     <section class="card">
         <h2>🎮 Input Server</h2>
@@ -306,11 +309,6 @@
     </section>
 
     <div class="technical">
-        <select id="lang-select">
-            <option value="en">English</option>
-            <option value="pt-BR">Português</option>
-            <option value="es">Español</option>
-        </select>
         <span id="dot-wasm"></span><span id="lbl-wasm"></span
     ><span id="dot-hid"></span><span id="lbl-device"></span
     ><span id="dot-touch"></span><span id="lbl-touch"></span
@@ -368,7 +366,7 @@
     <div id="in-page-pip" style="display: none"></div>
 </main>
 
-<dialog id="log-dialog" class="log-modal">
+<dialog id="log-dialog" class="log-modal" style="display: none;">
     <div class="log-modal-body">
         <div id="log-box" class="log-container" data-i18n="logs.wasmLoading">
             Waiting for WASM module initialization...

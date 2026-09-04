@@ -6,15 +6,18 @@ import { DeviceRegistryPolicy, initializeDeviceRegistryPolicy } from "./policies
 import { api, bindingAPI } from "./api.ts";
 import { t } from "./i18n";
 import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE } from "./const.ts";
+import { AudioHapticsManager } from "./stream.ts";
 
 export class GamepadClientApplication {
 	private readonly inputBufferPtr: number;
 	private inputTimer: number | null = null;
 	private nextManualHandle: number = 100;
+	private isNowEnabled: boolean | undefined | null = false;
 	private pendingDescriptor: Descriptor | null = null;
 
 	public static pending: boolean = true;
 	public readonly api: api | undefined;
+	public readonly media: AudioHapticsManager | null = null;
 	public readonly module: NativeModule | undefined;
 	public readonly devices = new Map<number, Descriptor>();
 	public readonly platform: PlatformBridgeRegistration | null;
@@ -27,13 +30,17 @@ export class GamepadClientApplication {
 		module: NativeModule,
 		platform: PlatformBridgeRegistration | null,
 		registry: DeviceRegistryPolicy | null,
+		media: AudioHapticsManager | null,
 		logFnPtr: number | null
 	) {
 		this.module = module;
 		this.platform = platform;
 		this.registry = registry;
+		this.media = media;
 		this.api = bindingAPI(module);
 		this.inputBufferPtr = module._malloc(INPUT_DESCRIPTOR_SIZE);
+
+		this.media?.setApi(this.api);
 	}
 
 	// ...
@@ -74,7 +81,14 @@ export class GamepadClientApplication {
 			},
 		});
 
-		return (ref.value = new GamepadClientApplication(module, platform, registry, null));
+		const media = new AudioHapticsManager({
+			module: module,
+			onChange: (status) => {
+				console.log(`[Engine] Status do Áudio/Haptics: ${status ? "Ativado" : "Desativado"}`);
+			},
+		});
+
+		return (ref.value = new GamepadClientApplication(module, platform, registry, media, null));
 	}
 
 	/**
@@ -213,6 +227,12 @@ export class GamepadClientApplication {
 					console.log(`State for device ${deviceId}:`, descriptor);
 				}
 			}
+
+			// if (this.isNowEnabled) {
+			// 	for (const [deviceId, descriptor] of this.devices.entries()) {
+			// 		this.api?.audioProcess(deviceId);
+			// 	}
+			// }
 		}, FRAME_MS);
 	}
 
@@ -240,9 +260,7 @@ export class GamepadClientApplication {
 			console.log("Pending GamepadClientApplication, returning empty state.");
 			return {} as state_t; // Retorna um estado vazio se houver um descriptor pendente
 		}
-
 		this.api?.update(deviceId, FRAME_SECONDS);
-
 		this.api?.state(deviceId, this.inputBufferPtr);
 
 		const b = this.inputBufferPtr;
@@ -257,6 +275,7 @@ export class GamepadClientApplication {
 			if (typeof this.module?.getValue === "function") {
 				return this.module.getValue(b + offset, "float");
 			}
+
 			// @ts-ignore
 			const view = new DataView(heap?.buffer, heap?.byteOffset + b + offset, 4);
 			return view.getFloat32(0, true);
@@ -350,6 +369,44 @@ export class GamepadClientApplication {
 
 			batteryLevel: rf(144),
 		};
+	}
+
+	public async toggleHaptics() {
+		try {
+			this.isNowEnabled = await this.media?.toggle();
+			return this.isNowEnabled;
+		} catch (err) {
+			console.error("[Engine] Erro ao iniciar captura de áudio:", err);
+			return false;
+		}
+	}
+
+	public async audioSettings(
+		device: number,
+		isMic: number,
+		isHeadset: number,
+		isSpeaker: number,
+		micVolume: number,
+		audioVolume: number,
+		rumbleMode: number,
+		rumbleReduce: number,
+		triggerReduce: number,
+		gain: number = 1.0,
+		volume: number = 100
+	) {
+		this.media?.applySettings(
+			device,
+			isMic,
+			isHeadset,
+			isSpeaker,
+			micVolume,
+			audioVolume,
+			rumbleMode,
+			rumbleReduce,
+			triggerReduce,
+			gain,
+			volume
+		);
 	}
 
 	/**

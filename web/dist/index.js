@@ -25,7 +25,7 @@ document.getElementById("btn-load")?.addEventListener("click", async (e) => {
 document.getElementById("btn-show-logs")?.addEventListener("click", async (e) => {
     const logContainer = document.getElementById("log-dialog");
     if (logContainer) {
-        logContainer.style.display = logContainer.style.display === "none" ? "block" : "none";
+        logContainer.style.display = logContainer.style.display !== "block" ? "block" : "none";
     }
 });
 document.getElementById("btn-close-logs")?.addEventListener("click", async (e) => {
@@ -176,8 +176,80 @@ Array.from(document.getElementsByClassName("color-preset-btn")).forEach((btn) =>
         }
     });
 });
-// (document.getElementById("btn-pip") as HTMLButtonElement).style.display = "none";
-document.getElementsByClassName("audio-card")[0]?.addEventListener("mouseover", (e) => {
-    // (document.getElementById("btn-pip") as HTMLButtonElement).style.display = "block";
+document.getElementById("btn-pip")?.addEventListener("click", async (e) => {
+    try {
+        if (!app) {
+            console.warn("WASM não carregado.");
+            return;
+        }
+        if (app.devices.size === 0) {
+            console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+            return;
+        }
+        const result = await app.toggleHaptics();
+        if (result) {
+            for (const [deviceId, descriptor] of app.devices) {
+                await app?.audioSettings(deviceId, 0, // enable haptics
+                1, // rumble mode
+                1, // rumble reduce
+                0, // trigger reduce
+                100, // audio volume
+                0xfc, // audio gain
+                0, // audio device
+                0 // reserved
+                );
+            }
+            console.log("Haptics enabled.");
+        }
+    }
+    catch (error) {
+        console.error("Screen permission denied or error:", error);
+    }
 });
-document.getElementById("btn-pip")?.addEventListener("click", (e) => { });
+function updateAudioSettings() {
+    if (!app) {
+        console.warn("WASM não carregado.");
+        return;
+    }
+    if (app.devices.size === 0) {
+        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+        return;
+    }
+    const volume = Number(document.getElementById("input-audio-volume")?.value);
+    const gain = Number(document.getElementById("input-audio-gain")?.value);
+    const bIsSpeaker = Number(document.getElementById("switch-speaker")?.checked);
+    const bIsAudioOnly = Number(document.getElementById("switch-audio-haptics")?.checked);
+    for (const [deviceId, descriptor] of app.devices) {
+        app?.audioSettings(deviceId, 0, // enable haptics
+        1, // rumble mode
+        bIsSpeaker, // rumble reduce
+        0, // trigger reduce
+        volume, // audio volume
+        bIsAudioOnly ? 0xfc : 0xff, // audio gain
+        0, // audio device
+        0, volume, gain // reserved
+        ).catch((err) => {
+            console.error(`Failed to apply audio settings for device ${deviceId}:`, err);
+        });
+    }
+}
+document.getElementById("input-audio-gain")?.addEventListener("input", debounce((event) => {
+    const gainValueDisplay = document.getElementById("input-audio-gain-value");
+    if (gainValueDisplay) {
+        gainValueDisplay.textContent = Number(event.target.value).toFixed(1);
+    }
+    updateAudioSettings();
+}, 400));
+document.getElementById("input-audio-volume")?.addEventListener("input", debounce((event) => {
+    const volumeValueDisplay = document.getElementById("input-audio-volume-value");
+    if (volumeValueDisplay) {
+        volumeValueDisplay.textContent = event.target.value;
+    }
+    updateAudioSettings();
+}, 400));
+document.getElementById("switch-audio-haptics")?.addEventListener("change", (e) => {
+    updateAudioSettings();
+});
+document.getElementById("switch-speaker")?.addEventListener("change", (e) => {
+    updateAudioSettings();
+});
