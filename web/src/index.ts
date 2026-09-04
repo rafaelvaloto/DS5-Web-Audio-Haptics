@@ -292,3 +292,34 @@ function updateAudioSettings() {
 (document.getElementById("switch-speaker") as HTMLInputElement)?.addEventListener("change", (e) => {
 	updateAudioSettings();
 });
+
+(document.getElementById("btn-ws-connect") as HTMLInputElement)?.addEventListener("click", (e) => {
+	try {
+		if (!app) {
+			console.warn("WASM não carregado.");
+			return;
+		}
+
+		if (app.devices.size === 0) {
+			console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
+			return;
+		}
+
+		app.wsConnect();
+		setTimeout(() => {
+			if (app?.wsIsConnect()) {
+				console.log("WebSocket is connected.");
+				(e.target as HTMLButtonElement).textContent = "Disconnect";
+				(e.target as HTMLButtonElement).className = "btn btn-danger";
+				document.getElementById("lbl-ws-status")!.textContent = "Connected";
+			} else {
+				console.warn("WebSocket connection failed.");
+				(e.target as HTMLButtonElement).textContent = "Connect";
+				(e.target as HTMLButtonElement).className = "btn btn-primary";
+				document.getElementById("lbl-ws-status")!.textContent = "Disconnected";
+			}
+		}, 1000);
+	} catch (error) {
+		console.error("Screen permission denied or error:", error);
+	}
+});
