@@ -113,7 +113,6 @@ export class AudioHapticsManager {
             nextSource.connect(nextProcessor);
             nextProcessor.connect(nextMute);
             nextMute.connect(nextContext.destination);
-            // 1. Cria o analisador com suavização
             const analyser = nextContext.createAnalyser();
             analyser.fftSize = 256;
             analyser.smoothingTimeConstant = 0.7;
@@ -124,7 +123,7 @@ export class AudioHapticsManager {
             canvas.height = 200;
             const ctx = canvas.getContext("2d");
             if (ctx) {
-                //ctx.fillStyle = "#0a0a0f";
+                ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             }
             // 3. Loop de animação aprimorado
@@ -136,24 +135,19 @@ export class AudioHapticsManager {
                 requestAnimationFrame(drawVisualizer);
                 analyser.getByteFrequencyData(dataArray);
                 if (ctx) {
-                    // 1. O fundo deve ser SEMPRE escuro para o motion blur funcionar sem cegar o usuário
-                    ctx.fillStyle = "rgba(10, 10, 15, 0.4)";
+                    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     const centerY = canvas.height / 2;
                     const totalBars = dataArray.length;
                     const barWidth = (canvas.width / totalBars) * 1.5;
                     let x = 0;
-                    // 2. Extrai a cor atual do controle, com fallback para azul PlayStation
                     const led = AudioHapticsManager.lastLightbarColor || { r: 0, g: 100, b: 255 };
-                    // 3. Aplica o brilho neon com a cor exata do controle
                     ctx.shadowBlur = 15;
                     ctx.shadowColor = `rgba(${led.r}, ${led.g}, ${led.b}, 0.8)`;
                     for (let i = 0; i < totalBars; i++) {
                         const barHeight = dataArray[i] * 0.7 || 2;
                         // Posição da barra de 0.0 (extrema esquerda/graves) a 1.0 (extrema direita/agudos)
                         const percent = i / totalBars;
-                        // Desloca o espectro de cor partindo da cor base do LED
-                        // A matemática aqui distorce o R, G e B independentemente com base na posição 'percent'
                         const rBase = led.r + percent * 120; // Esquenta a cor em direção à direita
                         const gBase = led.g - percent * 80; // Diminui o verde em direção à direita
                         const bBase = led.b + (1 - percent) * 120; // Esfria a cor em direção à esquerda
@@ -170,7 +164,6 @@ export class AudioHapticsManager {
                 }
             };
             drawVisualizer();
-            // 4. Captura e mesclagem do stream
             const canvasStream = canvas.captureStream(30);
             const fakeStream = new MediaStream([canvasStream.getVideoTracks()[0], nextStream.getAudioTracks()[0]]);
             // 5. Injeta no vídeo
