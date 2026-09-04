@@ -9,7 +9,7 @@ Transform your browser into a real-time haptic feedback router. This tool captur
 
 Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge, Opera, Brave):
 
-👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/testes/index.html)**
+👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/)**
 
 🎥 **[Watch the browser extension and web page demonstration.](https://youtu.be/hyBbN2aqjOc?si=5nG2WPL8PeZHLYOf)**
 
@@ -18,22 +18,10 @@ Experience live audio haptic routing in any Chromium-based browser (Chrome, Edge
 ## 🎧 How to Use (Step-by-Step)
 
 1. **Connect your Controller:** Pair your DualSense controller to your PC via Bluetooth.
-2. **Open the Router:** Go to the [Live Link](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/testes/index.html).
+2. **Open the Router:** Go to the [Live Link](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/).
 3. **Connect Device:** Click the connect button and select your DualSense controller from the browser prompt.
 4. **Enable Haptics:** Click **"Audio Haptics (On)"** and select your game's window in the Screen Share prompt. **Important:** Make sure to check the "Share audio" option in the browser prompt.
 5. **Play:** Use the Picture-in-Picture mode to keep the app running in a small floating window while you play.
-
----
-
-## 🎮 Usage Examples
-
-### DualSense controls with EA SPORTS FC 26
-
-![DualSense controls running with EA SPORTS FC 26](https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics/blob/main/Images/usage_ea_fc_26.png)
-
-### Audio Haptics in Picture-in-Picture mode
-
-![Audio Haptics Picture-in-Picture controls with EA SPORTS FC 26](https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics/blob/main/Images/usage_pip_ea_fc_26.png)
 
 ---
 
