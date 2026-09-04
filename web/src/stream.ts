@@ -109,6 +109,8 @@ export class AudioHapticsManager implements AudioHapticsController {
 		this.options.onChange?.(false);
 	}
 
+	public static lastLightbarColor: { r: number; g: number; b: number } | null = null;
+
 	public async enable(): Promise<void> {
 		if (this.enabled) return;
 
@@ -174,27 +176,105 @@ export class AudioHapticsManager implements AudioHapticsController {
 			nextProcessor.connect(nextMute);
 			nextMute.connect(nextContext.destination);
 
+			const analyser = nextContext.createAnalyser();
+			analyser.fftSize = 256;
+			analyser.smoothingTimeConstant = 0.7;
+			nextSource.connect(analyser);
+
+			// 2. Cria o Canvas
+			const canvas = document.createElement("canvas");
+			canvas.width = 400;
+			canvas.height = 200;
+			const ctx = canvas.getContext("2d");
+
+			if (ctx) {
+				ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+				ctx.fillRect(0, 0, canvas.width, canvas.height);
+			}
+
+			// 3. Loop de animação aprimorado
+			const dataArray = new Uint8Array(analyser.frequencyBinCount);
+			let isVisualizerActive = true;
+
+			const drawVisualizer = () => {
+				if (!isVisualizerActive) return;
+				requestAnimationFrame(drawVisualizer);
+				analyser.getByteFrequencyData(dataArray);
+
+				if (ctx) {
+					ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+					const centerY = canvas.height / 2;
+					const totalBars = dataArray.length;
+					const barWidth = (canvas.width / totalBars) * 1.5;
+					let x = 0;
+
+					const led = AudioHapticsManager.lastLightbarColor || { r: 0, g: 100, b: 255 };
+
+					ctx.shadowBlur = 15;
+					ctx.shadowColor = `rgba(${led.r}, ${led.g}, ${led.b}, 0.8)`;
+
+					for (let i = 0; i < totalBars; i++) {
+						const barHeight = dataArray[i] * 0.7 || 2;
+
+						// Posição da barra de 0.0 (extrema esquerda/graves) a 1.0 (extrema direita/agudos)
+						const percent = i / totalBars;
+
+						const rBase = led.r + percent * 120; // Esquenta a cor em direção à direita
+						const gBase = led.g - percent * 80; // Diminui o verde em direção à direita
+						const bBase = led.b + (1 - percent) * 120; // Esfria a cor em direção à esquerda
+
+						// Aplica os limites RGB (0-255) e injeta o brilho de acordo com a altura (barHeight)
+						const r = Math.min(255, Math.max(0, rBase + barHeight / 3));
+						const g = Math.min(255, Math.max(0, gBase + barHeight / 3));
+						const b = Math.min(255, Math.max(0, bBase + barHeight / 3));
+
+						ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+
+						// Desenha do centro para as bordas
+						ctx.fillRect(x, centerY - barHeight / 2, barWidth - 2, barHeight);
+
+						x += barWidth;
+					}
+
+					ctx.shadowBlur = 0;
+				}
+			};
+			drawVisualizer();
+			const canvasStream = canvas.captureStream(30);
+			const fakeStream = new MediaStream([canvasStream.getVideoTracks()[0], nextStream.getAudioTracks()[0]]);
+
+			// 5. Injeta no vídeo
 			const videoElement = document.createElement("video");
-			videoElement.srcObject = nextStream;
+			videoElement.srcObject = fakeStream;
 			videoElement.autoplay = true;
 			videoElement.muted = true;
+			videoElement.playsInline = true;
 
-			videoElement.addEventListener("loadedmetadata", async () => {
-				try {
-					await videoElement.requestPictureInPicture();
-				} catch (pipError) {
-					console.error("Error eject PiP:", pipError);
-				}
+			videoElement.addEventListener("loadedmetadata", () => {
+				videoElement
+					.play()
+					.then(async () => {
+						try {
+							await videoElement.requestPictureInPicture();
+						} catch (pipError) {
+							console.error("[WebHID] Erro ao abrir PiP do Visualizer:", pipError);
+						}
+					})
+					.catch((e) => console.error("[WebHID] Erro no autoplay do vídeo:", e));
 			});
 
-			// Sincroniza o desligamento da engine e do PiP
 			nextStream.getVideoTracks()[0]?.addEventListener("ended", () => {
+				isVisualizerActive = false;
+
 				if (document.pictureInPictureElement === videoElement) {
-					document.exitPictureInPicture().catch((error) => {
-						console.error("Error exiting PiP:", error);
-					});
+					document.exitPictureInPicture().catch(() => {});
 				}
+
+				canvasStream.getTracks().forEach((track) => track.stop());
 				console.log("Screen sharing ended.");
+
 				if (this.enabled) this.disable().catch(console.error);
 			});
 

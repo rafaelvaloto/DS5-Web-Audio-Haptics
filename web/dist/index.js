@@ -2,6 +2,7 @@ import { GamepadClientApplication } from "./main.js";
 import { bootWasmAndPlatform } from "./load.js";
 import { logLines, TRIGGERS } from "./const.js";
 import { debounce, hexToRgb } from "./helpers.js";
+import { AudioHapticsManager } from "./stream.js";
 // app engine instance
 let app = null;
 document.getElementById("btn-load")?.addEventListener("click", async (e) => {
@@ -77,13 +78,13 @@ document.getElementById("btn-start")?.addEventListener("click", (e) => {
     console.log("🚀 Loop rodando!");
     e.target.disabled = true;
     document.getElementById("btn-stop").disabled = false;
-});
-document.getElementById("btn-stop")?.addEventListener("click", (e) => {
-    if (app) {
-        app.stop();
-    }
-    e.target.disabled = true;
-    document.getElementById("btn-start").disabled = false;
+    setTimeout(() => {
+        const battery = document.getElementById(`lbl-battery`);
+        app?.devices.forEach((descriptor, deviceId) => {
+            battery.className = `${app?.api?.battery(deviceId)}`;
+            battery.textContent = `${app?.api?.battery(deviceId)}%`;
+        });
+    }, 10000);
 });
 document.getElementById("btn-stop")?.addEventListener("click", (e) => {
     if (app) {
@@ -154,6 +155,7 @@ document.getElementById("picker-led-color")?.addEventListener("input", debounce(
     }
     const rgb = hexToRgb(hexColor);
     app?.devices.forEach((descriptor, deviceId) => {
+        AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
         app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
         app?.api?.output(deviceId);
         console.log(`Lightbar color applied to device ${deviceId}: ${hexColor}`);
@@ -165,6 +167,7 @@ Array.from(document.getElementsByClassName("color-preset-btn")).forEach((btn) =>
             app?.devices.forEach((descriptor, deviceId) => {
                 if (btn.dataset.color) {
                     const rgb = hexToRgb(btn.dataset.color);
+                    AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
                     app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
                     app?.api?.output(deviceId);
                     console.log(`Lightbar pattern applied to device ${deviceId}.`);
@@ -214,7 +217,19 @@ document.getElementById("btn-pip")?.addEventListener("click", async (e) => {
         const result = await app.toggleHaptics();
         if (result) {
             console.log("Haptics enabled.");
+            e.target.textContent = "🪟 Stop Picture-in-Picture";
+            e.target.className = "btn btn-danger";
+            Array.from(document.getElementsByClassName("shared-card-overlay")).forEach((el) => {
+                el.style.opacity = "100";
+            });
+            document.getElementById("dot-audio-haptics").className = "dot active";
             updateAudioSettings();
+        }
+        else {
+            e.target.textContent = "🪟 Start Picture-in-Picture";
+            e.target.className = "btn btn-primary";
+            document.getElementById("dot-audio-haptics").className = "dot";
+            console.log("Haptics disabled.");
         }
     }
     catch (error) {

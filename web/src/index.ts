@@ -2,6 +2,7 @@ import { GamepadClientApplication } from "./main.ts";
 import { bootWasmAndPlatform } from "./load.ts";
 import { logLines, TRIGGERS } from "./const.ts";
 import { debounce, hexToRgb } from "./helpers.ts";
+import { AudioHapticsManager } from "./stream.ts";
 
 // app engine instance
 let app: GamepadClientApplication | null = null;
@@ -92,15 +93,13 @@ let app: GamepadClientApplication | null = null;
 
 	(e.target as HTMLButtonElement).disabled = true;
 	(document.getElementById("btn-stop") as HTMLButtonElement).disabled = false;
-});
-
-(document.getElementById("btn-stop") as HTMLButtonElement)?.addEventListener("click", (e) => {
-	if (app) {
-		app.stop();
-	}
-
-	(e.target as HTMLButtonElement).disabled = true;
-	(document.getElementById("btn-start") as HTMLButtonElement).disabled = false;
+	setTimeout(() => {
+		const battery = document.getElementById(`lbl-battery`) as HTMLButtonElement;
+		app?.devices.forEach((descriptor, deviceId) => {
+			battery.className = `${app?.api?.battery(deviceId)}`;
+			battery.textContent = `${app?.api?.battery(deviceId)}%`;
+		});
+	}, 10000);
 });
 
 (document.getElementById("btn-stop") as HTMLButtonElement)?.addEventListener("click", (e) => {
@@ -186,6 +185,7 @@ let lastColor = (document.getElementById("picker-led-color") as HTMLInputElement
 
 		const rgb = hexToRgb(hexColor);
 		app?.devices.forEach((descriptor, deviceId) => {
+			AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
 			app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
 			app?.api?.output(deviceId);
 			console.log(`Lightbar color applied to device ${deviceId}: ${hexColor}`);
@@ -199,6 +199,7 @@ let lastColor = (document.getElementById("picker-led-color") as HTMLInputElement
 			app?.devices.forEach((descriptor, deviceId) => {
 				if (btn.dataset.color) {
 					const rgb = hexToRgb(btn.dataset.color);
+					AudioHapticsManager.lastLightbarColor = { r: rgb.r, g: rgb.g, b: rgb.b };
 
 					app?.api?.lightbar(deviceId, rgb.r, rgb.g, rgb.b);
 					app?.api?.output(deviceId);
@@ -260,7 +261,19 @@ function updateAudioSettings() {
 		const result = await app.toggleHaptics();
 		if (result) {
 			console.log("Haptics enabled.");
+			(e.target as HTMLButtonElement).textContent = "🪟 Stop Picture-in-Picture";
+			(e.target as HTMLButtonElement).className = "btn btn-danger";
+			(Array.from(document.getElementsByClassName("shared-card-overlay")) as HTMLElement[]).forEach((el) => {
+				el.style.opacity = "100";
+			});
+			(document.getElementById("dot-audio-haptics") as HTMLButtonElement).className = "dot active";
 			updateAudioSettings();
+		} else {
+			(e.target as HTMLButtonElement).textContent = "🪟 Start Picture-in-Picture";
+			(e.target as HTMLButtonElement).className = "btn btn-primary";
+			(document.getElementById("dot-audio-haptics") as HTMLButtonElement).className = "dot";
+
+			console.log("Haptics disabled.");
 		}
 	} catch (error) {
 		console.error("Screen permission denied or error:", error);
