@@ -119,7 +119,7 @@ export class AudioHapticsManager {
             nextSource.connect(analyser);
             // 2. Cria o Canvas
             const canvas = document.createElement("canvas");
-            canvas.width = 400;
+            canvas.width = 350;
             canvas.height = 200;
             const ctx = canvas.getContext("2d");
             if (ctx) {
