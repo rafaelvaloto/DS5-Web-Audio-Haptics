@@ -9,7 +9,6 @@
             const consentStorageKey = "ga-consent";
 
             function loadGoogleAnalytics() {
-                if (window.__googleAnalyticsLoaded) return;
                 window.__googleAnalyticsLoaded = true;
                 window.dataLayer = window.dataLayer || [];
                 window.gtag = function () {
@@ -48,7 +47,7 @@
                 });
             }
 
-            document.addEventListener("DOMContentLoaded", setupAnalyticsConsent);
+            document.addEventListener("DOMContentLoaded", loadGoogleAnalytics);
         })();
     </script>
 

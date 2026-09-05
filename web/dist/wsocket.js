@@ -52,32 +52,52 @@ export class DualSenseSocketBridge {
     send(state) {
         if (!this.isConnected())
             return;
-        const bool = (value) => (value ? "1" : "0");
-        const number = (value) => (Number.isFinite(value) ? value.toFixed(4) : "0");
-        const line = [
-            `cross=${bool(state.bCross)}`,
-            `circle=${bool(state.bCircle)}`,
-            `square=${bool(state.bSquare)}`,
-            `triangle=${bool(state.bTriangle)}`,
-            `up=${bool(state.bDpadUp)}`,
-            `down=${bool(state.bDpadDown)}`,
-            `left=${bool(state.bDpadLeft)}`,
-            `right=${bool(state.bDpadRight)}`,
-            `start=${bool(state.bStart)}`,
-            `share=${bool(state.bShare)}`,
-            `ps=${bool(state.bPSButton)}`,
-            `lb=${bool(state.bLeftShoulder)}`,
-            `rb=${bool(state.bRightShoulder)}`,
-            `ls=${bool(state.bLeftStick)}`,
-            `rs=${bool(state.bRightStick)}`,
-            `lx=${number(state.leftAnalogX)}`,
-            `ly=${number(state.leftAnalogY)}`,
-            `rx=${number(state.rightAnalogX)}`,
-            `ry=${number(state.rightAnalogY)}`,
-            `lt=${number(state.leftTriggerAnalog)}`,
-            `rt=${number(state.rightTriggerAnalog)}`,
-        ].join(" ");
-        this.socket.send(`${line}\n`);
+        const axisToInt16 = (val) => Math.max(-32768, Math.min(32767, Math.round(val * 32767)));
+        const triggerToUint8 = (val) => Math.max(0, Math.min(255, Math.round(val * 255)));
+        if (!this.isConnected())
+            return;
+        const buffer = new ArrayBuffer(12);
+        const view = new DataView(buffer);
+        // Bitmask (16-bits)
+        let buttons = 0;
+        if (state.bDpadUp)
+            buttons |= 0x0001;
+        if (state.bDpadDown)
+            buttons |= 0x0002;
+        if (state.bDpadLeft)
+            buttons |= 0x0004;
+        if (state.bDpadRight)
+            buttons |= 0x0008;
+        if (state.bStart)
+            buttons |= 0x0010;
+        if (state.bShare)
+            buttons |= 0x0020; // BACK
+        if (state.bLeftStick)
+            buttons |= 0x0040; // LEFT THUMB
+        if (state.bRightStick)
+            buttons |= 0x0080; // RIGHT THUMB
+        if (state.bLeftShoulder)
+            buttons |= 0x0100; // LEFT SHOULDER
+        if (state.bRightShoulder)
+            buttons |= 0x0200; // RIGHT SHOULDER
+        if (state.bPSButton)
+            buttons |= 0x0400; // GUIDE
+        if (state.bCross)
+            buttons |= 0x1000; // A
+        if (state.bCircle)
+            buttons |= 0x2000; // B
+        if (state.bSquare)
+            buttons |= 0x4000; // X
+        if (state.bTriangle)
+            buttons |= 0x8000; // Y
+        view.setUint16(0, buttons, true);
+        view.setUint8(2, triggerToUint8(state.leftTriggerAnalog));
+        view.setUint8(3, triggerToUint8(state.rightTriggerAnalog));
+        view.setInt16(4, axisToInt16(state.leftAnalogX), true);
+        view.setInt16(6, axisToInt16(state.leftAnalogY), true);
+        view.setInt16(8, axisToInt16(state.rightAnalogX), true);
+        view.setInt16(10, axisToInt16(state.rightAnalogY), true);
+        this.socket.send(buffer);
         this.sentCount++;
     }
     close() {
