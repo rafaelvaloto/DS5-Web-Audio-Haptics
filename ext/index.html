@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+	<script nomodule src="tags_ga.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DS5 Web Audio Haptics Bluetooth</title>
     <link rel="stylesheet" href="./src/css/main.css">
@@ -85,7 +86,7 @@
 
 	<section class="card">
 		<div class="status-item">
-			<span id="dot-trigger" class="dot danger"></span><span id="trigger-selected-out">Change trigger use R3 + d-pad: ⬅️➡️⬆️⬇️</span>
+			<span id="dot-trigger" class="dot danger"></span><span id="trigger-selected-out" data-i18n="controls.changeTrigger">Change trigger use R3 + d-pad: ⬅️➡️⬆️⬇️</span>
 		</div>
 	</section>
 
@@ -244,9 +245,9 @@
     </button>
     </div>
 </dialog>
-
-<script src="./src/lib/GamepadCoreHost.js"></script>
+<script src="./dist/lib/GamepadCoreHost.js"></script>
 <script type="module" src="./dist/index.js"></script>
+
 
 </body>
 </html>

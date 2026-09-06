@@ -3,9 +3,10 @@ import { bindingAPI } from "./api.js";
 import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE, SONY_VENDOR_ID } from "./const.js";
 import { AudioHapticsManager } from "./stream.js";
 import { DualSenseSocketBridge } from "./wsocket.js";
+import i18n from "./i18n/index.js";
 const deviceChannel = new BroadcastChannel("dualsense_channel");
 export class GamepadClientApplication {
-    constructor(module, platform, registry, media, logFnPtr) {
+    constructor(module, platform, registry, media) {
         this.inputTimer = null;
         this.nextManualHandle = 100;
         this.isNowEnabled = false;
@@ -21,6 +22,15 @@ export class GamepadClientApplication {
         this.api = bindingAPI(module);
         this.inputBufferPtr = module._malloc(INPUT_DESCRIPTOR_SIZE);
         this.media?.setApi(this.api);
+        // Callbacks logs C++ (WASM)
+        const jsLogCallback = module.addFunction((messagePtr) => {
+            const rawMessage = module.UTF8ToString(messagePtr);
+            const finalMessage = i18n.t(rawMessage);
+            GamepadClientApplication.emitLog(`[WASM] ${finalMessage}`);
+        }, "vi");
+        if (this.api.logs) {
+            this.api.logs(jsLogCallback);
+        }
     }
     wsToggle() {
         if (this.dsExtensionBridge.isConnected()) {
@@ -32,7 +42,6 @@ export class GamepadClientApplication {
     wsIsConnect() {
         return this.dsExtensionBridge.isConnected();
     }
-    // ...
     static createFromContext(context, typeId = 1) {
         const { module, platform } = context;
         let deviceId = 1;
@@ -40,47 +49,42 @@ export class GamepadClientApplication {
         const registry = initializeDeviceRegistryPolicy(module, typeId, {
             alloc: () => {
                 GamepadClientApplication.pending = true;
-                console.log("Allocating device ID:", deviceId);
+                GamepadClientApplication.emitLog(`Allocating device ID: ${deviceId}`);
                 return deviceId;
             },
-            dispatch: (deviceId) => {
-                console.log("Device dispatched:", deviceId);
+            dispatch: (dispatchedId) => {
+                GamepadClientApplication.emitLog(`Device dispatched: ${dispatchedId}`);
                 const app = ref.value;
                 if (app && app.pendingDescriptor) {
-                    app.devices.set(deviceId, app.pendingDescriptor);
-                    app.pendingDescriptor = null; // Clear the pending descriptor after dispatch
+                    app.devices.set(dispatchedId, app.pendingDescriptor);
+                    app.pendingDescriptor = null;
                     GamepadClientApplication.pending = false;
-                    // GamepadClientApplication.emitLog(, { id: deviceId }));
+                    // Exemplo usando a tradução
+                    GamepadClientApplication.emitLog(i18n.t("logs.webHidConnected", { id: dispatchedId }));
                 }
             },
-            disconnect: (deviceId) => {
-                console.log("Device disconnected:", deviceId);
+            disconnect: (disconnectedId) => {
+                GamepadClientApplication.emitLog(`Device disconnected: ${disconnectedId}`);
                 const app = ref.value;
                 if (app) {
-                    const descriptor = app.devices.get(deviceId);
+                    const descriptor = app.devices.get(disconnectedId);
                     if (descriptor?.inputListener) {
                         descriptor.device.removeEventListener("inputreport", descriptor.inputListener);
                     }
-                    app.devices.delete(deviceId);
+                    app.devices.delete(disconnectedId);
                 }
-                // GamepadClientApplication.emitLog(t("logs.deviceDisconnected", { id: deviceId }));
+                GamepadClientApplication.emitLog(i18n.t("logs.notConnected", { id: disconnectedId }));
             },
         });
         const media = new AudioHapticsManager({
             module: module,
             onChange: (status) => {
-                console.log(`[Engine] Status do Áudio/Haptics: ${status ? "Ativado" : "Desativado"}`);
+                GamepadClientApplication.emitLog(`[Engine] Audio/Haptics status: ${status ? "Enabled" : "Disabled"}`);
             },
         });
-        return (ref.value = new GamepadClientApplication(module, platform, registry, media, null));
+        return (ref.value = new GamepadClientApplication(module, platform, registry, media));
     }
-    /**
-     * Request access to HID devices (e.g., Sony DualSense) via the WebHID API.
-     * Returns an array with the names of the authorized devices.
-     */
     async requestDeviceAccess() {
-        // Specific filter for the Sony DualSense (Vendor ID: 0x054C, Product ID: 0x0CE6)
-        // If you want to accept any controller, just pass { filters: [] }
         const devices = await navigator.hid.requestDevice({
             filters: [
                 { vendorId: SONY_VENDOR_ID, productId: 0x0ce6 },
@@ -89,30 +93,25 @@ export class GamepadClientApplication {
         });
         const connectedNames = [];
         for (const device of devices) {
-            // Check if the device is already connected
             const handle = this.nextManualHandle++;
             const path = device.productName || "Sony DualSense (WebHID)";
-            // Open the device if it's not already opened
-            await this.createDeviceFromDescriptor(device, handle, 1, // deviceType: 1 (Genérico/DualSense)
-            1, // connectionType: 1 (Bluetooth)
-            true, // isConnected
-            path);
+            await this.createDeviceFromDescriptor(device, handle, 1, 1, true, path);
             connectedNames.push(path);
         }
         return connectedNames;
     }
     async createDeviceFromDescriptor(device, handle, deviceType, connectionType, isConnected, path) {
         if (!this.api?.create) {
-            console.log("API create method is not available");
+            GamepadClientApplication.emitLog("API create method is not available");
             return;
         }
         if (!this.platform?.registerManually) {
-            console.log("API registerManually method is not available");
+            GamepadClientApplication.emitLog("API registerManually method is not available");
             return;
         }
         if (device.opened) {
             device.close().catch((err) => {
-                console.log("Failed to close device:", err);
+                GamepadClientApplication.emitLog(`Failed to close device: ${err}`);
             });
         }
         device
@@ -135,7 +134,6 @@ export class GamepadClientApplication {
                     descriptor.lastInputPacket = fullPacket;
                 };
                 device.addEventListener("inputreport", device.oninputreport);
-                this.devices.set(handle, descriptor);
                 this.pendingDescriptor = descriptor;
                 this.platform?.registerManually(descriptor);
                 const structSize = 536;
@@ -144,7 +142,7 @@ export class GamepadClientApplication {
                     const heap = this.module?.HEAPU8;
                     heap?.fill(0, descriptorPtr, descriptorPtr + structSize);
                     if (heap) {
-                        const view = new DataView(heap?.buffer, heap?.byteOffset + descriptorPtr, structSize);
+                        const view = new DataView(heap.buffer, heap.byteOffset + descriptorPtr, structSize);
                         view.setBigInt64(0, BigInt(handle), true);
                         view.setInt32(8, deviceType, true);
                         view.setInt32(12, connectionType, true);
@@ -156,7 +154,7 @@ export class GamepadClientApplication {
                             heap.set(pathBytes.subarray(0, maxPathLength), descriptorPtr + 20);
                         }
                         this.api?.create(descriptorPtr);
-                        // GamepadClientApplication.emitLog(`[GamepadClient] Dispositivo injetado: ${path}`);
+                        GamepadClientApplication.emitLog(`[GamepadClient] Dispositivo injetado: ${path}`);
                     }
                 }
                 finally {
@@ -164,21 +162,16 @@ export class GamepadClientApplication {
                 }
             })
                 .catch((err) => {
-                console.log("Failed to receive feature report:", err);
-                return;
+                GamepadClientApplication.emitLog(`Failed to receive feature report: ${err}`);
             });
         })
             .catch((err) => {
-            console.log("Failed to open device:", err);
-            return;
+            GamepadClientApplication.emitLog(`Failed to open device: ${err}`);
         });
     }
-    /**
-     * Inicia o loop da engine (Polling)
-     */
     run() {
         if (this.inputTimer !== null)
-            return; // avoid starting multiple timers
+            return;
         let isSend = false;
         const applySending = (message, deviceId) => {
             if (!isSend) {
@@ -193,7 +186,7 @@ export class GamepadClientApplication {
                 }, 2000);
             }
         };
-        // GamepadClientApplication.emitLog("[GamepadClient] Engine iniciada (Polling 100Hz)");
+        GamepadClientApplication.emitLog(i18n.t("logs.loopStarted") || "[GamepadClient] Engine iniciada (Polling)");
         this.inputTimer = window.setInterval(() => {
             for (const [deviceId, descriptor] of this.devices.entries()) {
                 const state = this.readInputState(deviceId);
@@ -213,46 +206,35 @@ export class GamepadClientApplication {
             }
         }, FRAME_MS);
     }
-    /**
-     * Para o loop da engine
-     */
     stop() {
         if (this.inputTimer !== null) {
             window.clearInterval(this.inputTimer);
             this.inputTimer = null;
-            // GamepadClientApplication.emitLog("[GamepadClient] Engine parada.");
+            GamepadClientApplication.emitLog(i18n.t("logs.loopStopped") || "[GamepadClient] Engine parada");
         }
     }
-    /**
-     * Pede ao C++ o estado atual do controle e converte a memória bruta para o objeto TS state_t
-     */
     readInputState(deviceId) {
-        if (this.pendingDescriptor) {
-            return {}; // Retorna um estado vazio se houver um descriptor pendente
-        }
-        if (GamepadClientApplication.pending) {
-            return {}; // Retorna um estado vazio se houver um descriptor pendente
+        if (this.pendingDescriptor || GamepadClientApplication.pending) {
+            return {};
         }
         this.api?.update(deviceId, FRAME_SECONDS);
         this.api?.state(deviceId, this.inputBufferPtr);
         const b = this.inputBufferPtr;
         const heap = this.module?.HEAPU8;
         if (!heap) {
-            return {}; // Retorna um estado vazio se o heap não estiver disponível
+            return {};
         }
         const rf = (offset) => {
             if (typeof this.module?.getValue === "function") {
                 return this.module.getValue(b + offset, "float");
             }
-            // @ts-ignore
-            const view = new DataView(heap?.buffer, heap?.byteOffset + b + offset, 4);
+            const view = new DataView(heap.buffer, heap.byteOffset + b + offset, 4);
             return view.getFloat32(0, true);
         };
         const ri32 = (offset) => {
             if (typeof this.module?.getValue === "function") {
                 return this.module.getValue(b + offset, "i32");
             }
-            // @ts-ignore
             const view = new DataView(heap.buffer, heap.byteOffset + b + offset, 4);
             return view.getInt32(0, true);
         };
@@ -329,26 +311,19 @@ export class GamepadClientApplication {
             return this.isNowEnabled;
         }
         catch (err) {
-            console.log("[Engine] Erro ao iniciar captura de áudio:", err);
+            GamepadClientApplication.emitLog(`[Engine] Erro ao iniciar captura de áudio: ${err}`);
             return false;
         }
     }
     async audioSettings(device, isMic, isHeadset, isSpeaker, micVolume, audioVolume, rumbleMode, rumbleReduce, triggerReduce, gain = 1.0, volume = 100) {
         this.media?.applySettings(device, isMic, isHeadset, isSpeaker, micVolume, audioVolume, rumbleMode, rumbleReduce, triggerReduce, gain, volume);
     }
-    /**
-     * Registra um ouvinte para receber os logs.
-     * Retorna uma função de limpeza (cleanup) caso queira parar de escutar.
-     */
     static onLog(listener) {
         GamepadClientApplication.logListeners.add(listener);
         return () => GamepadClientApplication.logListeners.delete(listener);
     }
-    /**
-     * Publica uma linha de log no console e notifica todos os observadores.
-     */
     static emitLog(message, level) {
-        console.log(message); // Garante que sempre apareça no console do DevTools
+        console.log(message);
         for (const listener of GamepadClientApplication.logListeners) {
             try {
                 listener(message, level);
@@ -360,5 +335,5 @@ export class GamepadClientApplication {
     }
 }
 GamepadClientApplication.pending = true;
-// log static listeners
+// Log static listeners
 GamepadClientApplication.logListeners = new Set();

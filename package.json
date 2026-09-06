@@ -6,7 +6,7 @@
 	"scripts": {
 		"build": "npm run build:web",
 		"build:ext": "tsc -p ext/tsconfig.json",
-		"build:web": "tsc -p web/tsconfig.json"
+		"build:web": "tsc -p web/tsconfig.json && cp -R src/lib dist/lib"
 	},
 	"type": "module",
 	"devDependencies": {

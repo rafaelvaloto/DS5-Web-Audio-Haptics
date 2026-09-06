@@ -24,17 +24,21 @@ const DEFAULT_EFFECT_VALUES = {
     27: [0, 3, 112, 15, 10], // 0x27 - Machine
 };
 const deviceChannel = new BroadcastChannel("dualsense_channel");
+// Função para enviar os logs gerados nesta janela para a tela principal
+function remoteLog(message) {
+    console.log(message); // Mantém no console local do devtools desta aba
+    deviceChannel.postMessage({ type: "REMOTE_LOG", message: message });
+}
 document.getElementById("btn-apply-trigger")?.addEventListener("click", (e) => {
-    console.log("Apply Trigger effectMode", document.getElementById("effectMode").value);
-    console.log("Apply Trigger hexOutput", document.getElementById("hexOutput").dataset.payload);
-    let trigger = document.getElementById("effectMode").value +
-        " " +
-        document.getElementById("hexOutput").dataset.payload;
+    let modeValue = document.getElementById("effectMode").value;
+    let payloadValue = document.getElementById("hexOutput").dataset.payload;
+    let trigger = modeValue + " " + payloadValue;
     localStorage.setItem("trigger_test", JSON.stringify({
         hand: document.getElementById("sel-trigger-hand").value,
         effect: trigger || [],
     }));
     deviceChannel.postMessage({ type: "DEVICE_APPLY_TRIGGER_TEST" });
+    remoteLog(`[Teste] Testando gatilho 0x${modeValue}...`);
 });
 function initSliders() {
     const container = document.getElementById("slidersContainer");
@@ -45,11 +49,10 @@ function initSliders() {
     let hexString = modeSelect?.value || "21";
     let modeNum = Number(hexString);
     let numLength = SELECT_EFFECT_TYPE[modeNum] || 6;
-    let defaults = DEFAULT_EFFECT_VALUES[modeNum] || []; // Puxa os valores padrão
+    let defaults = DEFAULT_EFFECT_VALUES[modeNum] || [];
     let html = "";
     if (modeNum === 23) {
         for (let i = 1; i <= numLength; i++) {
-            // Pega o valor padrão do array (i - 1 porque o array começa em 0) ou 0 se não existir
             let defaultVal = defaults[i - 1] !== undefined ? defaults[i - 1] : 0;
             let hexVal = toHex(defaultVal);
             if (i == 2) {
@@ -96,7 +99,6 @@ function initSliders() {
     }
     else {
         for (let i = 1; i <= numLength; i++) {
-            // Pega o valor padrão do array (i - 1 porque o array começa em 0) ou 0 se não existir
             let defaultVal = defaults[i - 1] !== undefined ? defaults[i - 1] : 0;
             let hexVal = toHex(defaultVal);
             if (i == 2) {
@@ -132,7 +134,6 @@ function initSliders() {
         }
     }
     container.innerHTML = html;
-    // Reconecta os listeners nos sliders recém-criados
     for (let i = 1; i <= numLength; i++) {
         document.getElementById(`${hexString}_b${i}`)?.addEventListener("input", updateHexOutput);
     }
@@ -157,7 +158,6 @@ function updateHexOutput() {
         }
         payloadOnly += `${hexVal} `;
     }
-    // REMOVIDO: initSliders(); <--- Era isso que matava os eventos enquanto você arrastava o slider
     const hexOutput = document.getElementById("hexOutput");
     if (hexOutput) {
         hexOutput.textContent = `${hexString} ${payloadOnly.trim()}`;
@@ -204,7 +204,6 @@ function saveTrigger() {
         });
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
-    // Limpa o nome do efeito e reseta os sliders, mas mantém o nome do jogo
     document.getElementById("effectName").value = "";
     let _effectMode = document.getElementById("effectMode").value;
     let numLength = SELECT_EFFECT_TYPE[Number(_effectMode)] || 6;
@@ -215,6 +214,7 @@ function saveTrigger() {
     }
     updateHexOutput();
     renderSavedGames();
+    remoteLog(`[Salvo] Gatilho "${effectName}" adicionado ao jogo "${gameName}".`);
     deviceChannel.postMessage({ type: "LOAD_PROFILES" });
 }
 function renderSavedGames() {
@@ -234,6 +234,7 @@ function renderSavedGames() {
             <div class="saved-trigger">
                 <div class="trigger-header">
                     <strong>${t.name}</strong>
+                    <span class="trigger-hand">${Number(t.hand) === 0 ? "Left (L2)" : Number(t.hand) === 2 ? "Both (L2 + R2)" : "Right (R2)"}</span>
                     <span>${EFFECTS[t.type] || t.type} (0x${t.type})</span>
                 </div>
                 <div style="display:flex; justify-content: space-between; align-items: center; gap: 8px;">
@@ -257,42 +258,43 @@ function deleteGame(gameName) {
     let games = getSavedGames();
     games = games.filter((g) => g.gameName !== gameName);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+    remoteLog(`[Excluído] Jogo "${gameName}" e todos os seus perfis foram apagados.`);
     renderSavedGames();
+    deviceChannel.postMessage({ type: "LOAD_PROFILES" });
 }
 function deleteTrigger(gameName, triggerId) {
     let games = getSavedGames();
     const game = games.find((g) => g.gameName === gameName);
     if (game) {
+        const triggerName = game.triggers.find((t) => t.id === triggerId)?.name || triggerId;
         game.triggers = game.triggers.filter((t) => t.id !== triggerId);
-        // Se deletou o último gatilho, deleta o jogo inteiro
         if (game.triggers.length === 0) {
             games = games.filter((g) => g.gameName !== gameName);
         }
         localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+        remoteLog(`[Excluído] Gatilho "${triggerName}" apagado do jogo "${gameName}".`);
         renderSavedGames();
+        deviceChannel.postMessage({ type: "LOAD_PROFILES" });
     }
 }
 function clearAll() {
     if (confirm("Apagar todos os perfis e gatilhos?")) {
         localStorage.removeItem(STORAGE_KEY);
+        remoteLog(`[Excluído] Todos os perfis de gatilho foram apagados.`);
         renderSavedGames();
+        deviceChannel.postMessage({ type: "LOAD_PROFILES" });
     }
 }
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Gera os sliders iniciais e já atrela os eventos a eles
     initSliders();
-    // 2. Calcula o output inicial baseado neles
     updateHexOutput();
-    // 3. Renderiza os salvos
     renderSavedGames();
-    // Eventos do compositor (Quando troca o Dropdown de efeito)
     document.getElementById("effectMode")?.addEventListener("change", () => {
-        initSliders(); // Recria os sliders e seus novos limites (max="3", etc)
-        updateHexOutput(); // Atualiza a string hexadecimal
+        initSliders();
+        updateHexOutput();
     });
     document.getElementById("btnSave")?.addEventListener("click", saveTrigger);
     document.getElementById("btnClearAll")?.addEventListener("click", clearAll);
-    // Delegação de eventos da lixeira... (mantém igual você já tinha feito)
     document.getElementById("savedGamesList")?.addEventListener("click", (e) => {
         const target = e.target;
         if (target.classList.contains("btn-del-game")) {

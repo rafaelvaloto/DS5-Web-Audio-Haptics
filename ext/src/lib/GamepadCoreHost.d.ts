@@ -13,6 +13,8 @@ export interface NativeModule {
 	_free(ptr: number): void;
 	getValue?(ptr: number, type: string): number;
 	setValue?(ptr: number, value: number, type: string): void;
+
+	UTF8ToString(ptr: number): string;
 }
 
 export declare const InitGamepadCoreHost: (moduleArg?: Record<string, unknown>) => Promise<NativeModule>;

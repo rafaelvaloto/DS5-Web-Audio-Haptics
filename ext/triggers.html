@@ -3,67 +3,62 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>DualSense - Gatilhos Adaptáveis</title>
+	<title data-i18n="triggers.pageTitle">DualSense - Gatilhos Adaptáveis</title>
 	<link rel="stylesheet" href="./src/css/main.css">
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen p-6 w-[800px]">
 <div class="container">
 	<!-- Coluna 1: Compositor -->
 	<div class="card">
-		<h2>🛠️ Compor e Salvar Efeito</h2>
+		<h2 data-i18n="triggers.composeAndSave">🛠️ Compor e Salvar Efeito</h2>
 
 		<div class="flow-control">
 			<div>
-				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Game</label>
-				<input type="text" id="gameName" placeholder="Ex: Returnal">
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;" data-i18n="triggers.gameLabel">Game</label>
+				<input type="text" id="gameName" data-i18n-placeholder="triggers.gamePlaceholder" placeholder="Ex: Returnal">
 			</div>
 
 			<div>
-				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Nome do Efeito</label>
-				<input type="text" id="effectName" placeholder="Ex: Weapon Name">
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;" data-i18n="triggers.effectNameLabel">Nome do Efeito</label>
+				<input type="text" id="effectName" data-i18n-placeholder="triggers.effectNamePlaceholder" placeholder="Ex: Weapon Name">
 			</div>
 
 			<div>
-				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Modo do Efeito (Byte 0)</label>
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;" data-i18n="triggers.effectModeLabel">Modo do Efeito (Byte 0)</label>
 				<select id="effectMode">
-					<option value="21">0x21 - Feedback (Resistência)</option>
-					<option value="22">0x22 - Bow (Arco)</option>
-					<option value="23">0x23 - Galloping</option>
-					<option value="25">0x25 - Weapon (Arma)</option>
-					<option value="26">0x26 - Automatic Gun</option>
-					<option value="27">0x27 - Machine</option>
+					<option value="21" data-i18n="triggers.modeFeedback">0x21 - Feedback (Resistência)</option>
+					<option value="22" data-i18n="triggers.modeBow">0x22 - Bow (Arco)</option>
+					<option value="23" data-i18n="triggers.modeGalloping">0x23 - Galloping</option>
+					<option value="25" data-i18n="triggers.modeWeapon">0x25 - Weapon (Arma)</option>
+					<option value="26" data-i18n="triggers.modeAutoGun">0x26 - Automatic Gun</option>
+					<option value="27" data-i18n="triggers.modeMachine">0x27 - Machine</option>
 				</select>
-
+			</div>
+			<div>
+				<label for="sel-trigger-hand" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;" data-i18n="triggers.handTriggerLabel">Hand trigger</label>
 				<select id="sel-trigger-hand">
-					<option value="1" data-i18n="controls.rightTrigger">
-						Right (R2)
-					</option>
-					<option value="0" data-i18n="controls.leftTrigger">
-						Left (L2)
-					</option>
-					<option value="2" data-i18n="controls.bothTriggers">
-						Both (L2 + R2)
-					</option>
+					<option value="1" data-i18n="controls.rightTrigger">Right (R2)</option>
+					<option value="0" data-i18n="controls.leftTrigger">Left (L2)</option>
+					<option value="2" data-i18n="controls.bothTriggers">Both (L2 + R2)</option>
 				</select>
 			</div>
 
-			<div class="audio-grid" id="slidersContainer">
-			</div>
+			<div class="audio-grid" id="slidersContainer"></div>
 
 			<div>
-				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Payload HEX</label>
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;" data-i18n="triggers.payloadHexLabel">Payload HEX</label>
 				<div class="hex-display" id="hexOutput">21 00 00 00 00 00 00 00</div>
 			</div>
 
-			<button class="btn btn-primary" id="btn-apply-trigger">Test Trigger</button>
+			<button class="btn btn-outline" id="btn-apply-trigger" data-i18n="triggers.testTriggerBtn">Test Trigger</button>
 			<hr>
-			<button class="btn btn-primary" id="btnSave">Salvar Gatilho no Perfil</button>
+			<button class="btn btn-primary" id="btnSave" data-i18n="triggers.saveProfileBtn">Salvar Gatilho no Perfil</button>
 		</div>
 	</div>
 	<div class="card">
-		<h2>
-			Perfis Salvos
-			<button class="btn btn-danger btn-small" id="btnClearAll">Apagar Tudo</button>
+		<h2 style="display: flex; justify-content: space-between; align-items: center;">
+			<span data-i18n="triggers.savedProfilesTitle">Perfis Salvos</span>
+			<button class="btn btn-danger btn-small" id="btnClearAll" data-i18n="triggers.clearAllBtn">Apagar Tudo</button>
 		</h2>
 
 		<div id="savedGamesList" style="margin-top: 16px;">
