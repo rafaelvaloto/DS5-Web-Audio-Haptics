@@ -1,0 +1,75 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>DualSense - Gatilhos Adaptáveis</title>
+	<link rel="stylesheet" href="./src/css/main.css">
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen p-6 w-[800px]">
+<div class="container">
+	<!-- Coluna 1: Compositor -->
+	<div class="card">
+		<h2>🛠️ Compor e Salvar Efeito</h2>
+
+		<div class="flow-control">
+			<div>
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Game</label>
+				<input type="text" id="gameName" placeholder="Ex: Returnal">
+			</div>
+
+			<div>
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Nome do Efeito</label>
+				<input type="text" id="effectName" placeholder="Ex: Weapon Name">
+			</div>
+
+			<div>
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Modo do Efeito (Byte 0)</label>
+				<select id="effectMode">
+					<option value="21">0x21 - Feedback (Resistência)</option>
+					<option value="22">0x22 - Bow (Arco)</option>
+					<option value="23">0x23 - Galloping</option>
+					<option value="25">0x25 - Weapon (Arma)</option>
+					<option value="26">0x26 - Automatic Gun</option>
+					<option value="27">0x27 - Machine</option>
+				</select>
+
+				<select id="sel-trigger-hand">
+					<option value="1" data-i18n="controls.rightTrigger">
+						Right (R2)
+					</option>
+					<option value="0" data-i18n="controls.leftTrigger">
+						Left (L2)
+					</option>
+					<option value="2" data-i18n="controls.bothTriggers">
+						Both (L2 + R2)
+					</option>
+				</select>
+			</div>
+
+			<div class="audio-grid" id="slidersContainer">
+			</div>
+
+			<div>
+				<label style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; display: block;">Payload HEX</label>
+				<div class="hex-display" id="hexOutput">21 00 00 00 00 00 00 00</div>
+			</div>
+
+			<button class="btn btn-primary" id="btn-apply-trigger">Test Trigger</button>
+			<hr>
+			<button class="btn btn-primary" id="btnSave">Salvar Gatilho no Perfil</button>
+		</div>
+	</div>
+	<div class="card">
+		<h2>
+			Perfis Salvos
+			<button class="btn btn-danger btn-small" id="btnClearAll">Apagar Tudo</button>
+		</h2>
+
+		<div id="savedGamesList" style="margin-top: 16px;">
+		</div>
+	</div>
+</div>
+<script src="./dist/triggers.js"></script>
+</body>
+</html>

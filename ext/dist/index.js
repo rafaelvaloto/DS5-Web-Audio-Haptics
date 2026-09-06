@@ -1,11 +1,21 @@
 import { GamepadClientApplication } from "./main.js";
 import { bootWasmAndPlatform } from "./load.js";
-import { logLines, TRIGGERS } from "./const.js";
+import { logLines } from "./const.js";
 import { debounce, hexToRgb } from "./helpers.js";
 import { AudioHapticsManager } from "./stream.js";
 // app engine instance
 let app = null;
 const deviceChannel = new BroadcastChannel("dualsense_channel");
+function loadProfilesIntoSelect() {
+    let selTriggerProfile = document.getElementById("sel-trigger-effect-profile");
+    selTriggerProfile.innerHTML = ""; // Clear existing options
+    selTriggerProfile.add(new Option("None", "None"));
+    let profiles = JSON.parse(localStorage.getItem("dualsense_profiles") || "null");
+    profiles?.forEach((profile) => {
+        selTriggerProfile.add(new Option(profile.gameName, profile.gameName));
+    });
+}
+loadProfilesIntoSelect();
 document.getElementById("btn-load")?.addEventListener("click", async (e) => {
     if (app) {
         // skip if already loaded
@@ -18,6 +28,81 @@ document.getElementById("btn-load")?.addEventListener("click", async (e) => {
             e.target.disabled = true;
             document.getElementById("btn-request").disabled = false;
             deviceChannel.onmessage = async (event) => {
+                if (event.data.type === "LOAD_PROFILES") {
+                    loadProfilesIntoSelect();
+                }
+                if (event.data.type === "DEVICE_APPLY_TRIGGER") {
+                    const selTriggerEffectProfile = document.getElementById("sel-trigger-effect-profile");
+                    let profiles = JSON.parse(localStorage.getItem("dualsense_profiles") || "null");
+                    profiles.forEach((profile) => {
+                        if (profile.gameName === selTriggerEffectProfile.value) {
+                            let num = event.data.message || 0;
+                            let trigger = profile.triggers[num] || null;
+                            if (!trigger) {
+                                app?.api?.reset(event.data.deviceId, 0);
+                                app?.api?.reset(event.data.deviceId, 1);
+                                app?.api?.output(event.data.deviceId);
+                                console.log(`Trigger reset applied to the controller ${event.data.deviceId}.`);
+                                document.getElementById("trigger-selected-out").innerText =
+                                    "Change trigger use R3 + d-pad: ⬅️➡️⬆️⬇️";
+                                document.getElementById("dot-trigger").className = "dot danger";
+                                return;
+                            }
+                            document.getElementById("trigger-selected-out").innerText =
+                                trigger.name || "";
+                            const effectString = trigger.type + " " + trigger.hex || "";
+                            const effectValues = effectString
+                                .trim()
+                                .split(/\s+/)
+                                .map((hex) => parseInt(hex, 16))
+                                .filter((n) => !isNaN(n));
+                            const hand = Number(trigger.hand || 0);
+                            const arr = new Uint8Array(effectValues);
+                            const t_bufferPtr = app?.module?._malloc(arr.length);
+                            if (t_bufferPtr) {
+                                try {
+                                    app?.module?.HEAPU8.set(arr, t_bufferPtr);
+                                    app?.api?.triggers(event.data.deviceId, t_bufferPtr, arr.length, hand);
+                                    app?.api?.output(event.data.deviceId);
+                                    console.log(`Trigger pattern applied to the controller ${event.data.deviceId}.`);
+                                    document.getElementById("dot-trigger").className =
+                                        "dot active";
+                                }
+                                finally {
+                                    app?.module?._free(t_bufferPtr);
+                                }
+                            }
+                        }
+                    });
+                }
+                if (event.data.type === "DEVICE_APPLY_TRIGGER_TEST") {
+                    app?.devices.forEach((descriptor, deviceId) => {
+                        let trigger = JSON.parse(localStorage.getItem("trigger_test") || "null");
+                        if (!trigger) {
+                            return;
+                        }
+                        const effectString = trigger.effect || "";
+                        const effectValues = effectString
+                            .trim()
+                            .split(/\s+/)
+                            .map((hex) => parseInt(hex, 16))
+                            .filter((n) => !isNaN(n));
+                        const hand = Number(trigger.hand || 0);
+                        const arr = new Uint8Array(effectValues);
+                        const t_bufferPtr = app?.module?._malloc(arr.length);
+                        if (t_bufferPtr) {
+                            try {
+                                app?.module?.HEAPU8.set(arr, t_bufferPtr);
+                                app?.api?.triggers(deviceId, t_bufferPtr, arr.length, hand);
+                                app?.api?.output(deviceId);
+                                console.log(`Trigger pattern applied to the controller ${deviceId}.`);
+                            }
+                            finally {
+                                app?.module?._free(t_bufferPtr);
+                            }
+                        }
+                    });
+                }
                 if (event.data.type === "DEVICE_AUTHORIZED") {
                     app?.devices.clear();
                     try {
@@ -35,14 +120,14 @@ document.getElementById("btn-load")?.addEventListener("click", async (e) => {
                         }
                     }
                     catch (err) {
-                        console.error("Failed to get authorized devices:", err);
+                        console.log("Failed to get authorized devices:", err);
                     }
                 }
             };
         }
     }
     catch (err) {
-        console.error("Failed to load the app:", err);
+        console.log("Failed to load the app:", err);
     }
 });
 document.getElementById("btn-show-logs")?.addEventListener("click", async (e) => {
@@ -61,13 +146,38 @@ document.getElementById("btn-clear-logs")?.addEventListener("click", async (e) =
     logLines.length = 0;
     document.getElementById("log-box").textContent = "";
 });
+document.getElementById("create-trigger")?.addEventListener("click", async (e) => {
+    if (chrome.runtime) {
+        const url = chrome.runtime.getURL("triggers.html");
+        await chrome.tabs.create({ url: url });
+        return;
+    }
+});
 document.getElementById("btn-request")?.addEventListener("click", async (e) => {
     if (!app) {
         console.warn("Você precisa carregar o WASM primeiro (clique em Load).");
         return;
     }
-    if (chrome.runtime.openOptionsPage) {
+    if (chrome.runtime?.openOptionsPage) {
         await chrome.runtime.openOptionsPage();
+        return;
+    }
+    try {
+        const authorizedDeviceNames = await app.requestDeviceAccess();
+        if (authorizedDeviceNames.length === 0) {
+            console.log("No devices were selected.");
+            return;
+        }
+        console.log(`Success! Connected controllers: ${authorizedDeviceNames.join(", ")}`);
+        const lblDevice = document.getElementById("lbl-device");
+        if (lblDevice) {
+            lblDevice.textContent = authorizedDeviceNames.join(", ");
+        }
+        e.target.disabled = true;
+        document.getElementById("btn-start").disabled = false;
+    }
+    catch (err) {
+        console.log("Failed to request device access:", err);
     }
 });
 document.getElementById("btn-start")?.addEventListener("click", (e) => {
@@ -99,7 +209,7 @@ document.getElementById("btn-stop")?.addEventListener("click", (e) => {
     document.getElementById("btn-start").disabled = false;
 });
 document.getElementById("btn-reset-trigger")?.addEventListener("click", (e) => {
-    document.getElementById("sel-trigger-effect").value = "none";
+    document.getElementById("sel-trigger-effect-profile").value = "none";
     if (!app) {
         console.warn("WASM não carregado.");
         return;
@@ -114,34 +224,6 @@ document.getElementById("btn-reset-trigger")?.addEventListener("click", (e) => {
         app?.api?.output(deviceId);
         console.log(`Trigger reset applied to the controller ${deviceId}.`);
     });
-});
-document.getElementById("btn-apply-trigger")?.addEventListener("click", (e) => {
-    let pattern = document.getElementById("sel-trigger-effect").value;
-    let hand = Number(document.getElementById("sel-trigger-hand").value);
-    if (!app) {
-        console.warn("WASM não carregado.");
-        return;
-    }
-    if (app.devices.size === 0) {
-        console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
-        return;
-    }
-    const arr = TRIGGERS[pattern] || new Uint8Array(0);
-    const bytesLength = arr.length;
-    const bufferPtr = app.module?._malloc(bytesLength);
-    if (bufferPtr) {
-        try {
-            app.module?.HEAPU8.set(arr, bufferPtr);
-            app?.devices.forEach((descriptor, deviceId) => {
-                app?.api?.triggers(deviceId, bufferPtr, arr.length, hand);
-                app?.api?.output(deviceId);
-                console.log(`Trigger pattern applied to the controller ${deviceId}.`);
-            });
-        }
-        finally {
-            app.module?._free(bufferPtr);
-        }
-    }
 });
 let lastColor = document.getElementById("picker-led-color")?.value || "#ffffff";
 document.getElementById("picker-led-color")?.addEventListener("input", debounce((event) => {
@@ -165,7 +247,7 @@ document.getElementById("picker-led-color")?.addEventListener("input", debounce(
         app?.api?.output(deviceId);
         console.log(`Lightbar color applied to device ${deviceId}: ${hexColor}`);
     });
-}, 1000));
+}, 400));
 Array.from(document.getElementsByClassName("color-preset-btn")).forEach((btn) => {
     btn.addEventListener("click", (e) => {
         try {
@@ -180,7 +262,7 @@ Array.from(document.getElementsByClassName("color-preset-btn")).forEach((btn) =>
             });
         }
         catch (err) {
-            console.error("Failed to apply lightbar pattern:", err);
+            console.log("Failed to apply lightbar pattern:", err);
         }
     });
 });
@@ -205,7 +287,7 @@ function updateAudioSettings() {
         0, // audio device
         0, Number(gain), Number(volume) // reserved
         ).catch((err) => {
-            console.error(`Failed to apply audio settings for device ${deviceId}:`, err);
+            console.log(`Failed to apply audio settings for device ${deviceId}:`, err);
         });
     }
 }
@@ -238,7 +320,7 @@ document.getElementById("btn-pip")?.addEventListener("click", async (e) => {
         }
     }
     catch (error) {
-        console.error("Screen permission denied or error:", error);
+        console.log("Screen permission denied or error:", error);
     }
 });
 document.getElementById("input-audio-gain")?.addEventListener("input", debounce((event) => {
@@ -247,14 +329,14 @@ document.getElementById("input-audio-gain")?.addEventListener("input", debounce(
         gainValueDisplay.textContent = Number(event.target.value).toFixed(1);
     }
     updateAudioSettings();
-}, 400));
+}, 200));
 document.getElementById("input-audio-volume")?.addEventListener("input", debounce((event) => {
     const volumeValueDisplay = document.getElementById("input-audio-volume-value");
     if (volumeValueDisplay) {
         volumeValueDisplay.textContent = event.target.value;
     }
     updateAudioSettings();
-}, 400));
+}, 100));
 document.getElementById("switch-audio-haptics")?.addEventListener("change", (e) => {
     updateAudioSettings();
 });
@@ -271,23 +353,27 @@ document.getElementById("btn-ws-connect")?.addEventListener("click", (e) => {
             console.warn("Nenhum controle conectado. Faça o Request Device primeiro.");
             return;
         }
-        app.wsConnect();
+        e.target.textContent = !app?.wsIsConnect() ? "Connecting..." : "Disconnecting...";
+        e.target.disabled = true;
+        app.wsToggle();
         setTimeout(() => {
             if (app?.wsIsConnect()) {
                 console.log("WebSocket is connected.");
                 e.target.textContent = "Disconnect";
                 e.target.className = "btn btn-danger";
                 document.getElementById("lbl-ws-status").textContent = "Connected";
+                e.target.disabled = false;
             }
             else {
-                console.warn("WebSocket connection failed.");
+                console.log("WebSocket connection failed.");
                 e.target.textContent = "Connect";
                 e.target.className = "btn btn-primary";
                 document.getElementById("lbl-ws-status").textContent = "Disconnected";
+                e.target.disabled = false;
             }
-        }, 1000);
+        }, 1500);
     }
     catch (error) {
-        console.error("Screen permission denied or error:", error);
+        console.log("Screen permission denied or error:", error);
     }
 });

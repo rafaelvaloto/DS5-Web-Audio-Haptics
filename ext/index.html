@@ -73,58 +73,23 @@
 
     <!-- Triggers -->
     <section class="card">
-        <h2>
-            🔫 <span data-i18n="controls.triggerEffectsTitle">Triggers</span>
-        </h2>
         <div class="row trigger-selects" style="margin-bottom: 12px">
-            <select id="sel-trigger-effect">
-                <option value="none" data-i18n="controls.effectNone">
-                    None / Off
-                </option>
-                <option value="feedback" data-i18n="controls.effectFeedback">
-                    Rigid Feedback (R2)
-                </option>
-                <option value="bow" data-i18n="controls.effectBow">
-                    Bow Tension (R2)
-                </option>
-                <option value="weapon" data-i18n="controls.effectWeapon">
-                    Weapon Semi-Auto (R2)
-                </option>
-                <option value="autogun" data-i18n="controls.effectAutoGun">
-                    Automatic Gun Buzz (R2)
-                </option>
-            </select>
-            <select id="sel-trigger-hand">
-                <option value="1" data-i18n="controls.rightTrigger">
-                    Right (R2)
-                </option>
-                <option value="0" data-i18n="controls.leftTrigger">
-                    Left (L2)
-                </option>
-                <option value="2" data-i18n="controls.bothTriggers">
-                    Both (L2 + R2)
-                </option>
-            </select>
+			<div class="row">
+				<button id="create-trigger" class="btn btn-primary" data-i18n="controls.createTrigger">
+					🔫 Create Profile
+				</button>
+			</div>
         </div>
-        <div class="row">
-            <button
-                    id="btn-apply-trigger"
-                    class="btn btn-primary"
-                    data-i18n="controls.applyTrigger"
-            >
-                Apply Effect</button
-            ><button
-                id="btn-reset-trigger"
-                class="btn"
-                data-i18n="controls.resetTriggers"
-        >
-            Reset
-        </button>
-        </div>
+		<select id="sel-trigger-effect-profile" style="width: 100%"></select>
     </section>
 
+	<section class="card">
+		<div class="status-item">
+			<span id="dot-trigger" class="dot danger"></span><span id="trigger-selected-out">Change trigger use R3 + d-pad: ⬅️➡️⬆️⬇️</span>
+		</div>
+	</section>
+
     <section class="card">
-        <h2>💡 <span data-i18n="controls.lightbarTitle">Lightbar</span></h2>
         <div class="color-picker">
             <input id="picker-led-color" type="color" value="#00cccf" /><button
                 class="color-preset-btn"
@@ -165,13 +130,10 @@
     </section>
 
     <section class="card audio-card">
-        <h2>
-            🔊<span data-i18n="controls.audioSettingsTitle">Audio Controls</span>
-        </h2>
         <div class="audio-grid">
             <div class="audio-control">
                 <label
-                ><span data-i18n="controls.volume">Volume</span> (<output
+                ><span data-i18n="controls.volume">🔊 Volume</span> (<output
                         id="input-audio-volume-value"
                 >100</output
                 >)</label

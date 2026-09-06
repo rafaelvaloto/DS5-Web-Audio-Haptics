@@ -1,0 +1,361 @@
+﻿interface Trigger {
+	id: string;
+	name: string;
+	type: string;
+	hex: string;
+	hand: string;
+}
+
+interface GameProfile {
+	gameName: string;
+	triggers: Trigger[];
+}
+
+const STORAGE_KEY = "dualsense_profiles";
+
+const EFFECTS: Record<string, string> = {
+	"21": "Feedback",
+	"22": "Bow",
+	"25": "Weapon",
+	"26": "Auto Gun",
+	"27": "Machine",
+};
+
+const SELECT_EFFECT_TYPE: Record<number, number> = {
+	21: 6,
+	22: 3,
+	23: 4,
+	25: 3,
+	26: 9,
+	27: 5,
+};
+
+const DEFAULT_EFFECT_VALUES: Record<number, number[]> = {
+	21: [128, 3, 255, 255, 255, 255], // 0x21 - Feedback
+	22: [128, 1, 63], // 0x22 - Bow
+	23: [128, 2, 20, 2], // 0x23 - Galloping
+	25: [128, 2, 70], // 0x25 - Weapon
+	26: [0, 3, 0, 0, 0, 255, 0, 0, 12], // 0x26 - Automatic Gun
+	27: [0, 3, 112, 15, 10], // 0x27 - Machine
+};
+
+const deviceChannel = new BroadcastChannel("dualsense_channel");
+(document.getElementById("btn-apply-trigger") as HTMLButtonElement)?.addEventListener("click", (e) => {
+	console.log("Apply Trigger effectMode", (document.getElementById("effectMode") as HTMLSelectElement).value);
+	console.log("Apply Trigger hexOutput", (document.getElementById("hexOutput") as HTMLSelectElement).dataset.payload);
+	let trigger =
+		(document.getElementById("effectMode") as HTMLSelectElement).value +
+		" " +
+		(document.getElementById("hexOutput") as HTMLInputElement).dataset.payload;
+	localStorage.setItem(
+		"trigger_test",
+		JSON.stringify({
+			hand: (document.getElementById("sel-trigger-hand") as HTMLSelectElement).value,
+			effect: trigger || [],
+		})
+	);
+	deviceChannel.postMessage({ type: "DEVICE_APPLY_TRIGGER_TEST" });
+});
+
+function initSliders(): void {
+	const container = document.getElementById("slidersContainer");
+	if (!container) {
+		return;
+	}
+
+	let modeSelect = document.getElementById("effectMode") as HTMLSelectElement;
+	let hexString = modeSelect?.value || "21";
+	let modeNum = Number(hexString);
+	let numLength = SELECT_EFFECT_TYPE[modeNum] || 6;
+	let defaults = DEFAULT_EFFECT_VALUES[modeNum] || []; // Puxa os valores padrão
+	let html = "";
+
+	if (modeNum === 23) {
+		for (let i = 1; i <= numLength; i++) {
+			// Pega o valor padrão do array (i - 1 porque o array começa em 0) ou 0 se não existir
+			let defaultVal = defaults[i - 1] !== undefined ? defaults[i - 1] : 0;
+			let hexVal = toHex(defaultVal);
+
+			if (i == 2) {
+				html += `
+             <div class="audio-control">
+                <div class="audio-control-row">
+                   <label>Byte ${i}</label>
+                   <output id="val-${hexString}_b${i}">${defaultVal} (0x${hexVal})</output>
+                </div>
+                <input type="range" id="${hexString}_b${i}" min="0" max="3" value="${defaultVal}">
+             </div>`;
+			} else if (i == 3) {
+				html += `
+             <div class="audio-control">
+                <div class="audio-control-row">
+                   <label>Byte ${i}</label>
+                   <output id="val-${hexString}_b${i}">${defaultVal} (0x${hexVal})</output>
+                </div>
+                <input type="range" id="${hexString}_b${i}" min="0" max="30" value="${defaultVal}">
+             </div>`;
+			} else if (i == 4) {
+				html += `
+          <div class="audio-control">
+             <div class="audio-control-row">
+                <label>Byte ${i}</label>
+                <output id="val-${hexString}_b${i}">${defaultVal} (0x${hexVal})</output>
+             </div>
+             <input type="range" id="${hexString}_b${i}" min="0" max="15" value="${defaultVal}">
+          </div>`;
+			} else {
+				html += `
+          <div class="audio-control">
+             <div class="audio-control-row">
+                <label>Byte ${i}</label>
+                <output id="val-${hexString}_b${i}">${defaultVal} (0x${hexVal})</output>
+             </div>
+             <input type="range" id="${hexString}_b${i}" min="0" max="255" value="${defaultVal}">
+          </div>`;
+			}
+		}
+	} else {
+		for (let i = 1; i <= numLength; i++) {
+			// Pega o valor padrão do array (i - 1 porque o array começa em 0) ou 0 se não existir
+			let defaultVal = defaults[i - 1] !== undefined ? defaults[i - 1] : 0;
+			let hexVal = toHex(defaultVal);
+
+			if (i == 2) {
+				html += `
+             <div class="audio-control">
+                <div class="audio-control-row">
+                   <label>Byte ${i}</label>
+                   <output id="val-${hexString}_b${i}">${defaultVal} (0x${hexVal})</output>
+                </div>
+                <input type="range" id="${hexString}_b${i}" min="0" max="3" value="${defaultVal}">
+             </div>`;
+			} else if (i == 9) {
+				html += `
+             <div class="audio-control">
+                <div class="audio-control-row">
+                   <label>Byte ${i}</label>
+                   <output id="val-${hexString}_b${i}">${defaultVal} (0x${hexVal})</output>
+                </div>
+                <input type="range" id="${hexString}_b${i}" min="0" max="40" value="${defaultVal}">
+             </div>`;
+			} else {
+				html += `
+          <div class="audio-control">
+             <div class="audio-control-row">
+                <label>Byte ${i}</label>
+                <output id="val-${hexString}_b${i}">${defaultVal} (0x${hexVal})</output>
+             </div>
+             <input type="range" id="${hexString}_b${i}" min="0" max="255" value="${defaultVal}">
+          </div>`;
+			}
+		}
+	}
+
+	container.innerHTML = html;
+
+	// Reconecta os listeners nos sliders recém-criados
+	for (let i = 1; i <= numLength; i++) {
+		document.getElementById(`${hexString}_b${i}`)?.addEventListener("input", updateHexOutput);
+	}
+}
+
+function toHex(dec: number): string {
+	return Math.max(0, Math.min(255, dec)).toString(16).padStart(2, "0");
+}
+
+function updateHexOutput(): void {
+	const modeSelect = document.getElementById("effectMode") as HTMLSelectElement;
+
+	if (!modeSelect) return;
+
+	let hexString = modeSelect.value || "21";
+	let payloadOnly = "";
+	let numLength = SELECT_EFFECT_TYPE[Number(hexString)] || 6;
+
+	for (let i = 1; i <= numLength; i++) {
+		const slider = document.getElementById(`${hexString}_b${i}`) as HTMLInputElement;
+		const output = document.getElementById(`val-${hexString}_b${i}`);
+		const val = parseInt(slider?.value || "0", 10);
+
+		const hexVal = toHex(val);
+		if (output) {
+			output.textContent = `${val} (0x${hexVal})`;
+		}
+
+		payloadOnly += `${hexVal} `;
+	}
+
+	// REMOVIDO: initSliders(); <--- Era isso que matava os eventos enquanto você arrastava o slider
+
+	const hexOutput = document.getElementById("hexOutput");
+	if (hexOutput) {
+		hexOutput.textContent = `${hexString} ${payloadOnly.trim()}`;
+		hexOutput.dataset.payload = payloadOnly.trim();
+	}
+}
+
+function getSavedGames(): GameProfile[] {
+	try {
+		return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+	} catch {
+		return [];
+	}
+}
+
+function saveTrigger(): void {
+	const gameName = (document.getElementById("gameName") as HTMLInputElement).value.trim();
+	const effectName = (document.getElementById("effectName") as HTMLInputElement).value.trim();
+	const effectMode = (document.getElementById("effectMode") as HTMLSelectElement).value;
+	const payload = document.getElementById("hexOutput")?.dataset.payload || "";
+
+	if (!gameName || !effectName) {
+		alert("Preencha o nome do Game e do Efeito.");
+		return;
+	}
+
+	let games = getSavedGames();
+	let gameIndex = games.findIndex((g) => g.gameName.toLowerCase() === gameName.toLowerCase());
+
+	const newTrigger: Trigger = {
+		id: Date.now().toString(),
+		name: effectName,
+		type: effectMode,
+		hex: payload,
+		hand: (document.getElementById("sel-trigger-hand") as HTMLSelectElement).value,
+	};
+
+	if (gameIndex >= 0) {
+		if (games[gameIndex].triggers.length >= 3) {
+			alert(`O jogo "${games[gameIndex].gameName}" já atingiu o limite de 3 gatilhos.`);
+			return;
+		}
+		games[gameIndex].triggers.push(newTrigger);
+	} else {
+		games.push({
+			gameName: gameName,
+			triggers: [newTrigger],
+		});
+	}
+
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+
+	// Limpa o nome do efeito e reseta os sliders, mas mantém o nome do jogo
+	(document.getElementById("effectName") as HTMLInputElement).value = "";
+	let _effectMode = (document.getElementById("effectMode") as HTMLInputElement).value;
+	let numLength = SELECT_EFFECT_TYPE[Number(_effectMode)] || 6;
+
+	for (let i = 1; i <= numLength; i++) {
+		const slider = document.getElementById(`${_effectMode}_b${i}`) as HTMLInputElement;
+		if (slider) slider.value = "0";
+	}
+	updateHexOutput();
+	renderSavedGames();
+
+	deviceChannel.postMessage({ type: "LOAD_PROFILES" });
+}
+
+function renderSavedGames(): void {
+	const list = document.getElementById("savedGamesList");
+	if (!list) return;
+
+	const games = getSavedGames();
+
+	if (games.length === 0) {
+		list.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">Nenhum perfil salvo.</p>`;
+		return;
+	}
+
+	let html = "";
+	games.forEach((game) => {
+		let triggersHtml = "";
+		game.triggers.forEach((t) => {
+			triggersHtml += `
+            <div class="saved-trigger">
+                <div class="trigger-header">
+                    <strong>${t.name}</strong>
+                    <span>${EFFECTS[t.type] || t.type} (0x${t.type})</span>
+                </div>
+                <div style="display:flex; justify-content: space-between; align-items: center; gap: 8px;">
+                    <span class="trigger-cmd">${t.type} ${t.hex}</span>
+                    <button class="btn btn-danger btn-small btn-del-trigger" data-game="${game.gameName}" data-tid="${t.id}">X</button>
+                </div>
+            </div>`;
+		});
+
+		html += `
+        <div class="saved-game">
+            <div class="saved-game-title">
+                ${game.gameName}
+                <button class="btn btn-danger btn-small btn-del-game" data-game="${game.gameName}">Excluir Jogo</button>
+            </div>
+            ${triggersHtml}
+        </div>`;
+	});
+
+	list.innerHTML = html;
+}
+
+function deleteGame(gameName: string): void {
+	let games = getSavedGames();
+	games = games.filter((g) => g.gameName !== gameName);
+	localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+	renderSavedGames();
+}
+
+function deleteTrigger(gameName: string, triggerId: string): void {
+	let games = getSavedGames();
+	const game = games.find((g) => g.gameName === gameName);
+	if (game) {
+		game.triggers = game.triggers.filter((t) => t.id !== triggerId);
+		// Se deletou o último gatilho, deleta o jogo inteiro
+		if (game.triggers.length === 0) {
+			games = games.filter((g) => g.gameName !== gameName);
+		}
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
+		renderSavedGames();
+	}
+}
+
+function clearAll(): void {
+	if (confirm("Apagar todos os perfis e gatilhos?")) {
+		localStorage.removeItem(STORAGE_KEY);
+		renderSavedGames();
+	}
+}
+document.addEventListener("DOMContentLoaded", () => {
+	// 1. Gera os sliders iniciais e já atrela os eventos a eles
+	initSliders();
+	// 2. Calcula o output inicial baseado neles
+	updateHexOutput();
+	// 3. Renderiza os salvos
+	renderSavedGames();
+
+	// Eventos do compositor (Quando troca o Dropdown de efeito)
+	document.getElementById("effectMode")?.addEventListener("change", () => {
+		initSliders(); // Recria os sliders e seus novos limites (max="3", etc)
+		updateHexOutput(); // Atualiza a string hexadecimal
+	});
+
+	document.getElementById("btnSave")?.addEventListener("click", saveTrigger);
+	document.getElementById("btnClearAll")?.addEventListener("click", clearAll);
+
+	// Delegação de eventos da lixeira... (mantém igual você já tinha feito)
+	document.getElementById("savedGamesList")?.addEventListener("click", (e) => {
+		const target = e.target as HTMLElement;
+
+		if (target.classList.contains("btn-del-game")) {
+			const game = target.getAttribute("data-game");
+			if (game && confirm(`Excluir o perfil do jogo ${game}?`)) {
+				deleteGame(game);
+			}
+		}
+
+		if (target.classList.contains("btn-del-trigger")) {
+			const game = target.getAttribute("data-game");
+			const tid = target.getAttribute("data-tid");
+			if (game && tid) {
+				deleteTrigger(game, tid);
+			}
+		}
+	});
+});

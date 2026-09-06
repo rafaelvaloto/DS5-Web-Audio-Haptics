@@ -4,9 +4,11 @@ import { NativeModule } from "./lib/GamepadCoreHost";
 import { PlatformBridgeRegistration } from "./platform/web_hid_platform.ts";
 import { DeviceRegistryPolicy, initializeDeviceRegistryPolicy } from "./policies/device_registry_policy.ts";
 import { api, bindingAPI } from "./api.ts";
-import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE } from "./const.ts";
+import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE, SONY_VENDOR_ID } from "./const.ts";
 import { AudioHapticsManager } from "./stream.ts";
 import { DualSenseSocketBridge } from "./wsocket.ts";
+
+const deviceChannel = new BroadcastChannel("dualsense_channel");
 
 export class GamepadClientApplication {
 	private readonly inputBufferPtr: number;
@@ -45,7 +47,7 @@ export class GamepadClientApplication {
 		this.media?.setApi(this.api);
 	}
 
-	public wsConnect(): void {
+	public wsToggle(): void {
 		if (this.dsExtensionBridge.isConnected()) {
 			this.dsExtensionBridge.disconnect();
 			return;
@@ -113,7 +115,10 @@ export class GamepadClientApplication {
 		// Specific filter for the Sony DualSense (Vendor ID: 0x054C, Product ID: 0x0CE6)
 		// If you want to accept any controller, just pass { filters: [] }
 		const devices = await navigator.hid.requestDevice({
-			filters: [{ vendorId: 0x054c, productId: 0x0ce6 }],
+			filters: [
+				{ vendorId: SONY_VENDOR_ID, productId: 0x0ce6 },
+				{ vendorId: SONY_VENDOR_ID, productId: 0x0df2 },
+			],
 		});
 
 		const connectedNames: string[] = [];
@@ -148,18 +153,18 @@ export class GamepadClientApplication {
 		path: string
 	): Promise<void> {
 		if (!this.api?.create) {
-			console.error("API create method is not available");
+			console.log("API create method is not available");
 			return;
 		}
 
 		if (!this.platform?.registerManually) {
-			console.error("API registerManually method is not available");
+			console.log("API registerManually method is not available");
 			return;
 		}
 
 		if (device.opened) {
 			device.close().catch((err) => {
-				console.error("Failed to close device:", err);
+				console.log("Failed to close device:", err);
 			});
 		}
 
@@ -219,12 +224,12 @@ export class GamepadClientApplication {
 						}
 					})
 					.catch((err) => {
-						console.error("Failed to receive feature report:", err);
+						console.log("Failed to receive feature report:", err);
 						return;
 					});
 			})
 			.catch((err) => {
-				console.error("Failed to open device:", err);
+				console.log("Failed to open device:", err);
 				return;
 			});
 	}
@@ -235,10 +240,34 @@ export class GamepadClientApplication {
 	public run(): void {
 		if (this.inputTimer !== null) return; // avoid starting multiple timers
 
+		let isSend = false;
+		const applySending = (message: number, deviceId: number) => {
+			if (!isSend) {
+				isSend = true;
+				deviceChannel.postMessage({
+					type: "DEVICE_APPLY_TRIGGER",
+					message,
+					deviceId,
+				});
+				setTimeout(() => {
+					isSend = false;
+				}, 2000);
+			}
+		};
 		// GamepadClientApplication.emitLog("[GamepadClient] Engine iniciada (Polling 100Hz)");
 		this.inputTimer = window.setInterval(() => {
 			for (const [deviceId, descriptor] of this.devices.entries()) {
 				const state = this.readInputState(deviceId);
+				if (state.bDpadUp && state.bRightStick) {
+					applySending(0, deviceId);
+				} else if (state.bDpadRight && state.bRightStick) {
+					applySending(1, deviceId);
+				} else if (state.bDpadDown && state.bRightStick) {
+					applySending(2, deviceId);
+				} else if (state.bDpadLeft && state.bRightStick) {
+					applySending(3, deviceId);
+				}
+
 				this.dsExtensionBridge.send(state);
 			}
 		}, FRAME_MS);
@@ -381,7 +410,7 @@ export class GamepadClientApplication {
 			this.isNowEnabled = await this.media?.toggle();
 			return this.isNowEnabled;
 		} catch (err) {
-			console.error("[Engine] Erro ao iniciar captura de áudio:", err);
+			console.log("[Engine] Erro ao iniciar captura de áudio:", err);
 			return false;
 		}
 	}
@@ -433,7 +462,7 @@ export class GamepadClientApplication {
 			try {
 				listener(message, level);
 			} catch (err) {
-				console.error("[GamepadClient] Error in log listener:", err);
+				console.log("[GamepadClient] Error in log listener:", err);
 			}
 		}
 	}
