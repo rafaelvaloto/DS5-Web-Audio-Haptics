@@ -101,7 +101,7 @@ export const ptBR: TranslationDictionary = {
 			'\t\t\t\trel="noopener noreferrer"\n' +
 			"\t\t\t>ViGEmBus_1.22.0_x64_x86_arm64.exe</a\n" +
 			"\t\t\t> para emular um gamepad virtual.",
-		inputServerRepository: "Para conectar o controle a um gamepad virtual, instale:",
+		inputServerRepository: "Para conectar o controle a um gamepad virtual, run the socket:",
 	},
 	commands: {
 		cross: "Cross (X)",
