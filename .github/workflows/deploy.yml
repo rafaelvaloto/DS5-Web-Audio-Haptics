@@ -37,15 +37,15 @@ jobs:
         run: npm ci
 
       - name: Build Web Application
-        run: npm run build:web
+        run: npm run build:app
 
       - name: Validate GitHub Pages Artifact
         shell: bash
         run: |
-          test -f web/index.html
-          test -f web/dist/main.js
-          test -f web/src/lib/GamepadCoreHost.js
-          test -f web/src/lib/GamepadCoreHost.wasm
+          test -f app/index.html
+          test -f app/dist/main.js
+          test -f app/src/lib/GamepadCoreHost.js
+          test -f app/src/lib/GamepadCoreHost.wasm
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -55,7 +55,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./web"
+          path: "./app"
 
       - name: Deploy to GitHub Pages
         id: deployment

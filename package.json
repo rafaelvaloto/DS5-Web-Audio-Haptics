@@ -1,12 +1,11 @@
 {
-	"name": "PS_Gamepad",
+	"name": "DS5 Web Audio Haptics Extension",
 	"version": "1.0.0",
-	"description": "",
+	"description": "Extension to enable haptic feedback for PS5 controllers using Web Audio API.",
 	"main": "dist/index.js",
 	"scripts": {
-		"build": "npm run build:web",
-		"build:ext": "tsc -p ext/tsconfig.json",
-		"build:web": "tsc -p web/tsconfig.json && cp -R src/lib dist/lib"
+		"build": "npm run build:app",
+		"build:app": "tsc -p app/tsconfig.json"
 	},
 	"type": "module",
 	"devDependencies": {
