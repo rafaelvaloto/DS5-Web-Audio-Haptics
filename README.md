@@ -38,7 +38,7 @@ Chrome/Edge/Brave:
 
 1. **Download the Pre-built Extension:** Go to
    the [Releases page](https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics/releases) and download the latest extension
-   package (usually named `DS5-Web-Audio-Haptics-Extension.zip` or similar).
+   package (usually named `DS5-Web-Audio-Haptics-Extension.zip` or similar). Extract the contents to a folder `./app` on your computer.
 
 2. **Open Extension Management:**
 	- Chrome: Navigate to `chrome://extensions/`
@@ -49,7 +49,7 @@ Chrome/Edge/Brave:
 
 4. **Load Unpacked Extension:**
 	- Click "Load unpacked"
-	- Select the extracted directory from the downloaded release
+	- Select the extracted `app/` directory from the downloaded release
 
 5. **Pin the Extension:** Click the puzzle icon in your browser toolbar and pin DS5 Web Audio Haptics for easy access.
 
