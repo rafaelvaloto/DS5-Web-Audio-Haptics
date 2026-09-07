@@ -60,7 +60,8 @@ export const es: TranslationDictionary = {
 		},
 	},
 	controls: {
-		changeTrigger: "Alterar os gatilhos use R3 + d-pad: ⬅️➡️⬆️⬇️",
+		changeTrigger:
+			"Cambiar entre gatillos usando\n" + "  R3 + D-Pad (Arriba=1, Derecha=2, Abajo=3, Izquierda=Reset)",
 		createTrigger: "Crear Gatillo",
 		headsetOnly: "Solo Auriculares",
 		modeAudioOnly: "Modo Solo Audio",

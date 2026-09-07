@@ -60,7 +60,7 @@ export const en: TranslationDictionary = {
 		},
 	},
 	controls: {
-		changeTrigger: "Change trigger use R3 + d-pad: ⬅️➡️⬆️⬇️",
+		changeTrigger: "Switch between triggers using\n" + "  R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset)",
 		createTrigger: "Create Trigger",
 		connectionFlow: "Connection Flow",
 		audioSettingsTitle: "Audio Controls",

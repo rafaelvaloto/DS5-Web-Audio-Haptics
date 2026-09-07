@@ -60,7 +60,7 @@ export const ptBR: TranslationDictionary = {
 		},
 	},
 	controls: {
-		changeTrigger: "Alterar os gatilhos use R3 + d-pad: ⬅️➡️⬆️⬇️",
+		changeTrigger: "Mudar entre gatilhos usando\n" + "  R3 + D-Pad (Cima=1, Direita=2, Baixo=3, Esquerda=Reset)",
 		createTrigger: "Criar Gatilho",
 		headsetOnly: "Apenas Fone de Ouvido",
 		modeAudioOnly: "Modo Apenas Áudio",

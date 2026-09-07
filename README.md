@@ -7,6 +7,18 @@ Transform your browser into a real-time haptic feedback router. This tool captur
 
 ---
 
+## ✨ Key Features
+
+- 🔊 **Audio-to-Haptic:** Turn on-screen game audio into synchronized controller vibrations.
+- 🛜 **100% Wireless:** Works fully over Bluetooth. No USB cables needed.
+- 🚫 **No Installs Required (Web Version):** Runs entirely in your web browser.
+- 🎮 **Universal Compatibility:** Works with native games or via Gamepad Socket for browser games.
+- 🏎️ **Game Profiles:** Create game-specific profiles with up to 3 different triggers. Switch between triggers using
+  R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset).
+- 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
+
+---
+
 ## 🚀 Live Haptic Router & Browser Extension
 
 Experience live audio haptic routing directly in your Chromium-based browser (Chrome, Edge, Opera, Brave).
@@ -16,6 +28,34 @@ Experience live audio haptic routing directly in your Chromium-based browser (Ch
 ### 🧩 Browser Extension
 You can also use this tool as a dedicated browser extension for an integrated experience.
 * **Status:** 🚧 *Coming soon directly to the Google Chrome Web Store!*
+
+---
+
+### Using as Browser Extension
+
+The same build works both in the browser and as an extension. To load DS5 Web Audio Haptics as an unpacked extension in
+Chrome/Edge/Brave:
+
+1. **Download the Pre-built Extension:** Go to
+   the [Releases page](https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics/releases) and download the latest extension
+   package (usually named `DS5-Web-Audio-Haptics-Extension.zip` or similar). Extract the downloaded file to access the
+   `app/` directory.
+
+2. **Open Extension Management:**
+	- Chrome: Navigate to `chrome://extensions/`
+	- Edge: Navigate to `edge://extensions/`
+	- Brave: Navigate to `brave://extensions/`
+
+3. **Enable Developer Mode:** Toggle the "Developer mode" switch in the top-right corner.
+
+4. **Load Unpacked Extension:**
+	- Click "Load unpacked"
+	- Select the extracted `app/` directory from the downloaded release
+
+5. **Pin the Extension:** Click the puzzle icon in your browser toolbar and pin DS5 Web Audio Haptics for easy access.
+
+The extension will now appear in your browser toolbar and can be used to connect to your DualSense controller and enable
+audio haptics on any tab.
 
 ---
 
@@ -49,17 +89,6 @@ After installing the drivers and the server, follow this flow to activate haptic
 
 ---
 
-## ✨ Key Features
-
-- 🔊 **Audio-to-Haptic:** Turn on-screen game audio into synchronized controller vibrations.
-- 🛜 **100% Wireless:** Works fully over Bluetooth. No USB cables needed.
-- 🚫 **No Installs Required (Web Version):** Runs entirely in your web browser.
-- 🎮 **Universal Compatibility:** Works with native games or via Gamepad Socket for browser games.
-- 🏎️ **Trigger Testing:** Manually test Adaptive Triggers (Machine Gun, Bow, etc.) directly in the app.
-- 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
-
----
-
 ## 🕹️ Game Compatibility
 
 **Note:** This routing method relies on the game engine natively reading PlayStation hardware inputs (Raw Input / Direct HID). **It should work on any game that natively supports the DualSense controller via Bluetooth.** Games that strictly require Microsoft's XInput API (Xbox controller format) will require the Gamepad Socket external wrapper.
@@ -74,15 +103,36 @@ Browser games generally require the socket connection to emulate a compatible vi
 
 **Important:** You do **not** need to install any additional drivers or use the Gamepad Socket for these titles. However, if you are playing through Steam, you **must disable Steam Input** for the game to correctly recognize the DualSense controller natively.
 
-**Free Games:**
+**Free Games tested:**
 
 - [Atlas Wars](https://store.epicgames.com/p/atlas-wars-5b83bd)
 - [Pixel Gun 3D](https://store.epicgames.com/p/pixel-gun-3d-812855)
 
-**Paid Games:**
+---
 
-- NBA THE RUN
-- EA SPORTS FC 26
+## 🔧 Build for development
+
+### Building from Source
+
+If you want to build the project from source or contribute to development:
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics.git
+   cd DS5-Web-Audio-Haptics
+   ```
+
+2. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Build the Application:**
+   ```bash
+   npm run build:app
+   ```
+   This will generate the production-ready files in the `app/` directory. These same files work both as a web
+   application and as a browser extension.
 
 ---
 
