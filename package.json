@@ -5,7 +5,8 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"build": "npm run build:app",
-		"build:app": "tsc -p app/tsconfig.json"
+		"build:app": "tsc -p app/tsconfig.json && npm run copy:css",
+		"copy:css": "node -e \"require('node:fs').cpSync('app/src/css', 'app/dist/css', { recursive: true })\""
 	},
 	"type": "module",
 	"devDependencies": {
