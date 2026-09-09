@@ -1,7 +1,6 @@
-﻿# 🔊 DS5 Web Audio Haptics Bluetooth
+# 🔊 DS5 Web Audio Haptics Bluetooth
  
-Transform your browser into a real-time audio router. This tool captures live game audio via Screen Share and streams it directly to your PlayStation DualSense controller via Bluetooth, delivering both full audio playback and high-fidelity haptics—no cables or custom dongles required!
-
+Transform your browser into a real-time raw audio router. This tool captures live game audio via Screen Share and streams it directly to your PlayStation DualSense controller via Bluetooth, delivering full audio playback through the controller's built-in speakers alongside high-fidelity haptics—no cables or custom dongles required!
 
 *[☕ Buy me a coffee or support the project!](https://github.com/sponsors/rafaelvaloto)*
 
@@ -9,12 +8,11 @@ Transform your browser into a real-time audio router. This tool captures live ga
 
 ## ✨ Key Features
 
-- 🔊 **Audio-to-Haptic:** Turn on-screen game audio into synchronized controller vibrations.
+- 🔊 **Raw Audio & Haptics:** Stream live game audio directly to the controller's built-in speakers while generating synchronized tactile vibrations.
 - 🛜 **100% Wireless:** Works fully over Bluetooth. No USB cables needed.
 - 🚫 **No Installs Required (Web Version):** Runs entirely in your web browser.
 - 🎮 **Universal Compatibility:** Works with native games or via Gamepad Socket for browser games.
-- 🏎️ **Game Profiles:** Create game-specific profiles with up to 3 different triggers. Switch between triggers using
-  R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset).
+- 🏎️ **Game Profiles:** Create game-specific profiles with up to 3 different triggers. Switch between triggers using R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset).
 - 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
 
 ---
@@ -28,9 +26,9 @@ You can also use this tool as a dedicated browser extension for an integrated ex
 
 ---
 
-## 🚀 Live Haptic Router
+## 🚀 Live Audio & Haptic Router
 
-Experience live audio haptic routing directly in your Chromium-based browser (Chrome, Edge, Opera, Brave).
+Experience live audio routing and haptics directly in your Chromium-based browser (Chrome, Edge, Opera, Brave).
 
 👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/)**
 
@@ -47,21 +45,21 @@ Watch the complete setup guide, including the browser extension, server configur
 
 ## 🎧 How to Use (Step-by-Step)
 
-To get the full experience, especially for browser games like those on itch.io, follow these steps to route both inputs and audio haptics.
+To get the full experience, especially for browser games like those on itch.io, follow these steps to route both inputs and audio/haptics.
 
 ### Part 1: Setting up the Virtual Gamepad
 1. **Download Gamepad Socket:** Go to the [Gamepad Socket repository](https://github.com/rafaelvaloto/Gamepad_Socket) and download the latest release.
 2. **Install Drivers:** If you haven't already, install the **ViGEm Bus Driver** (prompted during setup) to allow your PC to emulate an Xbox/Virtual controller.
 3. **Run the Server:** Extract the downloaded files and execute `Gamepad_Socket.exe` to start the local server.
 
-### Part 2: Connection Flow & Haptic Activation
-After installing the drivers and the server, follow this flow to activate haptic feedback:
+### Part 2: Connection Flow & Audio/Haptic Activation
+After installing the drivers and the server, follow this flow to activate the audio routing and haptic feedback:
 
 1. **Bluetooth Connection:** Ensure your DualSense controller is paired and connected to your PC via Bluetooth.
 2. **Run the Server:** Execute `Gamepad_Socket.exe` and keep the server running. This background process is required to mediate communication between the hardware and your web browser.
 3. **Activate the Extension:** Open the DS5 Web Audio Haptics extension in your browser and click "Connect". Ensure the connection to the local server is successfully established.
-4. **Audio Capture:** When loading a game on itch.io (or any other platform), click to enable Audio Haptics and select the tab audio capture option in the extension's interface/browser prompt.
-	* You MUST check the **"Share audio"** option in the browser prompt. This allows the game's audio signal to be captured and converted into real-time tactile vibrations on your controller.
+4. **Audio Capture:** When loading a game on itch.io (or any other platform), click to enable Audio & Haptics and select the tab audio capture option in the extension's interface/browser prompt.
+	* You MUST check the **"Share audio"** option in the browser prompt. This allows the game's audio signal to be captured, routed directly to the controller's speakers, and simultaneously converted into real-time tactile vibrations.
 5. **Play:** You can use the Picture-in-Picture mode to keep the app running in a small floating window while you play.
 
 ---
