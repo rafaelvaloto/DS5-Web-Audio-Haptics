@@ -25,7 +25,7 @@ You can also use this tool as a dedicated browser extension for an integrated ex
 [![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png)](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp)
 [![Edge](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png)](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp)
 [![Brave](https://raw.githubusercontent.com/alrra/browser-logos/master/src/brave/brave_48x48.png)](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp)
-[![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png)](https://addons.mozilla.org/pt-BR/firefox/addon/sua-extensao-aqui/)
+[![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png)](https://addons.mozilla.org/pt-BR/firefox/addon/npadkgahblelfcdfcoddadobolkfbchp)
 
 * **Status:** Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp) and Firefox Add-ons.
 * **Compatibility:** Works natively on Google Chrome, Microsoft Edge, Brave, Opera, Firefox, and other browsers.
