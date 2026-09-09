@@ -27,34 +27,10 @@ Experience live audio haptic routing directly in your Chromium-based browser (Ch
 
 ### 🧩 Browser Extension
 You can also use this tool as a dedicated browser extension for an integrated experience.
-* **Status:** 🚧 *Coming soon directly to the Google Chrome Web Store!*
 
----
+[![Available in the Chrome Web Store](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png)](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp)
 
-### Using as Browser Extension
-
-The same build works both in the browser and as an extension. To load DS5 Web Audio Haptics as an unpacked extension in
-Chrome/Edge/Brave:
-
-1. **Download the Pre-built Extension:** Go to
-   the [Releases page](https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics/releases) and download the latest extension
-   package (usually named `DS5-Web-Audio-Haptics-Extension.zip` or similar). Extract the contents to a folder `./app` on your computer.
-
-2. **Open Extension Management:**
-	- Chrome: Navigate to `chrome://extensions/`
-	- Edge: Navigate to `edge://extensions/`
-	- Brave: Navigate to `brave://extensions/`
-
-3. **Enable Developer Mode:** Toggle the "Developer mode" switch in the top-right corner.
-
-4. **Load Unpacked Extension:**
-	- Click "Load unpacked"
-	- Select the extracted `app/` directory from the downloaded release
-
-5. **Pin the Extension:** Click the puzzle icon in your browser toolbar and pin DS5 Web Audio Haptics for easy access.
-
-The extension will now appear in your browser toolbar and can be used to connect to your DualSense controller and enable
-audio haptics on any tab.
+* **Status:** Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp).
 
 ---
 
