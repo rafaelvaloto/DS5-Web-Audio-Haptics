@@ -1,6 +1,6 @@
 ﻿# 🔊 DS5 Web Audio Haptics Bluetooth
-
-Transform your browser into a real-time haptic feedback router. This tool captures live game audio via Screen Share and translates it into high-fidelity haptics via Bluetooth for PlayStation **DualSense** controllers—no cables or custom dongles required!
+ 
+Transform your browser into a real-time audio router. This tool captures live game audio via Screen Share and streams it directly to your PlayStation DualSense controller via Bluetooth, delivering both full audio playback and high-fidelity haptics—no cables or custom dongles required!
 
 
 *[☕ Buy me a coffee or support the project!](https://github.com/sponsors/rafaelvaloto)*
