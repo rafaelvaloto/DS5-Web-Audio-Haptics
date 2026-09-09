@@ -22,7 +22,7 @@ Transform your browser into a real-time haptic feedback router. This tool captur
 ## 🧩 Browser Extension
 You can also use this tool as a dedicated browser extension for an integrated experience.
 
-* **Status:** Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp) and Firefox Add-ons.
+* **Status:** Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp) Add-ons.
 * **Compatibility:** Works natively on Google Chrome, Microsoft Edge, Brave, Opera, Firefox, and other browsers.
 
 ---
