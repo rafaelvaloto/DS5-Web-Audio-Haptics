@@ -20,6 +20,7 @@ Transform your browser into a real-time haptic feedback router. This tool captur
 ---
 
 ## 🧩 Browser Extension
+
 You can also use this tool as a dedicated browser extension for an integrated experience.
 
 * **Status:** Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp) Add-ons.
@@ -27,7 +28,7 @@ You can also use this tool as a dedicated browser extension for an integrated ex
 
 ---
 
-## 🚀 Live Haptic Router & Browser Extension
+## 🚀 Live Haptic Router
 
 Experience live audio haptic routing directly in your Chromium-based browser (Chrome, Edge, Opera, Brave).
 
