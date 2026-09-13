@@ -31,7 +31,7 @@ export const es: TranslationDictionary = {
 		active: "Activo",
 		inactive: "Inactivo",
 		battery: "Batería",
-		rate: "Frecuencia",
+		rate: "Rate:",
 	},
 	cards: {
 		commands: {

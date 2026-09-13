@@ -13,6 +13,4 @@ const deviceChannel = new BroadcastChannel("dualsense_channel");
 	deviceChannel.postMessage({
 		type: "DEVICE_AUTHORIZED",
 	});
-
-	window.close();
 });

@@ -31,7 +31,7 @@ export const ptBR: TranslationDictionary = {
 		active: "Ativo",
 		inactive: "Inativo",
 		battery: "Bateria",
-		rate: "Frequência",
+		rate: "Freq.:",
 	},
 	cards: {
 		commands: {

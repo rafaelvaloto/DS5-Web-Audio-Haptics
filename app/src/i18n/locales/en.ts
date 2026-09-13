@@ -31,7 +31,7 @@ export const en: TranslationDictionary = {
 		active: "Active",
 		inactive: "Inactive",
 		battery: "Battery",
-		rate: "Rate",
+		rate: "Rate:",
 	},
 	cards: {
 		commands: {
