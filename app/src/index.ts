@@ -3,14 +3,12 @@ import { GamepadClientApplication } from "./main.ts";
 import { bootWasmAndPlatform } from "./load.ts";
 import { debounce, hexToRgb } from "./helpers.ts";
 import { AudioHapticsManager } from "./stream.ts";
-import { initAnalytics } from "./analytics.ts";
 import { Logger } from "./logs.ts";
 import type { BrowserGamepadBridgeStatus } from "./browser-gamepad-bridge.ts";
 import type { BrowserKeyboardBridgeStatus } from "./browser-keyboard-bridge.ts";
 import i18n from "./i18n/index.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
-	initAnalytics();
 	initTranslations();
 });
 

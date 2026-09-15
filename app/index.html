@@ -12,8 +12,8 @@
 			right: 24px;
 			max-width: 600px;
 			margin: 0 auto;
-			background-color: #1f2937; /* Cinza escuro (gray-800 tailwind) */
-			border: 1px solid #374151; /* Cinza borda (gray-700 tailwind) */
+			background-color: #1f2937;
+			border: 1px solid #374151;
 			border-radius: 8px;
 			box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
 			padding: 16px 24px;
@@ -24,7 +24,6 @@
 			font-family: inherit;
 		}
 
-		/* Oculta o elemento quando o atributo 'hidden' estiver presente */
 		.cookie-banner[hidden] {
 			display: none !important;
 		}
@@ -32,7 +31,7 @@
 		.cookie-content p {
 			margin: 0;
 			font-size: 0.9rem;
-			color: #d1d5db; /* Cinza claro (gray-300 tailwind) */
+			color: #d1d5db;
 			line-height: 1.5;
 		}
 
@@ -89,7 +88,6 @@
 		</svg>
 		GitHub
 	</a>
-    <!-- Status Bar -->
     <div class="card">
         <div class="status-bar">
             <div class="status-item">
@@ -104,101 +102,42 @@
         </div>
     </div>
 
-    <!-- Connection Flow -->
     <section class="card flow-control">
         <h2>
             🔌 <span data-i18n="controls.connectionFlow">Connection Flow</span>
         </h2>
-        <button
-                id="btn-load"
-                class="btn btn-primary"
-                data-i18n="header.btnLoadWasm"
-        >
-            1) Load WASM
-        </button>
-        <button
-                id="btn-request"
-                class="btn btn-primary"
-                disabled
-                data-i18n="header.btnConnectHid"
-        >
-            2) Connect DualSense (WebHID)
-        </button>
+        <button id="btn-load" class="btn btn-primary" data-i18n="header.btnLoadWasm">1) Load WASM</button>
+        <button id="btn-request" class="btn btn-primary" disabled data-i18n="header.btnConnectHid">2) Connect DualSense (WebHID)</button>
         <div class="row">
-            <button
-                    id="btn-start"
-                    class="btn btn-primary"
-                    disabled
-                    data-i18n="header.btnStartLoop"
-            >
-                3) Play</button
-            ><button
-                id="btn-stop"
-                class="btn btn-danger"
-                disabled
-                data-i18n="header.btnStopLoop"
-        >
-            4) Stop
-        </button>
+            <button id="btn-start" class="btn btn-primary" disabled data-i18n="header.btnStartLoop">3) Play</button><button id="btn-stop" class="btn btn-danger" disabled data-i18n="header.btnStopLoop">4) Stop</button>
         </div>
-        <button id="btn-show-logs" class="btn" data-i18n="header.btnShowLogs">
-            📄 Show Logs
-        </button>
+        <button id="btn-show-logs" class="btn" data-i18n="header.btnShowLogs">📄 Show Logs</button>
     </section>
 
     <section class="card">
         <div class="flow-control">
             <h3 data-i18n="controls.browserGamepadTitle">🎮 Browser Gamepad</h3>
-            <p class="input-server-help" data-i18n="controls.browserGamepadHint">
-                For browser games, enable this option.
-            </p>
+            <p class="input-server-help" data-i18n="controls.browserGamepadHint">For browser games, enable this option.</p>
             <div class="row" style="align-items: center">
-                <button
-                        id="btn-browser-gamepad"
-                        class="btn btn-primary"
-                        data-i18n="controls.browserGamepadConnect"
-                >Enable for Current Tab</button
-                ><strong
-                        id="lbl-browser-gamepad-status"
-                        class="input-server-help"
-                        style="text-align: right"
-                        data-i18n="controls.browserGamepadDisconnected"
-                >Disconnected</strong
-                >
+                <button id="btn-browser-gamepad" class="btn btn-primary" data-i18n="controls.browserGamepadConnect">Enable for Current Tab</button><strong id="lbl-browser-gamepad-status" class="input-server-help" style="text-align: right" data-i18n="controls.browserGamepadDisconnected">Disconnected</strong>
             </div>
         </div>
     </section>
-
     <section class="card">
         <div class="flow-control">
             <h3 data-i18n="controls.browserKeyboardTitle">⌨️ Browser Keyboard</h3>
-            <p class="input-server-help" data-i18n="controls.browserKeyboardHint">
-                For browser games, enable this option.
-            </p>
+            <p class="input-server-help" data-i18n="controls.browserKeyboardHint">For browser games, enable this option.</p>
             <div class="row" style="align-items: center">
-                <button
-                        id="btn-browser-keyboard"
-                        class="btn btn-primary"
-                        data-i18n="controls.browserKeyboardConnect"
-                >Enable for Current Tab</button
-                ><strong
-                        id="lbl-browser-keyboard-status"
-                        class="input-server-help"
-                        style="text-align: right"
-                        data-i18n="controls.browserKeyboardDisconnected"
-                >Disconnected</strong
-                >
+                <button id="btn-browser-keyboard" class="btn btn-primary" data-i18n="controls.browserKeyboardConnect">Enable for Current Tab</button><strong id="lbl-browser-keyboard-status" class="input-server-help" style="text-align: right" data-i18n="controls.browserKeyboardDisconnected">Disconnected</strong>
             </div>
+			<p class="input-server-help" data-i18n="controls.browserKeyboardHintOne"></p>
         </div>
     </section>
 
-    <!-- Triggers -->
     <section class="card">
         <div class="row trigger-selects" style="margin-bottom: 12px">
 			<div class="row">
-				<button id="create-trigger" class="btn btn-primary" data-i18n="controls.createTrigger">
-					🔫 Create Profile
-				</button>
+				<button id="create-trigger" class="btn btn-primary" data-i18n="controls.createTrigger">🔫 Create Profile</button>
 			</div>
         </div>
 		<select id="sel-trigger-effect-profile" style="width: 100%"></select>
@@ -212,86 +151,20 @@
 
     <section class="card">
         <div class="color-picker">
-            <input id="picker-led-color" type="color" value="#00cccf" /><button
-                class="color-preset-btn"
-                data-color="#00cccf"
-                style="background: #00cccf"
-        ></button
-        ><button
-                class="color-preset-btn"
-                data-color="#0000ff"
-                style="background: #0000ff"
-        ></button
-        ><button
-                class="color-preset-btn"
-                data-color="#ffff00"
-                style="background: #ffff00"
-        ></button
-        ><button
-                class="color-preset-btn"
-                data-color="#00ff00"
-                style="background: #00ff00"
-        ></button
-        ><button
-                class="color-preset-btn"
-                data-color="#ff0000"
-                style="background: #ff0000"
-        ></button
-        ><button
-                class="color-preset-btn"
-                data-color="#fff"
-                style="background: #fff"
-        ></button
-        ><button
-                class="color-preset-btn"
-                data-color="#000"
-                style="background: #000;"
-        ></button>
+            <input id="picker-led-color" type="color" value="#00cccf" /><button class="color-preset-btn" data-color="#00cccf" style="background: #00cccf"></button><button class="color-preset-btn" data-color="#0000ff" style="background: #0000ff"></button><button class="color-preset-btn" data-color="#ffff00" style="background: #ffff00"></button><button class="color-preset-btn" data-color="#00ff00" style="background: #00ff00"></button><button class="color-preset-btn" data-color="#ff0000" style="background: #ff0000"></button><button class="color-preset-btn" data-color="#fff" style="background: #fff"></button><button class="color-preset-btn" data-color="#000" style="background: #000;"></button>
         </div>
     </section>
 
     <section class="card audio-card">
         <div class="audio-grid">
             <div class="audio-control">
-                <label
-                ><span data-i18n="controls.volume">🔊 Volume</span> (<output
-                        id="input-audio-volume-value"
-                >100</output
-                >)</label
-                ><input
-                    id="input-audio-volume"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="100"
-            />
+                <label><span data-i18n="controls.volume">🔊 Volume</span> (<output id="input-audio-volume-value">100</output>)</label><input id="input-audio-volume" type="range" min="0" max="100" value="100" />
             </div>
             <div class="audio-control">
-                <label
-                ><span data-i18n="controls.gain">Gain</span> (<output
-                        id="input-audio-gain-value"
-                >1.0</output
-                >)</label
-                ><input
-                    id="input-audio-gain"
-                    type="range"
-                    min="1"
-                    max="2"
-                    value="1"
-                    step=".1"
-            />
+                <label><span data-i18n="controls.gain">Gain</span> (<output id="input-audio-gain-value">1.0</output>)</label><input id="input-audio-gain" type="range" min="1" max="2" value="1" step=".1" />
             </div>
-            <label class="checkbox-group"
-            ><input id="switch-speaker" type="checkbox" /><span
-                    data-i18n="controls.headsetOnly"
-            >Headset only</span
-            ></label
-            >
-            <label class="checkbox-group"
-            ><input id="switch-audio-haptics" type="checkbox" /><span
-                    data-i18n="controls.modeAudioOnly"
-            >Audio only</span
-            ></label>
+            <label class="checkbox-group"><input id="switch-speaker" type="checkbox" /><span data-i18n="controls.headsetOnly">Headset only</span></label>
+            <label class="checkbox-group"><input id="switch-audio-haptics" type="checkbox" /><span data-i18n="controls.modeAudioOnly">Audio only</span></label>
         </div>
     </section>
 
@@ -300,50 +173,22 @@
 			<span data-i18n="controls.sharedPiPTitle">Click here to enable audio haptics via Bluetooth.</span>
 		</h3>
 		<div class="shared-card-overlay">
-			<button
-				id="btn-pip"
-				class="btn btn-primary"
-				data-i18n="header.btnPip"
-			>
-				🪟 Picture-in-Picture
-			</button>
+			<button id="btn-pip" class="btn btn-primary" data-i18n="header.btnPip">🪟 Picture-in-Picture</button>
 		</div>
 	</section>
 
     <section class="card">
         <div class="flow-control">
-            <p
-                    class="input-server-help"
-                    data-i18n="controls.inputServerHint"
-            >
-				For native Windows games that do not support the DualSense via
-				Bluetooth, follow the steps below:<br /><br />Install the <a
-				href="https://github.com/nefarius/ViGEmBus/releases/"
-				target="_blank"
-				rel="noopener noreferrer"
-			>ViGEmBus_1.22.0_x64_x86_arm64.exe</a
-			> driver to emulate a virtual gamepad.
+            <p class="input-server-help" data-i18n="controls.inputServerHint">
+				For native Windows games that do not support the DualSense via Bluetooth, follow the steps below:<br /><br />Install the <a href="https://github.com/nefarius/ViGEmBus/releases/" target="_blank" rel="noopener noreferrer">ViGEmBus_1.22.0_x64_x86_arm64.exe</a> driver to emulate a virtual gamepad.
             </p>
             <p class="input-server-help">
-            <span data-i18n="controls.inputServerRepository"
-            >To connect the controller to a virtual gamepad, run the socket:</span
-            >
-                <a
-                        href="https://github.com/rafaelvaloto/Gamepad_Socket/releases"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                >Gamepad_Socket.zip</a>.
+                <span data-i18n="controls.inputServerRepository">To connect the controller to a virtual gamepad, run the socket:</span>
+                <a href="https://github.com/rafaelvaloto/Gamepad_Socket/releases" target="_blank" rel="noopener noreferrer">Gamepad_Socket.zip</a>.
             </p>
-            <label class="input-server-help" for="txt-ws-url">Server URL</label
-            ><input id="txt-ws-url" type="text" value="ws://localhost:26760" />
+            <label class="input-server-help" for="txt-ws-url">Server URL</label><input id="txt-ws-url" type="text" value="ws://localhost:26760" />
             <div class="row" style="align-items: center">
-                <button id="btn-ws-connect" class="btn btn-primary">Connect</button
-                ><strong
-                    id="lbl-ws-status"
-                    class="input-server-help"
-                    style="text-align: right"
-            >Disconnected</strong
-            >
+                <button id="btn-ws-connect" class="btn btn-primary">Connect</button><strong id="lbl-ws-status" class="input-server-help" style="text-align: right">Disconnected</strong>
             </div>
         </div>
     </section>
@@ -358,17 +203,10 @@
         </div>
     </div>
     <div class="log-modal-head dialog-actions">
-        <button id="btn-clear-logs" class="btn" data-i18n="header.btnClearLogs">
-            Clear
-        </button
-        ><button id="btn-close-logs" class="btn" data-i18n="header.btnCloseLogs">
-        Close
-    </button>
+        <button id="btn-clear-logs" class="btn" data-i18n="header.btnClearLogs">Clear</button><button id="btn-close-logs" class="btn" data-i18n="header.btnCloseLogs">Close</button>
     </div>
 </dialog>
 <script src="./dist/lib/GamepadCoreHost.js"></script>
 <script type="module" src="./dist/index.js"></script>
-
-
 </body>
 </html>

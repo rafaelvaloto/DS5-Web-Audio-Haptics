@@ -1,6 +1,58 @@
 import type { TranslationDictionary } from "../types.ts";
 
 export const es: TranslationDictionary = {
+	installPage: {
+		title: "Instalar la extensión DS5 Web Audio Haptics",
+		brand: "DS5 Web Audio Haptics",
+		github: "GitHub",
+		videoTutorial: "Tutorial en Video",
+		eyebrow: "Experiencia recomendada",
+		heroTitle: "Lleva la inmersión de PlayStation 5 a tus juegos web.",
+		heroDescription:
+			"Audio y hápticos por Bluetooth en tiempo real, gatillos adaptativos y una lightbar personalizable sin instalar drivers ni emuladores. La extensión funciona en un panel lateral dentro de la misma pestaña del juego, ofreciendo una experiencia discreta sin estorbar la gameplay.",
+		installExtension: "Instalar extensión",
+		downloadGamepadSocket: "Descargar Gamepad Socket",
+		heroCallout:
+			"Para juegos en el navegador, la extensión ahora puede usar <strong>Activate in Tab</strong> para emular teclado o gamepad sin instalaciones extra. Gamepad Socket es opcional y solo se necesita en casos que aún requieran un gamepad virtual fuera de ese flujo.",
+		whyTitle: "¿Por qué la extensión?",
+		whyDescription:
+			"Hace que la captura de audio, la inyección de entrada en el navegador y la configuración sean más consistentes que el flujo de la página alojada.",
+		pillBrowserSupport: "Mejor soporte para juegos del navegador",
+		pillAudioCapture: "Captura de audio de pestaña más fluida",
+		pillInstallPath: "Ruta de instalación dedicada",
+		pillOnboarding: "Onboarding más enfocado",
+		stepOneTitle: "1. Instala la extensión",
+		stepOneItemOne: "Instala la extensión del navegador desde Chrome Web Store.",
+		stepOneItemTwo: "Abre tu juego del navegador o la página compatible.",
+		stepOneItemThree:
+			"Usa <strong>Activate in Tab</strong> para habilitar la emulación de teclado o gamepad directamente en la pestaña actual.",
+		stepTwoTitle: "2. Conecta tu mando",
+		stepTwoItemOne: "Empareja el DualSense con Windows por Bluetooth.",
+		stepTwoItemTwo: "Abre la extensión y conecta el mando.",
+		stepTwoItemThree: "Permite la captura de audio/pestaña cuando el navegador solicite permiso.",
+		stepTwoItemFour: "Asegúrate de permitir compartir el audio para que el sonido funcione en el mando.",
+		stepThreeTitle: "3. Extras opcionales",
+		stepThreeItemOne: "Activa audio + hápticos desde la extensión cuando empieces a jugar.",
+		stepThreeItemTwo:
+			"Usa <strong>Gamepad Socket</strong> solo si un juego específico todavía necesita enrutamiento mediante gamepad virtual fuera del flujo in-tab.",
+		stepThreeItemThree:
+			"Instala <strong>ViGEmBus</strong> solo cuando Gamepad Socket lo requiera.",
+		partnersLabel: "Socios",
+		partnersTitle: "Dónde jugar",
+		partnersDescription:
+			"Juega en plataformas asociadas donde los juegos del navegador encajan de forma natural con esta extensión.",
+		playOnItchIo: "Jugar en itch.io",
+		playOnCrazyGames: "Jugar en CrazyGames",
+		playOnPoki: "Jugar en Poki",
+		whereToPlayTitle: "Plataformas del navegador",
+		whereToPlayDescription:
+			"Elige una plataforma para empezar a jugar. Aquí se pueden añadir más enlaces curados y colaboraciones con el tiempo.",
+		footerCopyright: "Todos los derechos reservados. Copyright (c) 2026 Rafael Valoto",
+		footerNote:
+			"Los juegos nativos de Windows con soporte directo para DualSense por Bluetooth no necesitan Gamepad Socket, y los juegos del navegador pueden usar Activate in Tab sin instalaciones extra.",
+		footerDisclaimer:
+			"PlayStation, DualSense, itch.io, CrazyGames y Poki son marcas registradas de sus respectivos propietarios. Este es un proyecto independiente y no está afiliado oficialmente con esas marcas o plataformas.",
+	},
 	header: {
 		btnShowLogs: "Mostrar Registros",
 		btnCloseLogs: "Cerrar Registros",
@@ -112,6 +164,7 @@ export const es: TranslationDictionary = {
 		browserGamepadDisconnected: "Desconectado",
 		browserKeyboardTitle: "⌨️ Teclado del navegador",
 		browserKeyboardHint: "Para juegos en el navegador, activa esta opción.",
+		browserKeyboardHintOne: "Usa para juegos sin soporte de gamepad.",
 		browserKeyboardConnect: "Activar en la Pestaña Actual",
 		browserKeyboardDisconnect: "Desactivar",
 		browserKeyboardConnecting: "Conectando...",
