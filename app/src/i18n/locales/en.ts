@@ -46,7 +46,7 @@ export const en: TranslationDictionary = {
 		whereToPlayTitle: "Browser platforms",
 		whereToPlayDescription:
 			"Choose a platform to start playing. More curated links and partnerships can be added here over time.",
-		footerCopyright: "All rights reserved. Copyright (c) 2026 Rafael Valoto",
+		footerCopyright: "© 2026 Valoto Games. All rights reserved.",
 		footerNote:
 			"Native Windows games with direct DualSense Bluetooth support do not need Gamepad Socket, and browser games can use Activate in Tab without extra installs.",
 		footerDisclaimer:
