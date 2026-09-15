@@ -146,6 +146,52 @@
         </button>
     </section>
 
+    <section class="card">
+        <div class="flow-control">
+            <h3 data-i18n="controls.browserGamepadTitle">🎮 Browser Gamepad</h3>
+            <p class="input-server-help" data-i18n="controls.browserGamepadHint">
+                For browser games, enable this option.
+            </p>
+            <div class="row" style="align-items: center">
+                <button
+                        id="btn-browser-gamepad"
+                        class="btn btn-primary"
+                        data-i18n="controls.browserGamepadConnect"
+                >Enable for Current Tab</button
+                ><strong
+                        id="lbl-browser-gamepad-status"
+                        class="input-server-help"
+                        style="text-align: right"
+                        data-i18n="controls.browserGamepadDisconnected"
+                >Disconnected</strong
+                >
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="flow-control">
+            <h3 data-i18n="controls.browserKeyboardTitle">⌨️ Browser Keyboard</h3>
+            <p class="input-server-help" data-i18n="controls.browserKeyboardHint">
+                For browser games, enable this option.
+            </p>
+            <div class="row" style="align-items: center">
+                <button
+                        id="btn-browser-keyboard"
+                        class="btn btn-primary"
+                        data-i18n="controls.browserKeyboardConnect"
+                >Enable for Current Tab</button
+                ><strong
+                        id="lbl-browser-keyboard-status"
+                        class="input-server-help"
+                        style="text-align: right"
+                        data-i18n="controls.browserKeyboardDisconnected"
+                >Disconnected</strong
+                >
+            </div>
+        </div>
+    </section>
+
     <!-- Triggers -->
     <section class="card">
         <div class="row trigger-selects" style="margin-bottom: 12px">
@@ -270,19 +316,17 @@
                     class="input-server-help"
                     data-i18n="controls.inputServerHint"
             >
-                For web games or games without native PlayStation 5 controller
-                support, connect the socket and install the <a
+				For native Windows games that do not support the DualSense via
+				Bluetooth, follow the steps below:<br /><br />Install the <a
 				href="https://github.com/nefarius/ViGEmBus/releases/"
 				target="_blank"
 				rel="noopener noreferrer"
 			>ViGEmBus_1.22.0_x64_x86_arm64.exe</a
-			> driver to
-                emulate a virtual gamepad.
+			> driver to emulate a virtual gamepad.
             </p>
             <p class="input-server-help">
             <span data-i18n="controls.inputServerRepository"
-            >To connect the controller to a virtual gamepad, use this
-              repository:</span
+            >To connect the controller to a virtual gamepad, run the socket:</span
             >
                 <a
                         href="https://github.com/rafaelvaloto/Gamepad_Socket/releases"

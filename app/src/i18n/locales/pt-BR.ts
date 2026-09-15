@@ -60,7 +60,7 @@ export const ptBR: TranslationDictionary = {
 		},
 	},
 	controls: {
-		changeTrigger: "Mudar entre gatilhos usando\n" + "  R3 + D-Pad (Cima=1, Direita=2, Baixo=3, Esquerda=Reset)",
+		changeTrigger: "Trocar efeito do gatilho R3 + D-Pad (Cima=1, Direita=2, Baixo=3, Esquerda=Reset)",
 		createTrigger: "Criar Gatilho",
 		headsetOnly: "Apenas Fone de Ouvido",
 		modeAudioOnly: "Modo Apenas Áudio",
@@ -95,13 +95,27 @@ export const ptBR: TranslationDictionary = {
 		effectWeapon: "Arma Semi-Automática (R2)",
 		effectAutoGun: "Tiro Automático / Buzz (R2)",
 		inputServerHint:
-			"Para jogos web ou jogos sem suporte nativo ao controle PlayStation 5, instale o driver <a\n" +
+			"Para jogos nativos no Windows que não oferecem suporte ao DualSense via Bluetooth, siga os passos abaixo:<br><br>Instale o driver <a\n" +
 			'\t\t\t\thref="https://github.com/nefarius/ViGEmBus/releases/"\n' +
 			'\t\t\t\ttarget="_blank"\n' +
 			'\t\t\t\trel="noopener noreferrer"\n' +
 			"\t\t\t>ViGEmBus_1.22.0_x64_x86_arm64.exe</a\n" +
 			"\t\t\t> para emular um gamepad virtual.",
-		inputServerRepository: "Para conectar o controle a um gamepad virtual, run the socket:",
+		inputServerRepository: "Para conectar o controle a um gamepad virtual, execute o socket:",
+		browserGamepadTitle: "🎮 Gamepad no navegador",
+		browserGamepadHint: "Para jogos no navegador, ative esta opção.",
+		browserGamepadConnect: "Ativar na Aba Atual",
+		browserGamepadDisconnect: "Desativar",
+		browserGamepadConnecting: "Conectando...",
+		browserGamepadConnected: "Conectado",
+		browserGamepadDisconnected: "Desconectado",
+		browserKeyboardTitle: "⌨️ Teclado no navegador",
+		browserKeyboardHint: "Para jogos no navegador, ative esta opção.",
+		browserKeyboardConnect: "Ativar na Aba Atual",
+		browserKeyboardDisconnect: "Desativar",
+		browserKeyboardConnecting: "Conectando...",
+		browserKeyboardConnected: "Conectado",
+		browserKeyboardDisconnected: "Desconectado",
 	},
 	commands: {
 		cross: "Cross (X)",

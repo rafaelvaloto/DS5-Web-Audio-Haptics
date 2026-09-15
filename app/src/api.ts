@@ -35,6 +35,7 @@ export type api = {
 		rumbleReduce: number,
 		triggerReduce: number
 	) => void;
+	touch: (device: number, bIsEnable: number) => void;
 
 	/** audio device api */
 	audioInit: (volume: number, gain: number) => void;
@@ -82,6 +83,11 @@ export function bindingAPI(module: NativeModule): api {
 			"number",
 			"number",
 			"number",
+		]),
+
+		touch: maybe("GCH_EnableTouch", null, [
+			"number",
+			"number"
 		]),
 
 		audioInit: maybe("GCH_InitializeAudio", null, ["number", "number"]),

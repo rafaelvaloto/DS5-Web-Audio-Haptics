@@ -7,6 +7,8 @@ import { api, bindingAPI } from "./api.ts";
 import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE, SONY_VENDOR_ID } from "./const.ts";
 import { AudioHapticsManager } from "./stream.ts";
 import { DualSenseSocketBridge } from "./wsocket.ts";
+import { BrowserGamepadBridge } from "./browser-gamepad-bridge.ts";
+import { BrowserKeyboardBridge } from "./browser-keyboard-bridge.ts";
 import i18n from "./i18n/index.ts";
 
 const deviceChannel = new BroadcastChannel("dualsense_channel");
@@ -26,6 +28,8 @@ export class GamepadClientApplication {
 	public readonly platform: PlatformBridgeRegistration | null;
 	public readonly registry: DeviceRegistryPolicy | null = null;
 	public readonly dsExtensionBridge = new DualSenseSocketBridge();
+	public readonly browserGamepadBridge = new BrowserGamepadBridge();
+	public readonly browserKeyboardBridge = new BrowserKeyboardBridge();
 
 	// Log static listeners
 	private static readonly logListeners = new Set<(message: string, level?: number) => void>();
@@ -66,6 +70,30 @@ export class GamepadClientApplication {
 
 	public wsIsConnect(): boolean {
 		return this.dsExtensionBridge.isConnected();
+	}
+
+	public async browserGamepadToggle(): Promise<void> {
+		if (this.browserGamepadBridge.isConnected()) {
+			this.browserGamepadBridge.disconnect();
+			return;
+		}
+		await this.browserGamepadBridge.connect();
+	}
+
+	public browserGamepadIsConnected(): boolean {
+		return this.browserGamepadBridge.isConnected();
+	}
+
+	public async browserKeyboardToggle(): Promise<void> {
+		if (this.browserKeyboardBridge.isConnected()) {
+			this.browserKeyboardBridge.disconnect();
+			return;
+		}
+		await this.browserKeyboardBridge.connect();
+	}
+
+	public browserKeyboardIsConnected(): boolean {
+		return this.browserKeyboardBridge.isConnected();
 	}
 
 	static createFromContext(context: WasmContext, typeId: number = 1): GamepadClientApplication {
@@ -259,6 +287,8 @@ export class GamepadClientApplication {
 				}
 
 				this.dsExtensionBridge.send(state);
+				this.browserGamepadBridge.send(state);
+				this.browserKeyboardBridge.send(state);
 			}
 		}, FRAME_MS);
 	}
@@ -267,6 +297,8 @@ export class GamepadClientApplication {
 		if (this.inputTimer !== null) {
 			window.clearInterval(this.inputTimer);
 			this.inputTimer = null;
+			this.browserGamepadBridge.reset();
+			this.browserKeyboardBridge.reset();
 			GamepadClientApplication.emitLog(i18n.t("logs.loopStopped") || "[GamepadClient] Engine parada");
 		}
 	}

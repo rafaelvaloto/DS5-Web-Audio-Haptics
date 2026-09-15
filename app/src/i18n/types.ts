@@ -95,6 +95,20 @@ export interface TranslationDictionary {
 		effectAutoGun: string;
 		inputServerHint?: string;
 		inputServerRepository?: string;
+		browserGamepadTitle: string;
+		browserGamepadHint: string;
+		browserGamepadConnect: string;
+		browserGamepadDisconnect: string;
+		browserGamepadConnecting: string;
+		browserGamepadConnected: string;
+		browserGamepadDisconnected: string;
+		browserKeyboardTitle: string;
+		browserKeyboardHint: string;
+		browserKeyboardConnect: string;
+		browserKeyboardDisconnect: string;
+		browserKeyboardConnecting: string;
+		browserKeyboardConnected: string;
+		browserKeyboardDisconnected: string;
 	};
 	commands?: {
 		cross: string;

@@ -10,6 +10,52 @@
 	"background": {
 		"service_worker": "background.js"
 	},
+	"content_scripts": [
+		{
+			"matches": [
+				"http://*/*",
+				"https://*/*"
+			],
+			"js": ["dist/gamepad-adapter.js"],
+			"run_at": "document_start",
+			"all_frames": true,
+			"match_origin_as_fallback": true,
+			"world": "MAIN"
+		},
+		{
+			"matches": [
+				"http://*/*",
+				"https://*/*"
+			],
+			"js": ["dist/gamepad-relay.js"],
+			"run_at": "document_start",
+			"all_frames": true,
+			"match_origin_as_fallback": true,
+			"world": "ISOLATED"
+		},
+		{
+			"matches": [
+				"http://*/*",
+				"https://*/*"
+			],
+			"js": ["dist/keyboard-adapter.js"],
+			"run_at": "document_start",
+			"all_frames": true,
+			"match_origin_as_fallback": true,
+			"world": "MAIN"
+		},
+		{
+			"matches": [
+				"http://*/*",
+				"https://*/*"
+			],
+			"js": ["dist/keyboard-relay.js"],
+			"run_at": "document_start",
+			"all_frames": true,
+			"match_origin_as_fallback": true,
+			"world": "ISOLATED"
+		}
+	],
 	"side_panel": {
 		"default_path": "index.html"
 	},

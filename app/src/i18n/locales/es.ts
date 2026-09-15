@@ -61,7 +61,7 @@ export const es: TranslationDictionary = {
 	},
 	controls: {
 		changeTrigger:
-			"Cambiar entre gatillos usando\n" + "  R3 + D-Pad (Arriba=1, Derecha=2, Abajo=3, Izquierda=Reset)",
+			"Cambiar entre gatillos R3 + D-Pad (Arriba=1, Derecha=2, Abajo=3, Izquierda=Reset)",
 		createTrigger: "Crear Gatillo",
 		headsetOnly: "Solo Auriculares",
 		modeAudioOnly: "Modo Solo Audio",
@@ -96,13 +96,27 @@ export const es: TranslationDictionary = {
 		effectWeapon: "Arma Semi-Automática (R2)",
 		effectAutoGun: "Disparo Automático / Buzz (R2)",
 		inputServerHint:
-			"Para juegos web o juegos sin compatibilidad nativa con el mando de PlayStation 5, instala el controlador <a\n" +
+			"Para juegos nativos de Windows que no admiten el DualSense mediante Bluetooth, sigue los pasos a continuación:<br><br>Instala el controlador <a\n" +
 			'\t\t\t\thref="https://github.com/nefarius/ViGEmBus/releases/"\n' +
 			'\t\t\t\ttarget="_blank"\n' +
 			'\t\t\t\trel="noopener noreferrer"\n' +
 			"\t\t\t>ViGEmBus_1.22.0_x64_x86_arm64.exe</a\n" +
 			"\t\t\t> para emular un mando virtual.",
-		inputServerRepository: "Para conectar el control a un gamepad virtual, run the socket:",
+		inputServerRepository: "Para conectar el control a un gamepad virtual, ejecuta el socket:",
+		browserGamepadTitle: "🎮 Gamepad del navegador",
+		browserGamepadHint: "Para juegos en el navegador, activa esta opción.",
+		browserGamepadConnect: "Activar en la Pestaña Actual",
+		browserGamepadDisconnect: "Desactivar",
+		browserGamepadConnecting: "Conectando...",
+		browserGamepadConnected: "Conectado",
+		browserGamepadDisconnected: "Desconectado",
+		browserKeyboardTitle: "⌨️ Teclado del navegador",
+		browserKeyboardHint: "Para juegos en el navegador, activa esta opción.",
+		browserKeyboardConnect: "Activar en la Pestaña Actual",
+		browserKeyboardDisconnect: "Desactivar",
+		browserKeyboardConnecting: "Conectando...",
+		browserKeyboardConnected: "Conectado",
+		browserKeyboardDisconnected: "Desconectado",
 	},
 	commands: {
 		cross: "Cross (X)",
