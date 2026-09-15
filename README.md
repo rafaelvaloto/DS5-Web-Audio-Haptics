@@ -1,6 +1,6 @@
 # 🔊 DS5 Web Audio Haptics Bluetooth
- 
-Transform your browser into a real-time raw audio router. This tool captures live game audio via Screen Share and streams it directly to your PlayStation DualSense controller via Bluetooth, delivering full audio playback through the controller's built-in speakers alongside high-fidelity haptics—no cables or custom dongles required!
+
+Transform your browser into an immersive experience. This extension captures live game audio in the browser and streams it directly to your PlayStation DualSense controller via Bluetooth. Enjoy the sound through the controller's built-in speakers alongside high-fidelity synchronized tactile vibrations—no cables or custom dongles required!
 
 *[☕ Buy me a coffee or support the project!](https://github.com/sponsors/rafaelvaloto)*
 
@@ -8,111 +8,46 @@ Transform your browser into a real-time raw audio router. This tool captures liv
 
 ## ✨ Key Features
 
-- 🔊 **Raw Audio & Haptics:** Stream live game audio directly to the controller's built-in speakers while generating synchronized tactile vibrations.
-- 🛜 **100% Wireless:** Works fully over Bluetooth. No USB cables needed.
-- 🧩 **Extension-First Experience:** GitHub Pages now points users to the browser extension for the best setup and gameplay flow.
-- 🎮 **Universal Compatibility:** Works with native games or via Gamepad Socket for browser games.
-- 🏎️ **Game Profiles:** Create game-specific profiles with up to 3 different triggers. Switch between triggers using R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset).
-- 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
+- 🔊 **Realistic Audio & Haptics:** Stream game audio directly to the controller with synchronized tactile vibrations.
+- 🛜 **100% Wireless:** Fully functional over Bluetooth, no USB cables needed.
+- 🎮 **Integrated Extension:** Works discreetly in a side panel directly on the same game tab, without getting in the way of your gameplay.
+- 🏎️ **Customizable Profiles:** Create specific profiles for each game with up to 3 adaptive trigger configurations. Switch between them quickly using R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset).
+- 🔋 **Battery Monitor:** Check your controller's battery level in real-time.
 
 ---
 
-## 🧩 Browser Extension
+## 🕹️ Where to Play
 
-You can also use this tool as a dedicated browser extension for an integrated experience.
+The extension is designed to work perfectly with web games. Play on platforms where the integration fits naturally:
 
-* **Status:** Available now on the 👉 **[Open the install page](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/install.html)** Add-ons.
-* **Compatibility:** Works natively on Google Chrome, Microsoft Edge, Brave, Opera, Firefox, and other browsers.
-
----
-
-## 🎥 Full Video Tutorial
-
-Watch the complete setup guide, including the browser extension, server configuration, and itch.io gameplay demonstration:
-
-[![Watch the tutorial](https://img.youtube.com/vi/YfGAkdejegI/maxresdefault.jpg)](https://youtu.be/YfGAkdejegI?si=3CojajkqFkR0tHr3)
-*Click the image to watch on YouTube*
+* **CrazyGames**
+* **itch.io**
+* **Poki**
 
 ---
 
-## 🎧 How to Use (Step-by-Step)
+## 🧩 How to Install and Use
 
-To get the full experience, especially for browser games like those on itch.io, follow these steps to route both inputs and audio/haptics.
+* **Installation:** 👉 **[Open the install page](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/)**
+* **Supported Browsers:** Google Chrome, Microsoft Edge, Brave, Opera, Firefox, and others.
 
-### Part 1: Setting up the Virtual Gamepad
-1. **Download Gamepad Socket:** Go to the [Gamepad Socket repository](https://github.com/rafaelvaloto/Gamepad_Socket) and download the latest release.
-2. **Install Drivers:** If you haven't already, install the **ViGEm Bus Driver** (prompted during setup) to allow your PC to emulate an Xbox/Virtual controller.
-3. **Run the Server:** Extract the downloaded files and execute `Gamepad_Socket.exe` to start the local server.
-
-### Part 2: Connection Flow & Audio/Haptic Activation
-After installing the drivers and the server, follow this flow to activate the audio routing and haptic feedback:
-
-1. **Bluetooth Connection:** Ensure your DualSense controller is paired and connected to your PC via Bluetooth.
-2. **Run the Server:** Execute `Gamepad_Socket.exe` and keep the server running. This background process is required to mediate communication between the hardware and your web browser.
-3. **Activate the Extension:** Open the DS5 Web Audio Haptics extension in your browser and click "Connect". Ensure the connection to the local server is successfully established.
-4. **Audio Capture:** When loading a game on itch.io (or any other platform), click to enable Audio & Haptics and select the tab audio capture option in the extension's interface/browser prompt.
-	* You MUST check the **"Share audio"** option in the browser prompt. This allows the game's audio signal to be captured, routed directly to the controller's speakers, and simultaneously converted into real-time tactile vibrations.
-5. **Play:** You can use the Picture-in-Picture mode to keep the app running in a small floating window while you play.
+**Step-by-Step Setup:**
+1. Install the extension in your browser from the web store.
+2. Pair your DualSense controller with Windows via Bluetooth.
+3. Open your browser game page (on Poki, CrazyGames, itch.io, etc.).
+4. Open the extension in the side panel, connect the controller, and allow audio/tab capture when the browser asks for permission.
+5. Make sure to enable audio sharing so the sound can play through the controller.
 
 ---
-
-## 🕹️ Game Compatibility
-
-**Note:** This routing method relies on the game engine natively reading PlayStation hardware inputs (Raw Input / Direct HID). **It should work on any game that natively supports the DualSense controller via Bluetooth.** Games that strictly require Microsoft's XInput API (Xbox controller format) will require the Gamepad Socket external wrapper.
-
-### 🌐 Web Browser Games (itch.io, etc.)
-Browser games generally require the socket connection to emulate a compatible virtual gamepad. As shown in the tutorial video, this setup works flawlessly for indie titles.
-* *Example:* [Little Big Smasher](https://augustopolonio.itch.io/little-big-smasher)
-
-### 🖥️ Native PC Games
-
-**Tested & Confirmed Games:** These games were tested successfully as they feature **native DualSense support over Bluetooth**.
-
-**Important:** You do **not** need to install any additional drivers or use the Gamepad Socket for these titles. However, if you are playing through Steam, you **must disable Steam Input** for the game to correctly recognize the DualSense controller natively.
-
-**Free Games tested:**
-
-- [Atlas Wars](https://store.epicgames.com/p/atlas-wars-5b83bd)
-- [Pixel Gun 3D](https://store.epicgames.com/p/pixel-gun-3d-812855)
-
----
-
-## 🔧 Build for development
-
-### Building from Source
-
-If you want to build the project from source or contribute to development:
-
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/rafaelvaloto/DS5-Web-Audio-Haptics.git
-   cd DS5-Web-Audio-Haptics
-   ```
-
-2. **Install Dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Build the Application:**
-   ```bash
-   npm run build:app
-   ```
-   This will generate the production-ready files in the `app/` directory. These same files work both as a web
-   application and as a browser extension.
-
----
-
-## ⭐ 3rdParty
-
-* [Gamepad-Core Host](https://github.com/rafaelvaloto/Gamepad-Core-Host) - The C-compatible API can also be consumed from JavaScript and TypeScript through WebAssembly, compiled with Emscripten. This makes Gamepad-Core Host available to browser applications, Node.js tools, and other JavaScript runtimes that support WebAssembly.
 
 ## ⭐ Credits
 
 * [SAxense](https://github.com/egormanga/SAxense) - Base for Bluetooth Audio Haptics.
-* [Awalol/DS5Dongle](https://github.com/awalol/DS5Dongle) - Reference **Bluetooth Audio (Headset/Speaker)** opus codec and buffer sizes.
+* [Awalol/DS5Dongle](https://github.com/awalol/DS5Dongle) - Reference for **Bluetooth Audio (Headset/Speaker)** codec.
 
 ---
+
+PlayStation, DualSense, itch.io, CrazyGames, and Poki are trademarks of their respective owners. This is an independent project and is not officially affiliated with those brands or platforms.
 
 ## 📄 License
 
