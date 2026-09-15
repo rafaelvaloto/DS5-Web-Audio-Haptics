@@ -546,6 +546,16 @@ window.addEventListener("pagehide", () => {
 	app?.browserKeyboardBridge.disconnect(false);
 });
 
+(document.getElementById("btn-input-server-toggle") as HTMLButtonElement)?.addEventListener("click", () => {
+	const toggle = document.getElementById("btn-input-server-toggle") as HTMLButtonElement | null;
+	const panel = document.getElementById("input-server-panel") as HTMLDivElement | null;
+	if (!toggle || !panel) return;
+
+	const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+	toggle.setAttribute("aria-expanded", String(!isExpanded));
+	panel.hidden = isExpanded;
+});
+
 (document.getElementById("btn-ws-connect") as HTMLInputElement)?.addEventListener("click", (e) => {
 	try {
 		if (!app) {

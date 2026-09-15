@@ -54,6 +54,48 @@ h2 {
     border-radius: var(--radius);
     padding: 16px;
 }
+.optional-card {
+    padding: 12px 14px;
+    background: color-mix(in srgb, var(--bg-card) 82%, transparent);
+    border-color: color-mix(in srgb, var(--border) 70%, transparent);
+}
+.optional-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 2px);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 10px 12px;
+    text-align: left;
+}
+.optional-toggle:hover {
+    background: rgb(148 163 184 / 0.06);
+}
+.optional-toggle .toggle-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    transition: transform 0.2s ease;
+    color: var(--text-main);
+}
+.optional-toggle[aria-expanded="true"] .toggle-indicator {
+    transform: rotate(180deg);
+}
+.optional-panel {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgb(148 163 184 / 0.18);
+}
+.optional-panel[hidden] {
+    display: none;
+}
 .status-bar {
     display: flex;
     justify-content: space-between;

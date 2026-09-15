@@ -6,6 +6,7 @@ export interface TranslationDictionary {
 		brand: string;
 		github: string;
 		videoTutorial: string;
+		videoTutorialTriggers: string;
 		eyebrow: string;
 		heroTitle: string;
 		heroDescription: string;

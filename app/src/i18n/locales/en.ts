@@ -6,6 +6,7 @@ export const en: TranslationDictionary = {
 		brand: "DS5 Web Audio Haptics",
 		github: "GitHub",
 		videoTutorial: "Video Tutorial",
+		videoTutorialTriggers: "Triggers Tutorial",
 		eyebrow: "Recommended experience",
 		heroTitle: "Bring PlayStation 5 immersion to your web games.",
 		heroDescription:

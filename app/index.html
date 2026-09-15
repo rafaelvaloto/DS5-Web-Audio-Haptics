@@ -177,18 +177,24 @@
 		</div>
 	</section>
 
-    <section class="card">
-        <div class="flow-control">
-            <p class="input-server-help" data-i18n="controls.inputServerHint">
+    <section class="card optional-card">
+        <button id="btn-input-server-toggle" class="btn optional-toggle" type="button" aria-expanded="false">
+            <span>Optional support for native Windows games</span>
+            <span class="toggle-indicator" aria-hidden="true">▾</span>
+        </button>
+        <div id="input-server-panel" class="optional-panel" hidden>
+            <div class="flow-control">
+                <p class="input-server-help" data-i18n="controls.inputServerHint">
 				For native Windows games that do not support the DualSense via Bluetooth, follow the steps below:<br /><br />Install the <a href="https://github.com/nefarius/ViGEmBus/releases/" target="_blank" rel="noopener noreferrer">ViGEmBus_1.22.0_x64_x86_arm64.exe</a> driver to emulate a virtual gamepad.
-            </p>
-            <p class="input-server-help">
-                <span data-i18n="controls.inputServerRepository">To connect the controller to a virtual gamepad, run the socket:</span>
-                <a href="https://github.com/rafaelvaloto/Gamepad_Socket/releases" target="_blank" rel="noopener noreferrer">Gamepad_Socket.zip</a>.
-            </p>
-            <label class="input-server-help" for="txt-ws-url">Server URL</label><input id="txt-ws-url" type="text" value="ws://localhost:26760" />
-            <div class="row" style="align-items: center">
-                <button id="btn-ws-connect" class="btn btn-primary">Connect</button><strong id="lbl-ws-status" class="input-server-help" style="text-align: right">Disconnected</strong>
+                </p>
+                <p class="input-server-help">
+                    <span data-i18n="controls.inputServerRepository">To connect the controller to a virtual gamepad, run the socket:</span>
+                    <a href="https://github.com/rafaelvaloto/Gamepad_Socket/releases" target="_blank" rel="noopener noreferrer">Gamepad_Socket.zip</a>.
+                </p>
+                <label class="input-server-help" for="txt-ws-url">Server URL</label><input id="txt-ws-url" type="text" value="ws://localhost:26760" />
+                <div class="row" style="align-items: center">
+                    <button id="btn-ws-connect" class="btn btn-primary">Connect</button><strong id="lbl-ws-status" class="input-server-help" style="text-align: right">Disconnected</strong>
+                </div>
             </div>
         </div>
     </section>
