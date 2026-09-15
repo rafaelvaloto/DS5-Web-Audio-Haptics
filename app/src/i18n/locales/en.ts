@@ -1,6 +1,57 @@
 import type { TranslationDictionary } from "../types.ts";
 
 export const en: TranslationDictionary = {
+	installPage: {
+		title: "Install DS5 Web Audio Haptics Extension",
+		brand: "DS5 Web Audio Haptics",
+		github: "GitHub",
+		videoTutorial: "Video Tutorial",
+		eyebrow: "Recommended experience",
+		heroTitle: "Bring PlayStation 5 immersion to your web games.",
+		heroDescription:
+			"Real-time Bluetooth audio and haptics, adaptive triggers, and a customizable lightbar without installing drivers or emulators. The extension runs in a side panel on the same game tab, keeping the experience discreet without getting in the way of gameplay.",
+		installExtension: "Install Extension",
+		downloadGamepadSocket: "Download Gamepad Socket",
+		heroCallout:
+			"For browser games, the extension can now use <strong>Activate in Tab</strong> to emulate a keyboard or gamepad without extra installs. Gamepad Socket is only optional for cases that still need a virtual gamepad outside that flow.",
+		whyTitle: "Why the extension?",
+		whyDescription:
+			"It makes audio capture, browser input injection, and setup more consistent than the plain hosted page flow.",
+		pillBrowserSupport: "Better browser-game support",
+		pillAudioCapture: "Smoother tab audio capture",
+		pillInstallPath: "Dedicated install path",
+		pillOnboarding: "Focused user onboarding",
+		stepOneTitle: "1. Install the extension",
+		stepOneItemOne: "Install the browser extension from the Chrome Web Store.",
+		stepOneItemTwo: "Open your browser game or supported page.",
+		stepOneItemThree:
+			"Use <strong>Activate in Tab</strong> to enable browser keyboard or gamepad emulation directly in the current tab.",
+		stepTwoTitle: "2. Connect your controller",
+		stepTwoItemOne: "Pair the DualSense with Windows over Bluetooth.",
+		stepTwoItemTwo: "Open the extension and connect the controller.",
+		stepTwoItemThree: "Allow audio/tab capture when the browser asks for permission.",
+		stepTwoItemFour: "Make sure audio sharing is enabled so sound can play through the controller.",
+		stepThreeTitle: "3. Optional extras",
+		stepThreeItemOne: "Enable audio + haptics from the extension when you start playing.",
+		stepThreeItemTwo:
+			"Use <strong>Gamepad Socket</strong> only if a specific game still needs virtual gamepad routing outside the in-tab flow.",
+		stepThreeItemThree: "Install <strong>ViGEmBus</strong> only when Gamepad Socket requires it.",
+		partnersLabel: "Partners",
+		partnersTitle: "Where to play",
+		partnersDescription:
+			"Play on partner platforms where browser games fit naturally with this extension.",
+		playOnItchIo: "Play on itch.io",
+		playOnCrazyGames: "Play on CrazyGames",
+		playOnPoki: "Play on Poki",
+		whereToPlayTitle: "Browser platforms",
+		whereToPlayDescription:
+			"Choose a platform to start playing. More curated links and partnerships can be added here over time.",
+		footerCopyright: "All rights reserved. Copyright (c) 2026 Rafael Valoto",
+		footerNote:
+			"Native Windows games with direct DualSense Bluetooth support do not need Gamepad Socket, and browser games can use Activate in Tab without extra installs.",
+		footerDisclaimer:
+			"PlayStation, DualSense, itch.io, CrazyGames, and Poki are trademarks of their respective owners. This is an independent project and is not officially affiliated with those brands or platforms.",
+	},
 	header: {
 		btnShowLogs: "Show Logs",
 		btnCloseLogs: "Close Logs",
@@ -60,7 +111,7 @@ export const en: TranslationDictionary = {
 		},
 	},
 	controls: {
-		changeTrigger: "Switch between triggers using\n" + "  R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset)",
+		changeTrigger: "Switch between triggers R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset)",
 		createTrigger: "Create Trigger",
 		connectionFlow: "Connection Flow",
 		audioSettingsTitle: "Audio Controls",
@@ -95,13 +146,28 @@ export const en: TranslationDictionary = {
 		effectWeapon: "Weapon Semi-Auto (R2)",
 		effectAutoGun: "Automatic Gun Buzz (R2)",
 		inputServerHint:
-			"For web games or games without native support for the PlayStation 5 controller, install the <a\n" +
+			"For native Windows games that do not support the DualSense via Bluetooth, follow the steps below:<br><br>Install the <a\n" +
 			'\t\t\t\thref="https://github.com/nefarius/ViGEmBus/releases/"\n' +
 			'\t\t\t\ttarget="_blank"\n' +
 			'\t\t\t\trel="noopener noreferrer"\n' +
 			"\t\t\t>ViGEmBus_1.22.0_x64_x86_arm64.exe</a\n" +
 			"\t\t\t> driver to emulate a virtual gamepad.",
 		inputServerRepository: "To connect the controller to a virtual gamepad, run the socket:",
+		browserGamepadTitle: "🎮 Browser Gamepad",
+		browserGamepadHint: "For browser games, enable this option.",
+		browserGamepadConnect: "Enable for Current Tab",
+		browserGamepadDisconnect: "Disable",
+		browserGamepadConnecting: "Connecting...",
+		browserGamepadConnected: "Connected",
+		browserGamepadDisconnected: "Disconnected",
+		browserKeyboardTitle: "⌨️ Browser Keyboard",
+		browserKeyboardHint: "For browser games, enable this option.",
+		browserKeyboardHintOne: "Use for games without gamepad support.",
+		browserKeyboardConnect: "Enable for Current Tab",
+		browserKeyboardDisconnect: "Disable",
+		browserKeyboardConnecting: "Connecting...",
+		browserKeyboardConnected: "Connected",
+		browserKeyboardDisconnected: "Disconnected",
 	},
 	commands: {
 		cross: "Cross (X)",

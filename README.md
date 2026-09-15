@@ -10,7 +10,7 @@ Transform your browser into a real-time raw audio router. This tool captures liv
 
 - 🔊 **Raw Audio & Haptics:** Stream live game audio directly to the controller's built-in speakers while generating synchronized tactile vibrations.
 - 🛜 **100% Wireless:** Works fully over Bluetooth. No USB cables needed.
-- 🚫 **No Installs Required (Web Version):** Runs entirely in your web browser.
+- 🧩 **Extension-First Experience:** GitHub Pages now points users to the browser extension for the best setup and gameplay flow.
 - 🎮 **Universal Compatibility:** Works with native games or via Gamepad Socket for browser games.
 - 🏎️ **Game Profiles:** Create game-specific profiles with up to 3 different triggers. Switch between triggers using R3 + D-Pad (Up=1, Right=2, Down=3, Left=Reset).
 - 🔋 **Battery Monitor:** Check your controller's battery life in real-time.
@@ -21,16 +21,8 @@ Transform your browser into a real-time raw audio router. This tool captures liv
 
 You can also use this tool as a dedicated browser extension for an integrated experience.
 
-* **Status:** Available now on the [Chrome Web Store](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp) Add-ons.
+* **Status:** Available now on the 👉 **[Open the install page](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/install.html)** Add-ons.
 * **Compatibility:** Works natively on Google Chrome, Microsoft Edge, Brave, Opera, Firefox, and other browsers.
-
----
-
-## 🚀 Live Audio & Haptic Router
-
-Experience live audio routing and haptics directly in your Chromium-based browser (Chrome, Edge, Opera, Brave).
-
-👉 **[Launch DS5 Web Audio Haptics Online](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/)**
 
 ---
 

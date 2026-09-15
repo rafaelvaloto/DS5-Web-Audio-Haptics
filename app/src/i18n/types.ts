@@ -1,6 +1,48 @@
 export type SupportedLocale = "en" | "pt-BR" | "es";
 
 export interface TranslationDictionary {
+	installPage?: {
+		title: string;
+		brand: string;
+		github: string;
+		videoTutorial: string;
+		eyebrow: string;
+		heroTitle: string;
+		heroDescription: string;
+		installExtension: string;
+		downloadGamepadSocket: string;
+		heroCallout: string;
+		whyTitle: string;
+		whyDescription: string;
+		pillBrowserSupport: string;
+		pillAudioCapture: string;
+		pillInstallPath: string;
+		pillOnboarding: string;
+		stepOneTitle: string;
+		stepOneItemOne: string;
+		stepOneItemTwo: string;
+		stepOneItemThree: string;
+		stepTwoTitle: string;
+		stepTwoItemOne: string;
+		stepTwoItemTwo: string;
+		stepTwoItemThree: string;
+		stepTwoItemFour: string;
+		stepThreeTitle: string;
+		stepThreeItemOne: string;
+		stepThreeItemTwo: string;
+		stepThreeItemThree: string;
+		partnersLabel: string;
+		partnersTitle: string;
+		partnersDescription: string;
+		playOnItchIo: string;
+		playOnCrazyGames: string;
+		playOnPoki: string;
+		whereToPlayTitle: string;
+		whereToPlayDescription: string;
+		footerCopyright: string;
+		footerNote: string;
+		footerDisclaimer: string;
+	};
 	header: {
 		title: string;
 		subtitle: string;
@@ -95,6 +137,21 @@ export interface TranslationDictionary {
 		effectAutoGun: string;
 		inputServerHint?: string;
 		inputServerRepository?: string;
+		browserGamepadTitle: string;
+		browserGamepadHint: string;
+		browserGamepadConnect: string;
+		browserGamepadDisconnect: string;
+		browserGamepadConnecting: string;
+		browserGamepadConnected: string;
+		browserGamepadDisconnected: string;
+		browserKeyboardTitle: string;
+		browserKeyboardHint: string;
+		browserKeyboardHintOne: string;
+		browserKeyboardConnect: string;
+		browserKeyboardDisconnect: string;
+		browserKeyboardConnecting: string;
+		browserKeyboardConnected: string;
+		browserKeyboardDisconnected: string;
 	};
 	commands?: {
 		cross: string;

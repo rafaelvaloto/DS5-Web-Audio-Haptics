@@ -42,10 +42,16 @@ jobs:
       - name: Validate GitHub Pages Artifact
         shell: bash
         run: |
-          test -f app/index.html
-          test -f app/dist/main.js
-          test -f app/src/lib/GamepadCoreHost.js
-          test -f app/src/lib/GamepadCoreHost.wasm
+          test -f app/install.html
+          test -f app/dist/i18n-init.js
+
+      - name: Prepare GitHub Pages Artifact
+        shell: bash
+        run: |
+          rm -rf pages-artifact
+          mkdir -p pages-artifact/dist
+          cp app/install.html pages-artifact/index.html
+          cp -R app/dist/. pages-artifact/dist/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -55,7 +61,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./app"
+          path: "./pages-artifact"
 
       - name: Deploy to GitHub Pages
         id: deployment

@@ -105,8 +105,8 @@ export const uiTranslations = {
 			audioHapticsPipHint: "🎵 Audio Haptics — open in PiP",
 			openPictureInPicture: "🪟 Open Picture-in-Picture",
 			inputServerHint:
-				"For web games or games without native PlayStation 5 controller support, connect the socket and install the ViGEmBus driver to emulate a virtual gamepad.",
-			inputServerRepository: "To connect the controller to a virtual gamepad, use this repository:",
+				"For native Windows games that do not support the DualSense via Bluetooth, follow the steps below: Install the ViGEmBus driver to emulate a virtual gamepad.",
+			inputServerRepository: "To connect the controller to a virtual gamepad, run the socket:",
 			modeAudioOnly: "Audio only",
 			reduceVibration: "Reduce Vibration",
 			applyAudioSettings: "Apply Settings",
@@ -342,8 +342,8 @@ export const uiTranslations = {
 			audioHapticsPipHint: "🎵 Áudio Háptico — abrir no PiP",
 			openPictureInPicture: "🪟 Abrir Picture-in-Picture",
 			inputServerHint:
-				"Para jogos web ou jogos sem suporte nativo ao controle PlayStation 5, conecte o socket e instale o driver ViGEmBus para emular um gamepad virtual.",
-			inputServerRepository: "Para conectar o controle a um gamepad virtual, use este repositório:",
+				"Para jogos nativos no Windows que não oferecem suporte ao DualSense via Bluetooth, siga os passos abaixo: Instale o driver ViGEmBus para emular um gamepad virtual.",
+			inputServerRepository: "Para conectar o controle a um gamepad virtual, execute o socket:",
 			modeAudioOnly: "Apenas áudio",
 			reduceVibration: "Reduzir Vibração",
 			applyAudioSettings: "Aplicar Configurações",
@@ -579,8 +579,8 @@ export const uiTranslations = {
 			audioHapticsPipHint: "🎵 Audio Háptico — abrir en PiP",
 			openPictureInPicture: "🪟 Abrir Picture-in-Picture",
 			inputServerHint:
-				"Para juegos web o juegos sin soporte nativo para el control PlayStation 5, conecta el socket e instala el controlador ViGEmBus para emular un gamepad virtual.",
-			inputServerRepository: "Para conectar el control a un gamepad virtual, usa este repositorio:",
+				"Para juegos nativos de Windows que no admiten el DualSense mediante Bluetooth, sigue los pasos a continuación: Instala el controlador ViGEmBus para emular un mando virtual.",
+			inputServerRepository: "Para conectar el control a un gamepad virtual, ejecuta el socket:",
 			modeAudioOnly: "Solo audio",
 			reduceVibration: "Reducir Vibración",
 			applyAudioSettings: "Aplicar Configuración",

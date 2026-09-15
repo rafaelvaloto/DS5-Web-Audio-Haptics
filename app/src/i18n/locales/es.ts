@@ -1,6 +1,58 @@
 import type { TranslationDictionary } from "../types.ts";
 
 export const es: TranslationDictionary = {
+	installPage: {
+		title: "Instalar la extensión DS5 Web Audio Haptics",
+		brand: "DS5 Web Audio Haptics",
+		github: "GitHub",
+		videoTutorial: "Tutorial en Video",
+		eyebrow: "Experiencia recomendada",
+		heroTitle: "Lleva la inmersión de PlayStation 5 a tus juegos web.",
+		heroDescription:
+			"Audio y hápticos por Bluetooth en tiempo real, gatillos adaptativos y una lightbar personalizable sin instalar drivers ni emuladores. La extensión funciona en un panel lateral dentro de la misma pestaña del juego, ofreciendo una experiencia discreta sin estorbar la gameplay.",
+		installExtension: "Instalar extensión",
+		downloadGamepadSocket: "Descargar Gamepad Socket",
+		heroCallout:
+			"Para juegos en el navegador, la extensión ahora puede usar <strong>Activate in Tab</strong> para emular teclado o gamepad sin instalaciones extra. Gamepad Socket es opcional y solo se necesita en casos que aún requieran un gamepad virtual fuera de ese flujo.",
+		whyTitle: "¿Por qué la extensión?",
+		whyDescription:
+			"Hace que la captura de audio, la inyección de entrada en el navegador y la configuración sean más consistentes que el flujo de la página alojada.",
+		pillBrowserSupport: "Mejor soporte para juegos del navegador",
+		pillAudioCapture: "Captura de audio de pestaña más fluida",
+		pillInstallPath: "Ruta de instalación dedicada",
+		pillOnboarding: "Onboarding más enfocado",
+		stepOneTitle: "1. Instala la extensión",
+		stepOneItemOne: "Instala la extensión del navegador desde Chrome Web Store.",
+		stepOneItemTwo: "Abre tu juego del navegador o la página compatible.",
+		stepOneItemThree:
+			"Usa <strong>Activate in Tab</strong> para habilitar la emulación de teclado o gamepad directamente en la pestaña actual.",
+		stepTwoTitle: "2. Conecta tu mando",
+		stepTwoItemOne: "Empareja el DualSense con Windows por Bluetooth.",
+		stepTwoItemTwo: "Abre la extensión y conecta el mando.",
+		stepTwoItemThree: "Permite la captura de audio/pestaña cuando el navegador solicite permiso.",
+		stepTwoItemFour: "Asegúrate de permitir compartir el audio para que el sonido funcione en el mando.",
+		stepThreeTitle: "3. Extras opcionales",
+		stepThreeItemOne: "Activa audio + hápticos desde la extensión cuando empieces a jugar.",
+		stepThreeItemTwo:
+			"Usa <strong>Gamepad Socket</strong> solo si un juego específico todavía necesita enrutamiento mediante gamepad virtual fuera del flujo in-tab.",
+		stepThreeItemThree:
+			"Instala <strong>ViGEmBus</strong> solo cuando Gamepad Socket lo requiera.",
+		partnersLabel: "Socios",
+		partnersTitle: "Dónde jugar",
+		partnersDescription:
+			"Juega en plataformas asociadas donde los juegos del navegador encajan de forma natural con esta extensión.",
+		playOnItchIo: "Jugar en itch.io",
+		playOnCrazyGames: "Jugar en CrazyGames",
+		playOnPoki: "Jugar en Poki",
+		whereToPlayTitle: "Plataformas del navegador",
+		whereToPlayDescription:
+			"Elige una plataforma para empezar a jugar. Aquí se pueden añadir más enlaces curados y colaboraciones con el tiempo.",
+		footerCopyright: "Todos los derechos reservados. Copyright (c) 2026 Rafael Valoto",
+		footerNote:
+			"Los juegos nativos de Windows con soporte directo para DualSense por Bluetooth no necesitan Gamepad Socket, y los juegos del navegador pueden usar Activate in Tab sin instalaciones extra.",
+		footerDisclaimer:
+			"PlayStation, DualSense, itch.io, CrazyGames y Poki son marcas registradas de sus respectivos propietarios. Este es un proyecto independiente y no está afiliado oficialmente con esas marcas o plataformas.",
+	},
 	header: {
 		btnShowLogs: "Mostrar Registros",
 		btnCloseLogs: "Cerrar Registros",
@@ -61,7 +113,7 @@ export const es: TranslationDictionary = {
 	},
 	controls: {
 		changeTrigger:
-			"Cambiar entre gatillos usando\n" + "  R3 + D-Pad (Arriba=1, Derecha=2, Abajo=3, Izquierda=Reset)",
+			"Cambiar entre gatillos R3 + D-Pad (Arriba=1, Derecha=2, Abajo=3, Izquierda=Reset)",
 		createTrigger: "Crear Gatillo",
 		headsetOnly: "Solo Auriculares",
 		modeAudioOnly: "Modo Solo Audio",
@@ -96,13 +148,28 @@ export const es: TranslationDictionary = {
 		effectWeapon: "Arma Semi-Automática (R2)",
 		effectAutoGun: "Disparo Automático / Buzz (R2)",
 		inputServerHint:
-			"Para juegos web o juegos sin compatibilidad nativa con el mando de PlayStation 5, instala el controlador <a\n" +
+			"Para juegos nativos de Windows que no admiten el DualSense mediante Bluetooth, sigue los pasos a continuación:<br><br>Instala el controlador <a\n" +
 			'\t\t\t\thref="https://github.com/nefarius/ViGEmBus/releases/"\n' +
 			'\t\t\t\ttarget="_blank"\n' +
 			'\t\t\t\trel="noopener noreferrer"\n' +
 			"\t\t\t>ViGEmBus_1.22.0_x64_x86_arm64.exe</a\n" +
 			"\t\t\t> para emular un mando virtual.",
-		inputServerRepository: "Para conectar el control a un gamepad virtual, run the socket:",
+		inputServerRepository: "Para conectar el control a un gamepad virtual, ejecuta el socket:",
+		browserGamepadTitle: "🎮 Gamepad del navegador",
+		browserGamepadHint: "Para juegos en el navegador, activa esta opción.",
+		browserGamepadConnect: "Activar en la Pestaña Actual",
+		browserGamepadDisconnect: "Desactivar",
+		browserGamepadConnecting: "Conectando...",
+		browserGamepadConnected: "Conectado",
+		browserGamepadDisconnected: "Desconectado",
+		browserKeyboardTitle: "⌨️ Teclado del navegador",
+		browserKeyboardHint: "Para juegos en el navegador, activa esta opción.",
+		browserKeyboardHintOne: "Usa para juegos sin soporte de gamepad.",
+		browserKeyboardConnect: "Activar en la Pestaña Actual",
+		browserKeyboardDisconnect: "Desactivar",
+		browserKeyboardConnecting: "Conectando...",
+		browserKeyboardConnected: "Conectado",
+		browserKeyboardDisconnected: "Desconectado",
 	},
 	commands: {
 		cross: "Cross (X)",

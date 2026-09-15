@@ -3,11 +3,12 @@ import { GamepadClientApplication } from "./main.ts";
 import { bootWasmAndPlatform } from "./load.ts";
 import { debounce, hexToRgb } from "./helpers.ts";
 import { AudioHapticsManager } from "./stream.ts";
-import { initAnalytics } from "./analytics.ts";
 import { Logger } from "./logs.ts";
+import type { BrowserGamepadBridgeStatus } from "./browser-gamepad-bridge.ts";
+import type { BrowserKeyboardBridgeStatus } from "./browser-keyboard-bridge.ts";
+import i18n from "./i18n/index.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
-	initAnalytics();
 	initTranslations();
 });
 
@@ -18,6 +19,74 @@ const uiLogger = new Logger("log-box", 100);
 const unsubscribeLogs = GamepadClientApplication.onLog((message, level) => {
 	uiLogger.log(message);
 });
+
+function setTranslatedText(element: HTMLElement | null, key: string): void {
+	if (!element) return;
+	element.dataset.i18n = key;
+	element.textContent = i18n.t(key);
+}
+
+function updateBrowserGamepadStatus(status: BrowserGamepadBridgeStatus, detail?: string): void {
+	const button = document.getElementById("btn-browser-gamepad") as HTMLButtonElement | null;
+	const label = document.getElementById("lbl-browser-gamepad-status");
+	if (!button || !label) return;
+
+	button.disabled = status === "connecting";
+	if (status === "connected") {
+		button.className = "btn btn-danger";
+		setTranslatedText(button, "controls.browserGamepadDisconnect");
+		setTranslatedText(label, "controls.browserGamepadConnected");
+		GamepadClientApplication.emitLog(
+			`Browser Gamepad connected${detail ? ` to ${detail}` : ""}. Start the input loop to send controls.`
+		);
+		return;
+	}
+
+	button.className = "btn btn-primary";
+	setTranslatedText(button, status === "connecting"
+		? "controls.browserGamepadConnecting"
+		: "controls.browserGamepadConnect");
+	setTranslatedText(label, status === "connecting"
+		? "controls.browserGamepadConnecting"
+		: "controls.browserGamepadDisconnected");
+
+	if (status === "error") {
+		GamepadClientApplication.emitLog(`Browser Gamepad error: ${detail || "unknown error"}`);
+	} else if (status === "disconnected") {
+		GamepadClientApplication.emitLog("Browser Gamepad disconnected.");
+	}
+}
+
+function updateBrowserKeyboardStatus(status: BrowserKeyboardBridgeStatus, detail?: string): void {
+	const button = document.getElementById("btn-browser-keyboard") as HTMLButtonElement | null;
+	const label = document.getElementById("lbl-browser-keyboard-status");
+	if (!button || !label) return;
+
+	button.disabled = status === "connecting";
+	if (status === "connected") {
+		button.className = "btn btn-danger";
+		setTranslatedText(button, "controls.browserKeyboardDisconnect");
+		setTranslatedText(label, "controls.browserKeyboardConnected");
+		GamepadClientApplication.emitLog(
+			`Browser Keyboard connected${detail ? ` to ${detail}` : ""}. Start the input loop to send controls.`
+		);
+		return;
+	}
+
+	button.className = "btn btn-primary";
+	setTranslatedText(button, status === "connecting"
+		? "controls.browserKeyboardConnecting"
+		: "controls.browserKeyboardConnect");
+	setTranslatedText(label, status === "connecting"
+		? "controls.browserKeyboardConnecting"
+		: "controls.browserKeyboardDisconnected");
+
+	if (status === "error") {
+		GamepadClientApplication.emitLog(`Browser Keyboard error: ${detail || "unknown error"}`);
+	} else if (status === "disconnected") {
+		GamepadClientApplication.emitLog("Browser Keyboard disconnected.");
+	}
+}
 
 function loadProfilesIntoSelect() {
 	let selTriggerProfile = document.getElementById("sel-trigger-effect-profile") as HTMLSelectElement;
@@ -43,6 +112,8 @@ loadProfilesIntoSelect();
 		app = GamepadClientApplication.createFromContext(wasmContext, 1);
 
 		if (app) {
+			app.browserGamepadBridge.setStatusListener(updateBrowserGamepadStatus);
+			app.browserKeyboardBridge.setStatusListener(updateBrowserKeyboardStatus);
 			(e.target as HTMLButtonElement).disabled = true;
 			(document.getElementById("btn-request") as HTMLButtonElement).disabled = false;
 
@@ -432,6 +503,47 @@ function updateAudioSettings() {
 
 (document.getElementById("switch-speaker") as HTMLInputElement)?.addEventListener("change", (e) => {
 	updateAudioSettings();
+});
+
+(document.getElementById("btn-browser-gamepad") as HTMLButtonElement)?.addEventListener("click", async () => {
+	if (!app) {
+		GamepadClientApplication.emitLog("[Aviso] Você precisa carregar o WASM primeiro (clique em Load).");
+		return;
+	}
+
+	if (app.devices.size === 0) {
+		GamepadClientApplication.emitLog("[Aviso] Nenhum controle conectado. Faça o Request Device primeiro.");
+		return;
+	}
+
+	try {
+		await app.browserGamepadToggle();
+	} catch {
+		// The bridge status listener reports the actionable error in the UI log.
+	}
+});
+
+(document.getElementById("btn-browser-keyboard") as HTMLButtonElement)?.addEventListener("click", async () => {
+	if (!app) {
+		GamepadClientApplication.emitLog("[Aviso] Você precisa carregar o WASM primeiro (clique em Load).");
+		return;
+	}
+
+	if (app.devices.size === 0) {
+		GamepadClientApplication.emitLog("[Aviso] Nenhum controle conectado. Faça o Request Device primeiro.");
+		return;
+	}
+
+	try {
+		await app.browserKeyboardToggle();
+	} catch {
+		// The bridge status listener reports the actionable error in the UI log.
+	}
+});
+
+window.addEventListener("pagehide", () => {
+	app?.browserGamepadBridge.disconnect(false);
+	app?.browserKeyboardBridge.disconnect(false);
 });
 
 (document.getElementById("btn-ws-connect") as HTMLInputElement)?.addEventListener("click", (e) => {
