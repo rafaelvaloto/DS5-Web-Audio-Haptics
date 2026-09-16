@@ -13,7 +13,11 @@
 	"content_scripts": [
 		{
 			"matches": [
-				"*://*/*"
+				"*://*.itch.io/*",
+				"*://*.hwcdn.net/*",
+				"*://*.poki.com/*",
+				"*://*.poki-cdn.com/*",
+				"*://*.crazygames.com/*"
 			],
 			"js": ["dist/gamepad-adapter.js"],
 			"run_at": "document_start",
@@ -23,7 +27,11 @@
 		},
 		{
 			"matches": [
-				"*://*/*"
+				"*://*.itch.io/*",
+				"*://*.hwcdn.net/*",
+				"*://*.poki.com/*",
+				"*://*.poki-cdn.com/*",
+				"*://*.crazygames.com/*"
 			],
 			"js": ["dist/gamepad-relay.js"],
 			"run_at": "document_start",
@@ -33,7 +41,11 @@
 		},
 		{
 			"matches": [
-				"*://*/*"
+				"*://*.itch.io/*",
+				"*://*.hwcdn.net/*",
+				"*://*.poki.com/*",
+				"*://*.poki-cdn.com/*",
+				"*://*.crazygames.com/*"
 			],
 			"js": ["dist/keyboard-adapter.js"],
 			"run_at": "document_start",
@@ -43,7 +55,11 @@
 		},
 		{
 			"matches": [
-				"*://*/*"
+				"*://*.itch.io/*",
+				"*://*.hwcdn.net/*",
+				"*://*.poki.com/*",
+				"*://*.poki-cdn.com/*",
+				"*://*.crazygames.com/*"
 			],
 			"js": ["dist/keyboard-relay.js"],
 			"run_at": "document_start",

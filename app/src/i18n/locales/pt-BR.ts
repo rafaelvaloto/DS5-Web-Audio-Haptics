@@ -8,7 +8,7 @@ export const ptBR: TranslationDictionary = {
 		videoTutorial: "Tutorial em Vídeo",
 		videoTutorialTriggers: "Tutorial de Gatilhos",
 		eyebrow: "Experiência recomendada",
-		heroTitle: "Leve a imersão do PlayStation 5 para seus games na web.",
+		heroTitle: "Leve a imersão de áudio haptics para seus games na web.",
 		heroDescription:
 			"Áudio e haptics via Bluetooth em tempo real, gatilhos adaptáveis e lightbar customizável sem precisar instalar drivers ou emuladores. A extensão funciona com painel lateral na mesma aba do jogo, permitindo uma usabilidade discreta sem atrapalhar a gameplay.",
 		installExtension: "Instalar extensão",
@@ -57,7 +57,7 @@ export const ptBR: TranslationDictionary = {
 	header: {
 		title: "DS5 Web Audio Haptics Bluetooth",
 		subtitle:
-			"Áudio e hápticos de alta fidelidade via Bluetooth para controles PlayStation DualSense usando WebHID e WebAssembly",
+			"Áudio e hápticos de alta fidelidade via Bluetooth para controles Next-Gen DualSense usando WebHID e WebAssembly",
 		btnShowLogs: "Mostrar Logs",
 		btnCloseLogs: "Fechar Logs",
 		btnLoadWasm: "1) Carregar WASM",

@@ -8,7 +8,7 @@ export const en: TranslationDictionary = {
 		videoTutorial: "Video Tutorial",
 		videoTutorialTriggers: "Triggers Tutorial",
 		eyebrow: "Recommended experience",
-		heroTitle: "Bring PlayStation 5 immersion to your web games.",
+		heroTitle: "Bring audio haptics immersion to your web games.",
 		heroDescription:
 			"Real-time Bluetooth audio and haptics, adaptive triggers, and a customizable lightbar without installing drivers or emulators. The extension runs in a side panel on the same game tab, keeping the experience discreet without getting in the way of gameplay.",
 		installExtension: "Install Extension",
@@ -57,8 +57,7 @@ export const en: TranslationDictionary = {
 		btnShowLogs: "Show Logs",
 		btnCloseLogs: "Close Logs",
 		title: "DS5 Web Audio Haptics Bluetooth",
-		subtitle:
-			"High-fidelity audio and haptics via Bluetooth for PlayStation DualSense controllers using WebHID and WebAssembly",
+		subtitle: "High-fidelity audio and haptics via Bluetooth for Next-Gen DualSense controllers using WebHID and WebAssembly",
 		btnLoadWasm: "1) Load WASM",
 		btnConnectHid: "2) Connect DualSense (WebHID)",
 		btnStartLoop: "3) Play",
