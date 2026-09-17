@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DualSense - Keyboard Mapping</title>
+    <style>
+        body { margin: 0; padding: 32px; background: #090d16; color: #f1f5f9; font: 15px system-ui, sans-serif; }
+        main { max-width: 900px; margin: auto; display: grid; gap: 20px; }
+        section { padding: 24px; border: 1px solid #233152; border-radius: 14px; background: #131b2e; }
+        h1, p { margin-top: 0; }
+        .section-hint { font-size: 13px; color: #94a3b8; }
+        .button-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        button { padding: 10px 16px; border: 0; border-radius: 8px; background: #38bdf8; color: #06111c; cursor: pointer; font-weight: 600; }
+        .secondary-button { background: #1e293b; color: #f1f5f9; border: 1px solid #334155; }
+        .binding-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px 20px; margin-top: 20px; }
+        .binding-row { display: grid; gap: 8px; }
+        .binding-label { font-weight: 600; color: #e2e8f0; }
+        .binding-button {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #f8fafc;
+            text-align: left;
+        }
+        .binding-button.listening {
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section>
+        <h1 data-i18n="keyboardMapping.title">Mapeamento do teclado</h1>
+        <p class="section-hint" data-i18n="keyboardMapping.description">
+            Clique em um botão, pressione a tecla desejada e o mapeamento será salvo automaticamente.
+        </p>
+        <p class="section-hint" data-i18n="keyboardMapping.defaultPreset">
+            Layout padrão para FPS: WASD no analógico esquerdo, setas no analógico direito, Q/E em L1/R1 e L2/R2 sem tecla definida.
+        </p>
+        <p class="section-hint" data-i18n="keyboardMapping.mouseLockedHint">
+            O analógico direito é fixo no movimento do mouse para controlar a câmera.
+        </p>
+        <p class="section-hint" data-i18n="keyboardMapping.mouseButtonsHint">
+            Para mapear mouse, clique em um botão e depois use clique esquerdo, clique direito, clique do meio ou a rolagem.
+        </p>
+        <div class="button-row">
+            <button id="btn-reset-bindings" type="button" class="secondary-button" data-i18n="keyboardMapping.reset">
+                Restaurar layout padrão
+            </button>
+        </div>
+        <div id="keyboard-binding-list" class="binding-grid"></div>
+    </section>
+</main>
+<script type="module" src="./dist/keyboard-mapping.js"></script>
+</body>
+</html>

@@ -42,7 +42,7 @@ export const en: TranslationDictionary = {
 		partnersDescription:
 			"Play on partner platforms where browser games fit naturally with this extension.",
 		playOnItchIo: "Play on itch.io",
-		playOnCrazyGames: "Play on CrazyGames",
+		playOnCrazyGames: "Play on partner platform",
 		playOnPoki: "Play on Poki",
 		whereToPlayTitle: "Browser platforms",
 		whereToPlayDescription:

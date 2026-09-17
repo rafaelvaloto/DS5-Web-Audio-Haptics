@@ -43,7 +43,7 @@ export const ptBR: TranslationDictionary = {
 		partnersDescription:
 			"Jogue em plataformas parceiras onde os jogos no navegador se encaixam naturalmente com esta extensão.",
 		playOnItchIo: "Jogar no itch.io",
-		playOnCrazyGames: "Jogar no CrazyGames",
+		playOnCrazyGames: "Jogar em sites de jogos online",
 		playOnPoki: "Jogar no Poki",
 		whereToPlayTitle: "Plataformas no navegador",
 		whereToPlayDescription:
