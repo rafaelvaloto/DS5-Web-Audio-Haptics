@@ -1,43 +1,38 @@
+import { KEYBOARD_BINDING_DEFINITIONS, loadKeyboardBindings } from "./keyboard-bindings.ts";
 import type { state_t } from "./types.ts";
 
 export type BrowserKeyboardBridgeStatus = "disconnected" | "connecting" | "connected" | "error";
 
 type KeyboardReport = {
 	pressed: string[];
+	mouse: { dx: number; dy: number };
+	mouseButtons: string[];
+	mouseButtonValues: Partial<Record<string, number>>;
+	wheel: number;
 };
 
 const UPDATE_INTERVAL_MS = 10;
-
-// Maps controller inputs to the keyboard keys they should emulate on the page.
-const KEY_MAP: Array<{ code: string; isPressed: (state: state_t) => boolean }> = [
-	{ code: "KeyW", isPressed: (state) => state.bLeftAnalogUp },
-	{ code: "KeyS", isPressed: (state) => state.bLeftAnalogDown },
-	{ code: "KeyA", isPressed: (state) => state.bLeftAnalogLeft },
-	{ code: "KeyD", isPressed: (state) => state.bLeftAnalogRight },
-	{ code: "ArrowUp", isPressed: (state) => state.bDpadUp },
-	{ code: "ArrowDown", isPressed: (state) => state.bDpadDown },
-	{ code: "ArrowLeft", isPressed: (state) => state.bDpadLeft },
-	{ code: "ArrowRight", isPressed: (state) => state.bDpadRight },
-	{ code: "Space", isPressed: (state) => state.bCross },
-	{ code: "ShiftLeft", isPressed: (state) => state.bCircle },
-	{ code: "ControlLeft", isPressed: (state) => state.bSquare },
-	{ code: "KeyE", isPressed: (state) => state.bTriangle },
-	{ code: "KeyQ", isPressed: (state) => state.bLeftShoulder },
-	{ code: "KeyF", isPressed: (state) => state.bRightShoulder },
-	{ code: "Enter", isPressed: (state) => state.bStart },
-	{ code: "Escape", isPressed: (state) => state.bShare },
-];
+const MOUSE_DEADZONE = 0.12;
+const MOUSE_SENSITIVITY = 18;
+const TRIGGER_PRESS_THRESHOLD = 0.02;
+const TRIGGER_RELEASE_THRESHOLD = 0.01;
 
 export class BrowserKeyboardBridge {
 	private tabId: number | null = null;
 	private lastSentAt = 0;
 	private pressedKeys = new Set<string>();
+	private triggerPressed = {
+		leftTrigger: false,
+		rightTrigger: false,
+	};
 	private statusListener:
 		((status: BrowserKeyboardBridgeStatus, detail?: string) => void) | null = null;
 	private readonly tabRemovedListener = (removedTabId: number): void => {
 		if (removedTabId !== this.tabId) return;
 		this.tabId = null;
 		this.pressedKeys.clear();
+		this.triggerPressed.leftTrigger = false;
+		this.triggerPressed.rightTrigger = false;
 		this.statusListener?.("disconnected");
 	};
 
@@ -103,13 +98,23 @@ export class BrowserKeyboardBridge {
 	reset(): void {
 		if (this.tabId === null) return;
 		this.pressedKeys.clear();
-		this.sendReport({ pressed: [] });
+		this.triggerPressed.leftTrigger = false;
+		this.triggerPressed.rightTrigger = false;
+		this.sendReport({
+			pressed: [],
+			mouse: { dx: 0, dy: 0 },
+			mouseButtons: [],
+			mouseButtonValues: {},
+			wheel: 0,
+		});
 	}
 
 	disconnect(notify = true): void {
 		const tabId = this.tabId;
 		this.tabId = null;
 		this.pressedKeys.clear();
+		this.triggerPressed.leftTrigger = false;
+		this.triggerPressed.rightTrigger = false;
 		if (typeof chrome !== "undefined" && chrome.tabs?.onRemoved) {
 			chrome.tabs.onRemoved.removeListener(this.tabRemovedListener);
 		}
@@ -122,11 +127,76 @@ export class BrowserKeyboardBridge {
 	}
 
 	private createReport(state: state_t): KeyboardReport {
+		const bindings = loadKeyboardBindings();
 		const pressed: string[] = [];
-		for (const entry of KEY_MAP) {
-			if (entry.isPressed(state)) pressed.push(entry.code);
+		const mouseButtons: string[] = [];
+		const mouseButtonValues: Partial<Record<string, number>> = {};
+		let wheel = 0;
+		for (const entry of KEYBOARD_BINDING_DEFINITIONS) {
+			const code = bindings[entry.action];
+			if (!code) continue;
+			const isPressed = this.isBindingPressed(entry.action, state, entry.isPressed);
+			if (!isPressed) continue;
+			if (code === "MouseLeft" || code === "MouseRight" || code === "MouseMiddle") {
+				const value = this.getMouseButtonValue(entry.action, state);
+				if (value > 0.01) {
+					mouseButtons.push(code);
+					mouseButtonValues[code] = value;
+				}
+				continue;
+			}
+			if (code === "MouseWheelUp") {
+				wheel = -1;
+				continue;
+			}
+			if (code === "MouseWheelDown") {
+				wheel = 1;
+				continue;
+			}
+			pressed.push(code);
 		}
-		return { pressed };
+		return {
+			pressed,
+			mouse: {
+				dx: this.normalizeMouseAxis(state.rightAnalogX),
+				dy: this.normalizeMouseAxis(state.rightAnalogY),
+			},
+			mouseButtons,
+			mouseButtonValues,
+			wheel,
+		};
+	}
+
+	private normalizeMouseAxis(value: number): number {
+		if (Math.abs(value) < MOUSE_DEADZONE) return 0;
+		return Math.round(value * MOUSE_SENSITIVITY);
+	}
+
+	private isBindingPressed(
+		action: string,
+		state: state_t,
+		fallback: (state: state_t) => boolean
+	): boolean {
+		if (action === "leftTrigger" || action === "rightTrigger") {
+			return this.getTriggerPressedState(action, action === "leftTrigger" ? state.leftTriggerAnalog : state.rightTriggerAnalog);
+		}
+		return fallback(state);
+	}
+
+	private getTriggerPressedState(action: "leftTrigger" | "rightTrigger", value: number): boolean {
+		const isPressed = this.triggerPressed[action];
+		if (isPressed) {
+			this.triggerPressed[action] = value > TRIGGER_RELEASE_THRESHOLD;
+		} else {
+			this.triggerPressed[action] = value >= TRIGGER_PRESS_THRESHOLD;
+		}
+		return this.triggerPressed[action];
+	}
+
+	private getMouseButtonValue(action: string, state: state_t): number {
+		if (action === "leftTrigger") return Math.max(0, Math.min(1, state.leftTriggerAnalog));
+		if (action === "rightTrigger") return Math.max(0, Math.min(1, state.rightTriggerAnalog));
+		return 1;
 	}
 
 	private sendReport(report: KeyboardReport): void {
@@ -136,7 +206,11 @@ export class BrowserKeyboardBridge {
 		const nextPressed = new Set(report.pressed);
 		const unchanged =
 			nextPressed.size === this.pressedKeys.size &&
-			[...nextPressed].every((code) => this.pressedKeys.has(code));
+			[...nextPressed].every((code) => this.pressedKeys.has(code)) &&
+			report.mouseButtons.length === 0 &&
+			report.wheel === 0 &&
+			report.mouse.dx === 0 &&
+			report.mouse.dy === 0;
 		if (unchanged) return;
 
 		this.pressedKeys = nextPressed;

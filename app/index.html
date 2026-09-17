@@ -125,12 +125,17 @@
     </section>
     <section class="card">
         <div class="flow-control">
-            <h3 data-i18n="controls.browserKeyboardTitle">⌨️ Browser Keyboard</h3>
-            <p class="input-server-help" data-i18n="controls.browserKeyboardHint">For browser games, enable this option.</p>
+			<div class="row">
+				<h3 data-i18n="controls.browserKeyboardTitle">⌨️ Keyboard</h3>
+				<button id="btn-browser-keyboard-keys" class="btn btn-outline btn-small" data-i18n="controls.browserKeyboardMap">Map Keys</button>
+			</div>
+
+
+            <p class="input-server-help" data-i18n="controls.browserKeyboardHint">Use for games without gamepad support.</p>
             <div class="row" style="align-items: center">
-                <button id="btn-browser-keyboard" class="btn btn-primary" data-i18n="controls.browserKeyboardConnect">Enable for Current Tab</button><strong id="lbl-browser-keyboard-status" class="input-server-help" style="text-align: right" data-i18n="controls.browserKeyboardDisconnected">Disconnected</strong>
+                <button id="btn-browser-keyboard" class="btn btn-primary" data-i18n="controls.browserKeyboardConnect">Enable for Current Tab</button>
+				<strong id="lbl-browser-keyboard-status" class="input-server-help" style="text-align: right" data-i18n="controls.browserKeyboardDisconnected">Disconnected</strong>
             </div>
-			<p class="input-server-help" data-i18n="controls.browserKeyboardHintOne"></p>
         </div>
     </section>
 

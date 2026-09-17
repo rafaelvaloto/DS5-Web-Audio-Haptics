@@ -44,6 +44,15 @@ export interface TranslationDictionary {
 		footerNote: string;
 		footerDisclaimer: string;
 	};
+	options?: {
+		title: string;
+		description: string;
+		loading: string;
+		connect: string;
+		none: string;
+		ready: string;
+		authorizedSuccess: string;
+	};
 	header: {
 		title: string;
 		subtitle: string;
@@ -153,6 +162,35 @@ export interface TranslationDictionary {
 		browserKeyboardConnecting: string;
 		browserKeyboardConnected: string;
 		browserKeyboardDisconnected: string;
+		browserKeyboardMap: string;
+	};
+	keyboardMapping?: {
+		title: string;
+		description: string;
+		defaultPreset: string;
+		mouseLockedHint: string;
+		mouseButtonsHint: string;
+		reset: string;
+		unassigned: string;
+		pressAnyKey: string;
+		leftAnalogUp: string;
+		leftAnalogDown: string;
+		leftAnalogLeft: string;
+		leftAnalogRight: string;
+		dpadUp: string;
+		dpadDown: string;
+		dpadLeft: string;
+		dpadRight: string;
+		cross: string;
+		circle: string;
+		square: string;
+		triangle: string;
+		leftShoulder: string;
+		rightShoulder: string;
+		leftTrigger: string;
+		rightTrigger: string;
+		start: string;
+		share: string;
 	};
 	commands?: {
 		cross: string;

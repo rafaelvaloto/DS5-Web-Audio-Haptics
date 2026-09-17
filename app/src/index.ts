@@ -272,6 +272,16 @@ loadProfilesIntoSelect();
 	window.open(url, "_blank");
 });
 
+(document.getElementById("btn-browser-keyboard-keys") as HTMLButtonElement)?.addEventListener("click", async () => {
+	if (typeof chrome !== "undefined" && chrome.runtime && chrome.tabs) {
+		const url = chrome.runtime.getURL("keyboard-mapping.html");
+		await chrome.tabs.create({ url });
+		return;
+	}
+
+	window.open("keyboard-mapping.html", "_blank");
+});
+
 (document.getElementById("btn-request") as HTMLButtonElement)?.addEventListener("click", async (e) => {
 	if (!app) {
 		GamepadClientApplication.emitLog("[Aviso] Você precisa carregar o WASM primeiro (clique em Load).");

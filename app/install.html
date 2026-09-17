@@ -95,6 +95,7 @@
             align-items: center;
             gap: 14px;
             padding: 14px 16px;
+			margin-top: 12px;
             border-radius: 16px;
             text-decoration: none;
             background: rgba(148, 163, 184, 0.09);
@@ -128,8 +129,14 @@
             background: #22c55e;
         }
         .platform-logo-crazy {
-            background: #1a1b28;
+            background: #6842ff;
         }
+		.platform-logo-itch {
+			background: #ff2449;
+		}
+		.platform-logo-itch>img {
+			filter: invert(100%);
+		}
         .platform-logo-poki img {
             filter: brightness(0) invert(1);
         }
@@ -181,51 +188,48 @@
         </div>
 
         <aside class="card hero-side">
-            <div style="display:none;">
-                <h2 data-i18n="installPage.partnersLabel">Partners</h2>
+            <div style="display:block;">
                 <div class="partner-logos">
-                    <span class="platform-logo" aria-hidden="true">
-                        <img src="https://static.itch.io/images/itchio-textless-black.svg" alt="" />
-                    </span>
-                    <span class="platform-logo platform-logo-crazy" aria-hidden="true">
+					<span class="platform-logo platform-logo-crazy" aria-hidden="true">
                         <img src="https://www.crazygames.com/images/logo/master/logo-master-white.svg" alt="" />
-                    </span>
-                    <span class="platform-logo platform-logo-poki" aria-hidden="true">
-                        <img src="https://a.poki-cdn.com/icons/ui/poki.svg" alt="" />
                     </span>
                 </div>
                 <h2 data-i18n="installPage.partnersTitle">Where to play</h2>
-                <p data-i18n="installPage.partnersDescription">Play on partner platforms where browser games fit naturally with this extension.</p>
+                <p data-i18n="installPage.partnersDescription">Play on partner platform where browser games fit naturally with this extension.</p>
             </div>
-            <div class="platform-list" style="display:none;">
-                <a class="platform-link" href="https://itch.io/games/platform-web" target="_blank" rel="noopener noreferrer">
-                    <span class="platform-logo" aria-hidden="true">
-                        <img src="https://static.itch.io/images/itchio-textless-black.svg" alt="" />
-                    </span>
-                    <span class="platform-copy">
-                        <strong>itch.io</strong>
-                        <span data-i18n="installPage.playOnItchIo">Play on itch.io</span>
-                    </span>
-                </a>
-                <a class="platform-link" href="https://www.crazygames.com" target="_blank" rel="noopener noreferrer">
+            <div class="platform-list" style="display:block;">
+				<a class="platform-link" href="https://www.crazygames.com" target="_blank" rel="noopener noreferrer">
                     <span class="platform-logo platform-logo-crazy" aria-hidden="true">
                         <img src="https://www.crazygames.com/images/logo/master/logo-master-white.svg" alt="" />
                     </span>
-                    <span class="platform-copy">
-                        <strong>CrazyGames</strong>
+					<span class="platform-copy">
+                        <strong>Game 1</strong>
                         <span data-i18n="installPage.playOnCrazyGames">Play on CrazyGames</span>
                     </span>
-                </a>
-                <a class="platform-link" href="https://poki.com" target="_blank" rel="noopener noreferrer">
-                    <span class="platform-logo platform-logo-poki" aria-hidden="true">
-                        <img src="https://a.poki-cdn.com/icons/ui/poki.svg" alt="" />
-                    </span>
-                    <span class="platform-copy">
-                        <strong>Poki</strong>
-                        <span data-i18n="installPage.playOnPoki">Play on Poki</span>
-                    </span>
-                </a>
+				</a>
             </div>
+			<div class="platform-list" style="display:block;">
+				<a class="platform-link" href="https://www.crazygames.com" target="_blank" rel="noopener noreferrer">
+                    <span class="platform-logo platform-logo-crazy" aria-hidden="true">
+                        <img src="https://www.crazygames.com/images/logo/master/logo-master-white.svg" alt="" />
+                    </span>
+					<span class="platform-copy">
+                        <strong>Game 2</strong>
+                        <span data-i18n="installPage.playOnCrazyGames">Play on CrazyGames</span>
+                    </span>
+				</a>
+			</div>
+			<div class="platform-list" style="display:block;">
+				<a class="platform-link" href="https://www.crazygames.com" target="_blank" rel="noopener noreferrer">
+                    <span class="platform-logo platform-logo-crazy" aria-hidden="true">
+                        <img src="https://www.crazygames.com/images/logo/master/logo-master-white.svg" alt="" />
+                    </span>
+					<span class="platform-copy">
+                        <strong>Game 3</strong>
+                        <span data-i18n="installPage.playOnCrazyGames">Play on CrazyGames</span>
+                    </span>
+				</a>
+			</div>
         </aside>
     </section>
 

@@ -13,6 +13,7 @@
 	"content_scripts": [
 		{
 			"matches": [
+				"*://*.itch.zone/*",
 				"*://*.itch.io/*",
 				"*://*.hwcdn.net/*",
 				"*://*.poki.com/*",
@@ -27,6 +28,7 @@
 		},
 		{
 			"matches": [
+				"*://*.itch.zone/*",
 				"*://*.itch.io/*",
 				"*://*.hwcdn.net/*",
 				"*://*.poki.com/*",
@@ -41,6 +43,7 @@
 		},
 		{
 			"matches": [
+				"*://*.itch.zone/*",
 				"*://*.itch.io/*",
 				"*://*.hwcdn.net/*",
 				"*://*.poki.com/*",
@@ -55,6 +58,7 @@
 		},
 		{
 			"matches": [
+				"*://*.itch.zone/*",
 				"*://*.itch.io/*",
 				"*://*.hwcdn.net/*",
 				"*://*.poki.com/*",
