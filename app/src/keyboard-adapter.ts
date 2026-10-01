@@ -44,8 +44,10 @@
 
 	let currentPressed = new Set<string>();
 	let currentMouseButtons = new Set<string>();
+	const suppressedVirtualMouseButtons = new Set<string>();
 	let virtualMouseX = Math.round(window.innerWidth / 2);
 	let virtualMouseY = Math.round(window.innerHeight / 2);
+	let suppressVirtualMouseUntil = 0;
 	let lastMouseButtonValues: Partial<Record<string, number>> = {};
 
 	const isReport = (value: unknown): value is KeyboardReport => {
@@ -55,7 +57,7 @@
 	};
 
 	const dispatchKey = (type: "keydown" | "keyup", code: string): void => {
-		const info = KEY_INFO[code];
+		const info = getKeyInfo(code);
 		if (!info) return;
 
 		const event = new KeyboardEvent(type, {
@@ -73,6 +75,25 @@
 
 		const target = document.activeElement || document.body || document;
 		target.dispatchEvent(event);
+	};
+
+	const getKeyInfo = (code: string): KeyInfo | null => {
+		const known = KEY_INFO[code];
+		if (known) return known;
+
+		const letter = /^Key([A-Z])$/.exec(code)?.[1];
+		if (letter) return { key: letter.toLowerCase(), keyCode: letter.charCodeAt(0) };
+
+		const digit = /^Digit([0-9])$/.exec(code)?.[1];
+		if (digit) return { key: digit, keyCode: 48 + Number(digit) };
+
+		const numpadDigit = /^Numpad([0-9])$/.exec(code)?.[1];
+		if (numpadDigit) return { key: numpadDigit, keyCode: 96 + Number(numpadDigit) };
+
+		const functionKey = /^F([1-9]|1[0-2])$/.exec(code)?.[1];
+		if (functionKey) return { key: `F${functionKey}`, keyCode: 111 + Number(functionKey) };
+
+		return null;
 	};
 
 	const updateReport = (report: KeyboardReport): void => {
@@ -97,7 +118,14 @@
 		}
 	};
 
-	const updateMouseButtons = (nextMouseButtons: Set<string>): void => {
+	const updateMouseButtons = (reportedMouseButtons: Set<string>): void => {
+		for (const code of [...suppressedVirtualMouseButtons]) {
+			if (!reportedMouseButtons.has(code)) suppressedVirtualMouseButtons.delete(code);
+		}
+
+		const nextMouseButtons = new Set(
+			[...reportedMouseButtons].filter((code) => !suppressedVirtualMouseButtons.has(code))
+		);
 		for (const code of currentMouseButtons) {
 			if (!nextMouseButtons.has(code)) dispatchMouseButton("mouseup", code);
 		}
@@ -108,6 +136,8 @@
 	};
 
 	const dispatchMouseMove = (dx: number, dy: number): void => {
+		if (performance.now() < suppressVirtualMouseUntil) return;
+
 		const target = document.pointerLockElement || document.activeElement || document.body || document;
 		virtualMouseX = Math.max(0, Math.min(window.innerWidth, virtualMouseX + dx));
 		virtualMouseY = Math.max(0, Math.min(window.innerHeight, virtualMouseY + dy));
@@ -142,7 +172,9 @@
 			cancelable: true,
 			composed: true,
 			button,
-			buttons: type === "mousedown" ? getMouseButtonsBitmask(code) : getMouseButtonsBitmask(),
+			buttons: type === "mousedown"
+				? getMouseButtonsBitmask(code)
+				: getMouseButtonsBitmask(undefined, code),
 			clientX: virtualMouseX,
 			clientY: virtualMouseY,
 		});
@@ -160,9 +192,10 @@
 		return strongest;
 	};
 
-	const getMouseButtonsBitmask = (includeCode?: string): number => {
+	const getMouseButtonsBitmask = (includeCode?: string, excludeCode?: string): number => {
 		const active = new Set(currentMouseButtons);
 		if (includeCode) active.add(includeCode);
+		if (excludeCode) active.delete(excludeCode);
 		let bitmask = 0;
 		for (const code of active) {
 			if (code === "MouseLeft") bitmask |= 1;
@@ -192,7 +225,36 @@
 		}
 		currentPressed = new Set<string>();
 		updateMouseButtons(new Set<string>());
+		suppressedVirtualMouseButtons.clear();
 	};
+
+	window.addEventListener("mousedown", (event) => {
+		if (!event.isTrusted) return;
+		suppressVirtualMouseUntil = performance.now() + 250;
+		const code = event.button === 0
+			? "MouseLeft"
+			: event.button === 1
+				? "MouseMiddle"
+				: event.button === 2 ? "MouseRight" : null;
+		if (!code || !currentMouseButtons.has(code)) return;
+
+		dispatchMouseButton("mouseup", code);
+		currentMouseButtons.delete(code);
+		suppressedVirtualMouseButtons.add(code);
+	}, true);
+
+	window.addEventListener("mousemove", (event) => {
+		if (!event.isTrusted) return;
+		virtualMouseX = event.clientX;
+		virtualMouseY = event.clientY;
+		suppressVirtualMouseUntil = performance.now() + 250;
+	}, true);
+
+	for (const eventType of ["mouseup", "wheel"] as const) {
+		window.addEventListener(eventType, (event) => {
+			if (event.isTrusted) suppressVirtualMouseUntil = performance.now() + 250;
+		}, true);
+	}
 
 	window.addEventListener("message", (event: MessageEvent<unknown>) => {
 		if (event.source !== window || !event.data || typeof event.data !== "object") return;

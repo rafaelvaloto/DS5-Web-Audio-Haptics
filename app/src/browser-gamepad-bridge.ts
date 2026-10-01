@@ -1,4 +1,5 @@
-import type { state_t } from "./types.ts";
+import { loadGyroscopeMapping } from "./keyboard-bindings.ts";
+import type { motion_sensors_t, state_t } from "./types.ts";
 
 export type BrowserGamepadBridgeStatus = "disconnected" | "connecting" | "connected" | "error";
 
@@ -8,6 +9,8 @@ type BrowserGamepadReport = {
 };
 
 const UPDATE_INTERVAL_MS = 10;
+const GYROSCOPE_DEADZONE = 0.025;
+const GYROSCOPE_SENSITIVITY = 1.25;
 
 const clamp = (value: number, minimum: number, maximum: number): number => {
 	if (!Number.isFinite(value)) return 0;
@@ -77,12 +80,12 @@ export class BrowserGamepadBridge {
 		return this.tabId !== null;
 	}
 
-	send(state: state_t): void {
+	send(state: state_t, motionSensors?: motion_sensors_t): void {
 		const now = performance.now();
 		if (this.tabId === null || now - this.lastSentAt < UPDATE_INTERVAL_MS) return;
 
 		this.lastSentAt = now;
-		this.sendReport(this.createReport(state));
+		this.sendReport(this.createReport(state, motionSensors));
 	}
 
 	reset(): void {
@@ -104,14 +107,27 @@ export class BrowserGamepadBridge {
 		if (notify) this.statusListener?.("disconnected");
 	}
 
-	private createReport(state: state_t): BrowserGamepadReport {
+	private createReport(state: state_t, motionSensors?: motion_sensors_t): BrowserGamepadReport {
+		const axes: [number, number, number, number] = [
+			clamp(state.leftAnalogX, -1, 1),
+			clamp(-state.leftAnalogY, -1, 1),
+			clamp(state.rightAnalogX, -1, 1),
+			clamp(-state.rightAnalogY, -1, 1),
+		];
+		const gyroscopeMapping = loadGyroscopeMapping();
+		if (gyroscopeMapping.enabled && gyroscopeMapping.output === "gamepad" && motionSensors) {
+			const lateral = gyroscopeMapping.lateralAxis === "roll"
+				? -motionSensors.gyroscopeX
+				: motionSensors.gyroscopeZ;
+			const horizontal = this.normalizeGyroscopeAxis(lateral);
+			const vertical = this.normalizeGyroscopeAxis(-motionSensors.gyroscopeY);
+			const axisOffset = gyroscopeMapping.gamepadStick === "left" ? 0 : 2;
+			axes[axisOffset] = clamp(axes[axisOffset] + horizontal, -1, 1);
+			axes[axisOffset + 1] = clamp(axes[axisOffset + 1] + vertical, -1, 1);
+		}
+
 		return {
-			axes: [
-				clamp(state.leftAnalogX, -1, 1),
-				clamp(-state.leftAnalogY, -1, 1),
-				clamp(state.rightAnalogX, -1, 1),
-				clamp(-state.rightAnalogY, -1, 1),
-			],
+			axes,
 			buttons: [
 				digital(state.bCross),
 				digital(state.bCircle),
@@ -132,6 +148,11 @@ export class BrowserGamepadBridge {
 				digital(state.bPSButton),
 			],
 		};
+	}
+
+	private normalizeGyroscopeAxis(value: number): number {
+		if (Math.abs(value) < GYROSCOPE_DEADZONE) return 0;
+		return clamp(value * GYROSCOPE_SENSITIVITY, -1, 1);
 	}
 
 	private sendReport(report: BrowserGamepadReport): void {

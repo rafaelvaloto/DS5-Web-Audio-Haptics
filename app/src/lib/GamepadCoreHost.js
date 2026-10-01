@@ -1416,6 +1416,7 @@ async function createWasm() {
       freeTableIndexes.push(index);
     };
 
+
 // End JS library code
 
 // include: postlibrary.js
@@ -1474,6 +1475,7 @@ Module['FS_createPreloadedFile'] = FS.createPreloadedFile;
   Module['removeFunction'] = removeFunction;
   Module['setValue'] = setValue;
   Module['getValue'] = getValue;
+  Module['UTF8ToString'] = UTF8ToString;
   var missingLibrarySymbols = [
   'writeI53ToI64',
   'writeI53ToI64Clamped',
@@ -1700,7 +1702,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'PATH_FS',
   'UTF8Decoder',
   'UTF8ArrayToString',
-  'UTF8ToString',
   'stringToUTF8Array',
   'stringToUTF8',
   'lengthBytesUTF8',
@@ -1916,6 +1917,7 @@ var _GCH_CreateDevice = Module['_GCH_CreateDevice'] = makeInvalidEarlyAccess('_G
 var _GCH_UpdateInput = Module['_GCH_UpdateInput'] = makeInvalidEarlyAccess('_GCH_UpdateInput');
 var _GCH_UpdateOutput = Module['_GCH_UpdateOutput'] = makeInvalidEarlyAccess('_GCH_UpdateOutput');
 var _GCH_GetInputState = Module['_GCH_GetInputState'] = makeInvalidEarlyAccess('_GCH_GetInputState');
+var _GCH_GetMotionSensors = Module['_GCH_GetMotionSensors'] = makeInvalidEarlyAccess('_GCH_GetMotionSensors');
 var _GCH_GetDeviceDescriptor = Module['_GCH_GetDeviceDescriptor'] = makeInvalidEarlyAccess('_GCH_GetDeviceDescriptor');
 var _GCH_DeviceIsConnected = Module['_GCH_DeviceIsConnected'] = makeInvalidEarlyAccess('_GCH_DeviceIsConnected');
 var _GCH_GetDeviceType = Module['_GCH_GetDeviceType'] = makeInvalidEarlyAccess('_GCH_GetDeviceType');
@@ -1932,6 +1934,7 @@ var _GCH_EnableTouch = Module['_GCH_EnableTouch'] = makeInvalidEarlyAccess('_GCH
 var _GCH_CustomTrigger = Module['_GCH_CustomTrigger'] = makeInvalidEarlyAccess('_GCH_CustomTrigger');
 var _GCH_StopTrigger = Module['_GCH_StopTrigger'] = makeInvalidEarlyAccess('_GCH_StopTrigger');
 var _GCH_SetVibration = Module['_GCH_SetVibration'] = makeInvalidEarlyAccess('_GCH_SetVibration');
+var _GCH_SetCalibrationValues = Module['_GCH_SetCalibrationValues'] = makeInvalidEarlyAccess('_GCH_SetCalibrationValues');
 var _GCH_InitializePlatformBridge = Module['_GCH_InitializePlatformBridge'] = makeInvalidEarlyAccess('_GCH_InitializePlatformBridge');
 var _GCH_InitializeDeviceRegistryPolicy = Module['_GCH_InitializeDeviceRegistryPolicy'] = makeInvalidEarlyAccess('_GCH_InitializeDeviceRegistryPolicy');
 var _GCH_InitializePlatformBridgeWasm = Module['_GCH_InitializePlatformBridgeWasm'] = makeInvalidEarlyAccess('_GCH_InitializePlatformBridgeWasm');
@@ -1964,6 +1967,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['GCH_UpdateInput'] != 'undefined', 'missing Wasm export: GCH_UpdateInput');
   assert(typeof wasmExports['GCH_UpdateOutput'] != 'undefined', 'missing Wasm export: GCH_UpdateOutput');
   assert(typeof wasmExports['GCH_GetInputState'] != 'undefined', 'missing Wasm export: GCH_GetInputState');
+  assert(typeof wasmExports['GCH_GetMotionSensors'] != 'undefined', 'missing Wasm export: GCH_GetMotionSensors');
   assert(typeof wasmExports['GCH_GetDeviceDescriptor'] != 'undefined', 'missing Wasm export: GCH_GetDeviceDescriptor');
   assert(typeof wasmExports['GCH_DeviceIsConnected'] != 'undefined', 'missing Wasm export: GCH_DeviceIsConnected');
   assert(typeof wasmExports['GCH_GetDeviceType'] != 'undefined', 'missing Wasm export: GCH_GetDeviceType');
@@ -1980,6 +1984,7 @@ function assignWasmExports(wasmExports) {
   assert(typeof wasmExports['GCH_CustomTrigger'] != 'undefined', 'missing Wasm export: GCH_CustomTrigger');
   assert(typeof wasmExports['GCH_StopTrigger'] != 'undefined', 'missing Wasm export: GCH_StopTrigger');
   assert(typeof wasmExports['GCH_SetVibration'] != 'undefined', 'missing Wasm export: GCH_SetVibration');
+  assert(typeof wasmExports['GCH_SetCalibrationValues'] != 'undefined', 'missing Wasm export: GCH_SetCalibrationValues');
   assert(typeof wasmExports['GCH_InitializePlatformBridge'] != 'undefined', 'missing Wasm export: GCH_InitializePlatformBridge');
   assert(typeof wasmExports['GCH_InitializeDeviceRegistryPolicy'] != 'undefined', 'missing Wasm export: GCH_InitializeDeviceRegistryPolicy');
   assert(typeof wasmExports['GCH_InitializePlatformBridgeWasm'] != 'undefined', 'missing Wasm export: GCH_InitializePlatformBridgeWasm');
@@ -2008,6 +2013,7 @@ function assignWasmExports(wasmExports) {
   _GCH_UpdateInput = Module['_GCH_UpdateInput'] = createExportWrapper('GCH_UpdateInput', wasmExports['GCH_UpdateInput'], 2);
   _GCH_UpdateOutput = Module['_GCH_UpdateOutput'] = createExportWrapper('GCH_UpdateOutput', wasmExports['GCH_UpdateOutput'], 1);
   _GCH_GetInputState = Module['_GCH_GetInputState'] = createExportWrapper('GCH_GetInputState', wasmExports['GCH_GetInputState'], 2);
+  _GCH_GetMotionSensors = Module['_GCH_GetMotionSensors'] = createExportWrapper('GCH_GetMotionSensors', wasmExports['GCH_GetMotionSensors'], 2);
   _GCH_GetDeviceDescriptor = Module['_GCH_GetDeviceDescriptor'] = createExportWrapper('GCH_GetDeviceDescriptor', wasmExports['GCH_GetDeviceDescriptor'], 2);
   _GCH_DeviceIsConnected = Module['_GCH_DeviceIsConnected'] = createExportWrapper('GCH_DeviceIsConnected', wasmExports['GCH_DeviceIsConnected'], 1);
   _GCH_GetDeviceType = Module['_GCH_GetDeviceType'] = createExportWrapper('GCH_GetDeviceType', wasmExports['GCH_GetDeviceType'], 1);
@@ -2024,6 +2030,7 @@ function assignWasmExports(wasmExports) {
   _GCH_CustomTrigger = Module['_GCH_CustomTrigger'] = createExportWrapper('GCH_CustomTrigger', wasmExports['GCH_CustomTrigger'], 4);
   _GCH_StopTrigger = Module['_GCH_StopTrigger'] = createExportWrapper('GCH_StopTrigger', wasmExports['GCH_StopTrigger'], 2);
   _GCH_SetVibration = Module['_GCH_SetVibration'] = createExportWrapper('GCH_SetVibration', wasmExports['GCH_SetVibration'], 3);
+  _GCH_SetCalibrationValues = Module['_GCH_SetCalibrationValues'] = createExportWrapper('GCH_SetCalibrationValues', wasmExports['GCH_SetCalibrationValues'], 3);
   _GCH_InitializePlatformBridge = Module['_GCH_InitializePlatformBridge'] = createExportWrapper('GCH_InitializePlatformBridge', wasmExports['GCH_InitializePlatformBridge'], 7);
   _GCH_InitializeDeviceRegistryPolicy = Module['_GCH_InitializeDeviceRegistryPolicy'] = createExportWrapper('GCH_InitializeDeviceRegistryPolicy', wasmExports['GCH_InitializeDeviceRegistryPolicy'], 4);
   _GCH_InitializePlatformBridgeWasm = Module['_GCH_InitializePlatformBridgeWasm'] = createExportWrapper('GCH_InitializePlatformBridgeWasm', wasmExports['GCH_InitializePlatformBridgeWasm'], 7);

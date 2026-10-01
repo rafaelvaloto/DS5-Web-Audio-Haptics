@@ -54,6 +54,14 @@ h2 {
     border-radius: var(--radius);
     padding: 16px;
 }
+.device-feature-disabled {
+    opacity: 0.45;
+}
+.device-feature-disabled button,
+.device-feature-disabled input,
+.device-feature-disabled select {
+    cursor: not-allowed;
+}
 .optional-card {
     padding: 12px 14px;
     background: color-mix(in srgb, var(--bg-card) 82%, transparent);

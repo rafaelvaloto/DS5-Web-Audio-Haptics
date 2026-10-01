@@ -28,10 +28,60 @@
             border-color: #38bdf8;
             box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25);
         }
+        .gyro-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .toggle-label { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; font-weight: 600; }
+        .toggle-label input { width: 18px; height: 18px; accent-color: #38bdf8; }
+        .gyro-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 20px; }
+        .field { display: grid; gap: 7px; }
+        .field label { color: #e2e8f0; font-weight: 600; }
+        select { padding: 10px 12px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #f8fafc; }
+        [hidden] { display: none !important; }
     </style>
 </head>
 <body>
 <main>
+    <section>
+        <div class="gyro-header">
+            <div>
+                <h1 data-i18n="keyboardMapping.gyroscopeTitle">Giroscópio</h1>
+                <p class="section-hint" data-i18n="keyboardMapping.gyroscopeDescription">
+                    Use o movimento do controle para gerar teclas, controlar o mouse ou os analógicos do gamepad.
+                </p>
+            </div>
+            <label class="toggle-label">
+                <input id="gyro-enabled" type="checkbox">
+                <span data-i18n="keyboardMapping.gyroscopeEnable">Ativar</span>
+            </label>
+        </div>
+        <div id="gyro-settings" hidden>
+            <div class="gyro-options">
+                <div class="field">
+                    <label for="gyro-output" data-i18n="keyboardMapping.gyroscopeOutput">Saída</label>
+                    <select id="gyro-output">
+                        <option value="keyboard" data-i18n="keyboardMapping.gyroscopeKeyboard">Teclado</option>
+                        <option value="mouse" data-i18n="keyboardMapping.gyroscopeMouse">Mouse</option>
+                        <option value="gamepad" data-i18n="keyboardMapping.gyroscopeGamepad">Gamepad</option>
+                    </select>
+                </div>
+                <div id="gyro-lateral-field" class="field">
+                    <label for="gyro-lateral-axis" data-i18n="keyboardMapping.gyroscopeLateralAxis">Eixo lateral</label>
+                    <select id="gyro-lateral-axis">
+                        <option value="roll">Roll</option>
+                        <option value="yaw">Yaw</option>
+                    </select>
+                </div>
+                <div id="gyro-gamepad-stick-field" class="field" hidden>
+                    <label for="gyro-gamepad-stick" data-i18n="keyboardMapping.gyroscopeGamepadStick">Analógico</label>
+                    <select id="gyro-gamepad-stick">
+                        <option value="left" data-i18n="keyboardMapping.gyroscopeLeftStick">Analógico esquerdo</option>
+                        <option value="right" data-i18n="keyboardMapping.gyroscopeRightStick">Analógico direito</option>
+                    </select>
+                </div>
+            </div>
+            <p id="gyro-mode-hint" class="section-hint"></p>
+            <div id="gyro-keyboard-bindings" class="binding-grid"></div>
+        </div>
+    </section>
     <section>
         <h1 data-i18n="keyboardMapping.title">Mapeamento do teclado</h1>
         <p class="section-hint" data-i18n="keyboardMapping.description">

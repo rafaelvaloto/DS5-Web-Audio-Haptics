@@ -7,8 +7,19 @@ export type Descriptor = {
 	deviceType: number;
 	device: HIDDevice;
 	handleId: number;
+	controllerId?: number;
 	lastInputPacket: Uint8Array;
+	calibrationBytes?: Uint8Array;
 	inputListener?: (event: HIDInputReportEvent) => void;
+};
+
+export type motion_sensors_t = {
+	gyroscopeX: number;
+	gyroscopeY: number;
+	gyroscopeZ: number;
+	accelerometerX: number;
+	accelerometerY: number;
+	accelerometerZ: number;
 };
 
 /**

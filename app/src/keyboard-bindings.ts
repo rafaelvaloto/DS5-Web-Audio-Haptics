@@ -32,6 +32,33 @@ export const KEYBOARD_BINDINGS_STORAGE_KEY = "dualsense_keyboard_bindings";
 export const MOUSE_BINDING_CODES = ["MouseLeft", "MouseRight", "MouseMiddle", "MouseWheelUp", "MouseWheelDown"] as const;
 export type MouseBindingCode = typeof MOUSE_BINDING_CODES[number];
 
+export type GyroscopeOutput = "keyboard" | "mouse" | "gamepad";
+export type GyroscopeLateralAxis = "roll" | "yaw";
+export type GyroscopeGamepadStick = "left" | "right";
+export type GyroscopeKeyboardBinding = "pitchUp" | "pitchDown" | "lateralLeft" | "lateralRight";
+
+export type GyroscopeMapping = {
+	enabled: boolean;
+	output: GyroscopeOutput;
+	lateralAxis: GyroscopeLateralAxis;
+	gamepadStick: GyroscopeGamepadStick;
+	bindings: Record<GyroscopeKeyboardBinding, string>;
+};
+
+export const GYROSCOPE_MAPPING_STORAGE_KEY = "dualsense_gyroscope_mapping";
+export const DEFAULT_GYROSCOPE_MAPPING: GyroscopeMapping = {
+	enabled: false,
+	output: "keyboard",
+	lateralAxis: "yaw",
+	gamepadStick: "right",
+	bindings: {
+		pitchUp: "ArrowUp",
+		pitchDown: "ArrowDown",
+		lateralLeft: "ArrowLeft",
+		lateralRight: "ArrowRight",
+	},
+};
+
 export const DEFAULT_KEYBOARD_BINDINGS: KeyboardBindingMap = {
 	leftAnalogUp: "KeyW",
 	leftAnalogDown: "KeyS",
@@ -96,4 +123,46 @@ export function mergeKeyboardBindings(bindings: Partial<KeyboardBindingMap>): Ke
 		if (typeof value === "string") merged[entry.action] = value;
 	}
 	return merged;
+}
+
+export function loadGyroscopeMapping(): GyroscopeMapping {
+	try {
+		const raw = localStorage.getItem(GYROSCOPE_MAPPING_STORAGE_KEY);
+		if (!raw) return cloneDefaultGyroscopeMapping();
+		const parsed = JSON.parse(raw) as Partial<GyroscopeMapping>;
+		const bindings: Partial<Record<GyroscopeKeyboardBinding, string>> =
+			parsed.bindings && typeof parsed.bindings === "object" ? parsed.bindings : {};
+		return {
+			enabled: parsed.enabled === true,
+			output: parsed.output === "mouse" || parsed.output === "gamepad" ? parsed.output : "keyboard",
+			lateralAxis: parsed.lateralAxis === "roll" ? "roll" : "yaw",
+			gamepadStick: parsed.gamepadStick === "left" ? "left" : "right",
+			bindings: {
+				pitchUp: typeof bindings.pitchUp === "string" ? bindings.pitchUp : DEFAULT_GYROSCOPE_MAPPING.bindings.pitchUp,
+				pitchDown: typeof bindings.pitchDown === "string" ? bindings.pitchDown : DEFAULT_GYROSCOPE_MAPPING.bindings.pitchDown,
+				lateralLeft: typeof bindings.lateralLeft === "string" ? bindings.lateralLeft : DEFAULT_GYROSCOPE_MAPPING.bindings.lateralLeft,
+				lateralRight: typeof bindings.lateralRight === "string" ? bindings.lateralRight : DEFAULT_GYROSCOPE_MAPPING.bindings.lateralRight,
+			},
+		};
+	} catch {
+		return cloneDefaultGyroscopeMapping();
+	}
+}
+
+export function saveGyroscopeMapping(mapping: GyroscopeMapping): void {
+	localStorage.setItem(GYROSCOPE_MAPPING_STORAGE_KEY, JSON.stringify(mapping));
+}
+
+export function cloneDefaultGyroscopeMapping(): GyroscopeMapping {
+	return {
+		...DEFAULT_GYROSCOPE_MAPPING,
+		bindings: { ...DEFAULT_GYROSCOPE_MAPPING.bindings },
+	};
+}
+
+export function toggleGyroscopeMapping(): boolean {
+	const mapping = loadGyroscopeMapping();
+	mapping.enabled = !mapping.enabled;
+	saveGyroscopeMapping(mapping);
+	return mapping.enabled;
 }

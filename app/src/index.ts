@@ -7,6 +7,7 @@ import { Logger } from "./logs.ts";
 import type { BrowserGamepadBridgeStatus } from "./browser-gamepad-bridge.ts";
 import type { BrowserKeyboardBridgeStatus } from "./browser-keyboard-bridge.ts";
 import i18n from "./i18n/index.ts";
+import { DUALSHOCK4_DEVICE_TYPE, getSonyConnectionType, getSonyDeviceType } from "./const.ts";
 
 document.addEventListener("DOMContentLoaded", () => {
 	initTranslations();
@@ -25,6 +26,55 @@ function setTranslatedText(element: HTMLElement | null, key: string): void {
 	element.dataset.i18n = key;
 	element.textContent = i18n.t(key);
 }
+
+function supportsAdaptiveFeatures(): boolean {
+	return app?.supportsDualSenseFeatures() ?? false;
+}
+
+async function updateDeviceCapabilities(): Promise<void> {
+	const hasConnectedDevices = (app?.devices.size ?? 0) > 0;
+	const dualSenseFeaturesEnabled = !hasConnectedDevices || supportsAdaptiveFeatures();
+
+	for (const section of document.querySelectorAll<HTMLElement>("[data-dualsense-only]")) {
+		section.classList.toggle("device-feature-disabled", !dualSenseFeaturesEnabled);
+		section.setAttribute("aria-disabled", String(!dualSenseFeaturesEnabled));
+		for (const control of section.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>(
+			"button, input, select"
+		)) {
+			control.disabled = !dualSenseFeaturesEnabled;
+		}
+	}
+
+	if (!dualSenseFeaturesEnabled && app?.media?.isEnabled()) {
+		await app.media.disable();
+	}
+
+	if (!dualSenseFeaturesEnabled) {
+		const audioDot = document.getElementById("dot-audio-haptics");
+		if (audioDot) audioDot.className = "dot";
+	}
+}
+
+window.addEventListener("gch-devices-changed", () => {
+	void updateDeviceCapabilities();
+});
+
+window.addEventListener("gch-media-changed", (event) => {
+	const enabled = (event as CustomEvent<boolean>).detail;
+	const pipButton = document.getElementById("btn-pip") as HTMLButtonElement | null;
+	if (pipButton) {
+		pipButton.textContent = enabled ? "🪟 Stop Picture-in-Picture" : "🪟 Start Picture-in-Picture";
+		pipButton.className = enabled ? "btn btn-danger" : "btn btn-primary";
+	}
+	const audioDot = document.getElementById("dot-audio-haptics");
+	if (audioDot) audioDot.className = enabled ? "dot active" : "dot";
+	if (!enabled) {
+		const startButton = document.getElementById("btn-start") as HTMLButtonElement | null;
+		const stopButton = document.getElementById("btn-stop") as HTMLButtonElement | null;
+		if (startButton) startButton.disabled = (app?.devices.size ?? 0) === 0;
+		if (stopButton) stopButton.disabled = true;
+	}
+});
 
 function updateBrowserGamepadStatus(status: BrowserGamepadBridgeStatus, detail?: string): void {
 	const button = document.getElementById("btn-browser-gamepad") as HTMLButtonElement | null;
@@ -127,6 +177,10 @@ loadProfilesIntoSelect();
 				}
 
 				if (event.data.type === "DEVICE_APPLY_TRIGGER") {
+					if (app?.devices.get(event.data.deviceId)?.deviceType === DUALSHOCK4_DEVICE_TYPE) {
+						return;
+					}
+
 					const selTriggerEffectProfile = document.getElementById(
 						"sel-trigger-effect-profile"
 					) as HTMLSelectElement;
@@ -185,6 +239,8 @@ loadProfilesIntoSelect();
 
 				if (event.data.type === "DEVICE_APPLY_TRIGGER_TEST") {
 					app?.devices.forEach((descriptor, deviceId) => {
+						if (descriptor.deviceType === DUALSHOCK4_DEVICE_TYPE) return;
+
 						let trigger = JSON.parse(localStorage.getItem("trigger_test") || "null");
 						if (!trigger) {
 							return;
@@ -217,13 +273,21 @@ loadProfilesIntoSelect();
 
 				if (event.data.type === "DEVICE_AUTHORIZED") {
 					app?.devices.clear();
+					window.dispatchEvent(new Event("gch-devices-changed"));
 
 					try {
 						const devices = await navigator.hid.getDevices();
 
 						if (devices.length > 0) {
 							devices.forEach((d: HIDDevice) => {
-								app?.createDeviceFromDescriptor(d, app.nextManualHandle++, 1, 1, true, d.productName);
+								app?.createDeviceFromDescriptor(
+									d,
+									app.nextManualHandle++,
+									getSonyDeviceType(d.productId),
+									getSonyConnectionType(d),
+									true,
+									d.productName
+								);
 							});
 
 							const btnRequest = document.getElementById("btn-request") as HTMLButtonElement;
@@ -272,15 +336,17 @@ loadProfilesIntoSelect();
 	window.open(url, "_blank");
 });
 
-(document.getElementById("btn-browser-keyboard-keys") as HTMLButtonElement)?.addEventListener("click", async () => {
-	if (typeof chrome !== "undefined" && chrome.runtime && chrome.tabs) {
-		const url = chrome.runtime.getURL("keyboard-mapping.html");
-		await chrome.tabs.create({ url });
-		return;
-	}
+for (const buttonId of ["btn-browser-keyboard-keys", "btn-browser-gamepad-gyro"]) {
+	(document.getElementById(buttonId) as HTMLButtonElement | null)?.addEventListener("click", async () => {
+		if (typeof chrome !== "undefined" && chrome.runtime && chrome.tabs) {
+			const url = chrome.runtime.getURL("keyboard-mapping.html");
+			await chrome.tabs.create({ url });
+			return;
+		}
 
-	window.open("keyboard-mapping.html", "_blank");
-});
+		window.open("keyboard-mapping.html", "_blank");
+	});
+}
 
 (document.getElementById("btn-request") as HTMLButtonElement)?.addEventListener("click", async (e) => {
 	if (!app) {
@@ -314,7 +380,7 @@ loadProfilesIntoSelect();
 	}
 });
 
-(document.getElementById("btn-start") as HTMLButtonElement)?.addEventListener("click", (e) => {
+(document.getElementById("btn-start") as HTMLButtonElement)?.addEventListener("click", async (e) => {
 	if (!app) {
 		GamepadClientApplication.emitLog("[Aviso] WASM não carregado.");
 		return;
@@ -323,6 +389,24 @@ loadProfilesIntoSelect();
 	if (app.devices.size === 0) {
 		GamepadClientApplication.emitLog("[Aviso] Nenhum controle conectado. Faça o Request Device primeiro.");
 		return;
+	}
+
+	if (!app.media?.isEnabled()) {
+		const pictureInPictureEnabled = await app.toggleHaptics();
+		if (!pictureInPictureEnabled) {
+			GamepadClientApplication.emitLog(
+				"[Aviso] O Picture-in-Picture é necessário para manter o controle ativo em tela cheia."
+			);
+			return;
+		}
+
+		const pipButton = document.getElementById("btn-pip") as HTMLButtonElement | null;
+		if (pipButton) {
+			pipButton.textContent = "🪟 Stop Picture-in-Picture";
+			pipButton.className = "btn btn-danger";
+		}
+		(document.getElementById("dot-audio-haptics") as HTMLElement | null)?.classList.add("active");
+		if (supportsAdaptiveFeatures()) updateAudioSettings();
 	}
 
 	app.run();
@@ -361,6 +445,8 @@ loadProfilesIntoSelect();
 	}
 
 	app?.devices.forEach((descriptor, deviceId) => {
+		if (descriptor.deviceType === DUALSHOCK4_DEVICE_TYPE) return;
+
 		app?.api?.reset(deviceId, 0);
 		app?.api?.reset(deviceId, 1);
 		app?.api?.output(deviceId);
@@ -428,12 +514,19 @@ function updateAudioSettings() {
 		return;
 	}
 
+	if (!supportsAdaptiveFeatures()) {
+		GamepadClientApplication.emitLog("[Aviso] Áudio háptico não está disponível para o DualShock 4.");
+		return;
+	}
+
 	const volume = Number((document.getElementById("input-audio-volume") as HTMLInputElement)?.value);
 	const gain = Number((document.getElementById("input-audio-gain") as HTMLInputElement)?.value);
 	const bHeadSetOnly = Number((document.getElementById("switch-speaker") as HTMLInputElement)?.checked);
 	const bIsAudioOnly = Number((document.getElementById("switch-audio-haptics") as HTMLInputElement)?.checked);
 
 	for (const [deviceId, descriptor] of app.devices) {
+		if (descriptor.deviceType === DUALSHOCK4_DEVICE_TYPE) continue;
+
 		app?.audioSettings(
 			deviceId,
 			0, // enable haptics
@@ -466,14 +559,16 @@ function updateAudioSettings() {
 
 		const result = await app.toggleHaptics();
 		if (result) {
-			GamepadClientApplication.emitLog("Haptics enabled.");
+			GamepadClientApplication.emitLog(
+				supportsAdaptiveFeatures() ? "Haptics enabled." : "Picture-in-Picture keepalive enabled."
+			);
 			(e.target as HTMLButtonElement).textContent = "🪟 Stop Picture-in-Picture";
 			(e.target as HTMLButtonElement).className = "btn btn-danger";
 			(Array.from(document.getElementsByClassName("shared-card-overlay")) as HTMLElement[]).forEach((el) => {
 				el.style.opacity = "100";
 			});
 			(document.getElementById("dot-audio-haptics") as HTMLButtonElement).className = "dot active";
-			updateAudioSettings();
+			if (supportsAdaptiveFeatures()) updateAudioSettings();
 		} else {
 			(e.target as HTMLButtonElement).textContent = "🪟 Start Picture-in-Picture";
 			(e.target as HTMLButtonElement).className = "btn btn-primary";
@@ -549,11 +644,6 @@ function updateAudioSettings() {
 	} catch {
 		// The bridge status listener reports the actionable error in the UI log.
 	}
-});
-
-window.addEventListener("pagehide", () => {
-	app?.browserGamepadBridge.disconnect(false);
-	app?.browserKeyboardBridge.disconnect(false);
 });
 
 (document.getElementById("btn-input-server-toggle") as HTMLButtonElement)?.addEventListener("click", () => {

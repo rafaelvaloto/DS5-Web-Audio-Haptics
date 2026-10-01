@@ -5,9 +5,9 @@ export interface AudioHapticsDependencies {
 }
 
 export interface AudioHapticsController {
-	enable(): Promise<void>;
+	enable(enableAudioHaptics?: boolean): Promise<void>;
 	disable(): Promise<void>;
-	toggle(): Promise<boolean>;
+	toggle(enableAudioHaptics?: boolean): Promise<boolean>;
 	isEnabled(): boolean;
 }
 
@@ -18,6 +18,8 @@ export class AudioHapticsManager implements AudioHapticsController {
 	private source: MediaStreamAudioSourceNode | null = null;
 	private processor: AudioNode | null = null;
 	private mute: GainNode | null = null;
+	private videoElement: HTMLVideoElement | null = null;
+	private pictureInPictureStream: MediaStream | null = null;
 	private bufferPtr = 0;
 	private bufferCapacity = 0;
 
@@ -93,6 +95,15 @@ export class AudioHapticsManager implements AudioHapticsController {
 		}
 
 		this.stream?.getTracks().forEach((track) => track.stop());
+		if (this.pictureInPictureStream && this.pictureInPictureStream !== this.stream) {
+			this.pictureInPictureStream.getTracks().forEach((track) => track.stop());
+		}
+		if (this.videoElement) {
+			if (document.pictureInPictureElement === this.videoElement) {
+				await document.exitPictureInPicture().catch(() => {});
+			}
+			this.videoElement.srcObject = null;
+		}
 
 		if (this.bufferPtr) {
 			this.options.module._free(this.bufferPtr);
@@ -103,6 +114,8 @@ export class AudioHapticsManager implements AudioHapticsController {
 		this.source = null;
 		this.processor = null;
 		this.mute = null;
+		this.videoElement = null;
+		this.pictureInPictureStream = null;
 		this.bufferPtr = 0;
 		this.bufferCapacity = 0;
 
@@ -111,7 +124,7 @@ export class AudioHapticsManager implements AudioHapticsController {
 
 	public static lastLightbarColor: { r: number; g: number; b: number } | null = null;
 
-	public async enable(): Promise<void> {
+	public async enable(enableAudioHaptics = true): Promise<void> {
 		if (this.enabled) return;
 
 		if (typeof navigator === "undefined" || !navigator.mediaDevices?.getDisplayMedia) {
@@ -119,16 +132,32 @@ export class AudioHapticsManager implements AudioHapticsController {
 		}
 		const nextStream = await navigator.mediaDevices.getDisplayMedia({
 			video: true,
-			audio: {
+			audio: enableAudioHaptics ? {
 				echoCancellation: false,
 				noiseSuppression: false,
 				autoGainControl: false,
-			},
+			} : false,
 		});
 
-		if (nextStream.getAudioTracks().length === 0) {
+		if (enableAudioHaptics && nextStream.getAudioTracks().length === 0) {
 			nextStream.getTracks().forEach((track) => track.stop());
 			throw new Error("Nenhuma faixa de áudio disponível. Marque 'Compartilhar áudio'.");
+		}
+
+		if (!enableAudioHaptics) {
+			try {
+				await this.openPictureInPicture(nextStream);
+				this.stream = nextStream;
+				this.enabled = true;
+				nextStream.getVideoTracks()[0]?.addEventListener("ended", () => {
+					if (this.enabled) this.disable().catch(console.error);
+				});
+				this.options.onChange?.(true);
+				return;
+			} catch (error) {
+				nextStream.getTracks().forEach((track) => track.stop());
+				throw error;
+			}
 		}
 
 		try {
@@ -247,6 +276,11 @@ export class AudioHapticsManager implements AudioHapticsController {
 
 			// 5. Injeta no vídeo
 			const videoElement = document.createElement("video");
+			this.videoElement = videoElement;
+			this.pictureInPictureStream = fakeStream;
+			videoElement.addEventListener("leavepictureinpicture", () => {
+				if (this.enabled) this.disable().catch(console.error);
+			});
 			videoElement.srcObject = fakeStream;
 			videoElement.autoplay = true;
 			videoElement.muted = true;
@@ -293,12 +327,27 @@ export class AudioHapticsManager implements AudioHapticsController {
 		}
 	}
 
-	public async toggle(): Promise<boolean> {
+	private async openPictureInPicture(stream: MediaStream): Promise<void> {
+		const videoElement = document.createElement("video");
+		videoElement.srcObject = stream;
+		videoElement.autoplay = true;
+		videoElement.muted = true;
+		videoElement.playsInline = true;
+		this.videoElement = videoElement;
+		this.pictureInPictureStream = stream;
+		videoElement.addEventListener("leavepictureinpicture", () => {
+			if (this.enabled) this.disable().catch(console.error);
+		});
+		await videoElement.play();
+		await videoElement.requestPictureInPicture();
+	}
+
+	public async toggle(enableAudioHaptics = true): Promise<boolean> {
 		if (this.enabled) {
 			await this.disable();
 			return false;
 		}
-		await this.enable();
+		await this.enable(enableAudioHaptics);
 		return true;
 	}
 

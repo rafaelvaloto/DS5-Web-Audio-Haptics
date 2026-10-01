@@ -1,20 +1,36 @@
 import type { WasmContext } from "./load.ts";
-import { Descriptor, state_t } from "./types.ts";
+import { Descriptor, motion_sensors_t, state_t } from "./types.ts";
 import { NativeModule } from "./lib/GamepadCoreHost";
 import { PlatformBridgeRegistration } from "./platform/web_hid_platform.ts";
 import { DeviceRegistryPolicy, initializeDeviceRegistryPolicy } from "./policies/device_registry_policy.ts";
 import { api, bindingAPI } from "./api.ts";
-import { FRAME_MS, FRAME_SECONDS, INPUT_DESCRIPTOR_SIZE, SONY_VENDOR_ID } from "./const.ts";
+import {
+	BLUETOOTH_CONNECTION_TYPE,
+	DUALSHOCK4_BLUETOOTH_BUFFER_SIZE,
+	DUALSHOCK4_DEVICE_TYPE,
+	FRAME_MS,
+	FRAME_SECONDS,
+	getSonyConnectionType,
+	getSonyDeviceType,
+	INPUT_DESCRIPTOR_SIZE,
+	SONY_HID_FILTERS,
+	STANDARD_HID_BUFFER_SIZE,
+} from "./const.ts";
 import { AudioHapticsManager } from "./stream.ts";
 import { DualSenseSocketBridge } from "./wsocket.ts";
 import { BrowserGamepadBridge } from "./browser-gamepad-bridge.ts";
 import { BrowserKeyboardBridge } from "./browser-keyboard-bridge.ts";
+import { loadGyroscopeMapping, toggleGyroscopeMapping } from "./keyboard-bindings.ts";
 import i18n from "./i18n/index.ts";
 
 const deviceChannel = new BroadcastChannel("dualsense_channel");
 
 export class GamepadClientApplication {
 	private readonly inputBufferPtr: number;
+	private readonly motionSensorsBufferPtr: number;
+	private readonly gyroscopeEnabledDevices = new Set<number>();
+	private readonly dpadUpPressedDevices = new Set<number>();
+	private readonly dpadDownPressedDevices = new Set<number>();
 	private inputTimer: number | null = null;
 	public nextManualHandle: number = 100;
 	private isNowEnabled: boolean | undefined | null = false;
@@ -46,14 +62,15 @@ export class GamepadClientApplication {
 		this.media = media;
 		this.api = bindingAPI(module);
 		this.inputBufferPtr = module._malloc(INPUT_DESCRIPTOR_SIZE);
+		this.motionSensorsBufferPtr = module._malloc(24);
 		this.media?.setApi(this.api);
 
 		// Callbacks logs C++ (WASM)
-		const jsLogCallback = module.addFunction((messagePtr: number) => {
+		const jsLogCallback = module.addFunction((level: number, messagePtr: number) => {
 			const rawMessage = module.UTF8ToString(messagePtr);
 			const finalMessage = i18n.t(rawMessage);
-			GamepadClientApplication.emitLog(`[WASM] ${finalMessage}`);
-		}, "vi");
+			GamepadClientApplication.emitLog(`[WASM] ${finalMessage}`, level);
+		}, "vii");
 
 		if (this.api.logs) {
 			this.api.logs(jsLogCallback);
@@ -96,6 +113,12 @@ export class GamepadClientApplication {
 		return this.browserKeyboardBridge.isConnected();
 	}
 
+	public supportsDualSenseFeatures(): boolean {
+		return [...this.devices.values()].some(
+			(descriptor) => descriptor.deviceType !== DUALSHOCK4_DEVICE_TYPE
+		);
+	}
+
 	static createFromContext(context: WasmContext, typeId: number = 1): GamepadClientApplication {
 		const { module, platform } = context;
 
@@ -112,9 +135,12 @@ export class GamepadClientApplication {
 				GamepadClientApplication.emitLog(`Device dispatched: ${dispatchedId}`);
 				const app = ref.value;
 				if (app && app.pendingDescriptor) {
-					app.devices.set(dispatchedId, app.pendingDescriptor);
+					const descriptor = app.pendingDescriptor;
+					descriptor.controllerId = dispatchedId;
+					app.devices.set(dispatchedId, descriptor);
 					app.pendingDescriptor = null;
 					GamepadClientApplication.pending = false;
+					window.dispatchEvent(new Event("gch-devices-changed"));
 
 					// Exemplo usando a tradução
 					GamepadClientApplication.emitLog(i18n.t("logs.webHidConnected", { id: dispatchedId }));
@@ -124,11 +150,15 @@ export class GamepadClientApplication {
 				GamepadClientApplication.emitLog(`Device disconnected: ${disconnectedId}`);
 				const app = ref.value;
 				if (app) {
+					app.gyroscopeEnabledDevices.delete(disconnectedId);
+					app.dpadUpPressedDevices.delete(disconnectedId);
+					app.dpadDownPressedDevices.delete(disconnectedId);
 					const descriptor = app.devices.get(disconnectedId);
 					if (descriptor?.inputListener) {
 						descriptor.device.removeEventListener("inputreport", descriptor.inputListener as EventListener);
 					}
 					app.devices.delete(disconnectedId);
+					window.dispatchEvent(new Event("gch-devices-changed"));
 				}
 
 				GamepadClientApplication.emitLog(i18n.t("logs.notConnected", { id: disconnectedId }));
@@ -139,27 +169,77 @@ export class GamepadClientApplication {
 			module: module,
 			onChange: (status) => {
 				GamepadClientApplication.emitLog(`[Engine] Audio/Haptics status: ${status ? "Enabled" : "Disabled"}`);
+				if (!status) ref.value?.stop();
+				window.dispatchEvent(new CustomEvent("gch-media-changed", { detail: status }));
 			},
 		});
 
 		return (ref.value = new GamepadClientApplication(module, platform, registry, media));
 	}
 
+	private setCalibrationValues(controllerId: number, calibrationBytes?: Uint8Array): void {
+		if (!calibrationBytes?.byteLength) return;
+
+		if (!this.api?.calibration || !this.module) {
+			GamepadClientApplication.emitLog("GCH_SetCalibrationValues is not available in the WASM module");
+			return;
+		}
+
+		const calibrationPtr = this.module._malloc(calibrationBytes.byteLength);
+		if (!calibrationPtr) {
+			GamepadClientApplication.emitLog("Failed to allocate the calibration buffer");
+			return;
+		}
+
+		try {
+			this.module.HEAPU8.set(calibrationBytes, calibrationPtr);
+			this.api.calibration(controllerId, calibrationPtr, calibrationBytes.byteLength);
+		} finally {
+			this.module._free(calibrationPtr);
+		}
+	}
+
+	private normalizeCalibrationReport(
+		data: DataView,
+		deviceType: number,
+		connectionType: number,
+		reportId: number
+	): Uint8Array {
+		const raw = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+		if (deviceType !== DUALSHOCK4_DEVICE_TYPE) return raw.slice();
+
+		const expectedSize = connectionType === BLUETOOTH_CONNECTION_TYPE ? 41 : 37;
+		const normalized = new Uint8Array(expectedSize);
+		if (raw[0] === reportId) {
+			normalized.set(raw.subarray(0, expectedSize));
+		} else {
+			normalized[0] = reportId;
+			normalized.set(raw.subarray(0, expectedSize - 1), 1);
+		}
+		return normalized;
+	}
+
 	public async requestDeviceAccess(): Promise<string[]> {
 		const devices = await navigator.hid.requestDevice({
-			filters: [
-				{ vendorId: SONY_VENDOR_ID, productId: 0x0ce6 },
-				{ vendorId: SONY_VENDOR_ID, productId: 0x0df2 },
-			],
+			filters: [...SONY_HID_FILTERS],
 		});
 
 		const connectedNames: string[] = [];
 
 		for (const device of devices) {
 			const handle = this.nextManualHandle++;
-			const path = device.productName || "Sony DualSense (WebHID)";
+			const path = device.productName || "Sony PlayStation Controller (WebHID)";
+			const deviceType = getSonyDeviceType(device.productId);
+			const connectionType = getSonyConnectionType(device);
 
-			await this.createDeviceFromDescriptor(device, handle, 1, 1, true, path);
+			await this.createDeviceFromDescriptor(
+				device,
+				handle,
+				deviceType,
+				connectionType,
+				true,
+				path
+			);
 
 			connectedNames.push(path);
 		}
@@ -194,30 +274,51 @@ export class GamepadClientApplication {
 		device
 			.open()
 			.then(() => {
-				device
-					.receiveFeatureReport(0x05)
+				const calibrationReportId = deviceType === DUALSHOCK4_DEVICE_TYPE &&
+					connectionType !== BLUETOOTH_CONNECTION_TYPE ? 0x02 : 0x05;
+				const calibrationReport = device.receiveFeatureReport(calibrationReportId);
+				calibrationReport
 					.then((data) => {
-						const descriptor = {
+						const calibrationBytes = this.normalizeCalibrationReport(
+							data,
+							deviceType,
+							connectionType,
+							calibrationReportId
+						);
+						const inputBufferSize = deviceType === DUALSHOCK4_DEVICE_TYPE &&
+							connectionType === BLUETOOTH_CONNECTION_TYPE
+							? DUALSHOCK4_BLUETOOTH_BUFFER_SIZE
+							: STANDARD_HID_BUFFER_SIZE;
+						const descriptor: Descriptor = {
 							path: device.productName,
-							deviceType: 1,
+							deviceType,
 							device: device,
 							handleId: handle,
-							lastInputPacket: new Uint8Array(78).fill(0).map((v, i) => (i === 0 ? 0x31 : 0)),
+							calibrationBytes,
+							lastInputPacket: new Uint8Array(inputBufferSize)
+								.fill(0)
+								.map((value, index) => index === 0
+									? deviceType === DUALSHOCK4_DEVICE_TYPE
+										? connectionType === BLUETOOTH_CONNECTION_TYPE ? 0x11 : 0x01
+										: 0x31
+									: value),
 						};
 
-						device.oninputreport = (event: HIDInputReportEvent) => {
-							const fullPacket = new Uint8Array(event.data.byteLength + 1);
+						const inputListener = (event: HIDInputReportEvent) => {
+							const fullPacket = new Uint8Array(inputBufferSize);
 							fullPacket[0] = event.reportId;
 							fullPacket.set(
-								new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength),
+								new Uint8Array(event.data.buffer, event.data.byteOffset, event.data.byteLength)
+									.subarray(0, inputBufferSize - 1),
 								1
 							);
 							descriptor.lastInputPacket = fullPacket;
 						};
-						device.addEventListener("inputreport", device.oninputreport);
+						descriptor.inputListener = inputListener;
+						device.addEventListener("inputreport", inputListener as EventListener);
 
-						this.pendingDescriptor = descriptor as any;
-						this.platform?.registerManually(descriptor as any);
+						this.pendingDescriptor = descriptor;
+						this.platform?.registerManually(descriptor);
 
 						const structSize = 536;
 						const descriptorPtr = this.module?._malloc(structSize) || 0;
@@ -238,6 +339,9 @@ export class GamepadClientApplication {
 								}
 
 								this.api?.create(descriptorPtr);
+								if (descriptor.controllerId !== undefined) {
+									this.setCalibrationValues(descriptor.controllerId, calibrationBytes);
+								}
 								GamepadClientApplication.emitLog(`[GamepadClient] Dispositivo injetado: ${path}`);
 							}
 						} finally {
@@ -256,26 +360,33 @@ export class GamepadClientApplication {
 	public run(): void {
 		if (this.inputTimer !== null) return;
 
-		let isSend = false;
+		let nextTriggerSelectionAt = 0;
 		const applySending = (message: number, deviceId: number) => {
-			if (!isSend) {
-				isSend = true;
-				deviceChannel.postMessage({
-					type: "DEVICE_APPLY_TRIGGER",
-					message,
-					deviceId,
-				});
-				setTimeout(() => {
-					isSend = false;
-				}, 2000);
-			}
+			const now = performance.now();
+			if (now < nextTriggerSelectionAt) return;
+			nextTriggerSelectionAt = now + 2000;
+			deviceChannel.postMessage({
+				type: "DEVICE_APPLY_TRIGGER",
+				message,
+				deviceId,
+			});
 		};
 
 		GamepadClientApplication.emitLog(i18n.t("logs.loopStarted") || "[GamepadClient] Engine iniciada (Polling)");
 
 		this.inputTimer = window.setInterval(() => {
-			for (const [deviceId, descriptor] of this.devices.entries()) {
+			for (const deviceId of this.devices.keys()) {
 				const state = this.readInputState(deviceId);
+				this.handleGyroscopeButtons(deviceId, state);
+				const gyroscopeMapping = loadGyroscopeMapping();
+				const gyroscopeEnabled = gyroscopeMapping.enabled && (
+					gyroscopeMapping.output === "gamepad"
+						? this.browserGamepadBridge.isConnected()
+						: this.browserKeyboardBridge.isConnected()
+				);
+				const motionSensors = this.readMotionSensors(deviceId, gyroscopeEnabled);
+				const activeMotionSensors = state.bDpadDown ? undefined : motionSensors;
+
 				if (state.bDpadUp && state.bRightStick) {
 					applySending(0, deviceId);
 				} else if (state.bDpadRight && state.bRightStick) {
@@ -287,8 +398,8 @@ export class GamepadClientApplication {
 				}
 
 				this.dsExtensionBridge.send(state);
-				this.browserGamepadBridge.send(state);
-				this.browserKeyboardBridge.send(state);
+				this.browserGamepadBridge.send(state, activeMotionSensors);
+				this.browserKeyboardBridge.send(state, activeMotionSensors);
 			}
 		}, FRAME_MS);
 	}
@@ -299,7 +410,72 @@ export class GamepadClientApplication {
 			this.inputTimer = null;
 			this.browserGamepadBridge.reset();
 			this.browserKeyboardBridge.reset();
+			for (const deviceId of [...this.gyroscopeEnabledDevices]) {
+				this.setGyroscopeEnabled(deviceId, false);
+			}
+			this.dpadUpPressedDevices.clear();
+			this.dpadDownPressedDevices.clear();
 			GamepadClientApplication.emitLog(i18n.t("logs.loopStopped") || "[GamepadClient] Engine parada");
+		}
+	}
+
+	private handleGyroscopeButtons(deviceId: number, state: state_t): void {
+		if (state.bDpadUp) {
+			if (!this.dpadUpPressedDevices.has(deviceId)) {
+				this.dpadUpPressedDevices.add(deviceId);
+				const enabled = toggleGyroscopeMapping();
+				GamepadClientApplication.emitLog(`[Gyroscope] ${enabled ? "Enabled" : "Disabled"} via D-Pad Up.`);
+			}
+		} else {
+			this.dpadUpPressedDevices.delete(deviceId);
+		}
+
+		if (state.bDpadDown) {
+			if (!this.dpadDownPressedDevices.has(deviceId)) {
+				this.dpadDownPressedDevices.add(deviceId);
+				this.api?.resetGyroscope(deviceId);
+				GamepadClientApplication.emitLog("[Gyroscope] Flow paused and controller realigned via D-Pad Down.");
+			}
+		} else {
+			this.dpadDownPressedDevices.delete(deviceId);
+		}
+	}
+
+	private readMotionSensors(deviceId: number, enabled: boolean): motion_sensors_t | undefined {
+		this.setGyroscopeEnabled(deviceId, enabled);
+
+		if (!enabled || !this.module || !this.api?.motionSensors) {
+			return undefined;
+		}
+		if (!this.api.motionSensors(deviceId, this.motionSensorsBufferPtr)) {
+			return undefined;
+		}
+
+		const heap = this.module.HEAPU8;
+		const view = new DataView(heap.buffer, heap.byteOffset + this.motionSensorsBufferPtr, 24);
+		const readFloat = (offset: number) => view.getFloat32(offset, true);
+		return {
+			gyroscopeX: readFloat(0),
+			gyroscopeY: readFloat(4),
+			gyroscopeZ: readFloat(8),
+			accelerometerX: readFloat(12),
+			accelerometerY: readFloat(16),
+			accelerometerZ: readFloat(20),
+		};
+	}
+
+	private setGyroscopeEnabled(deviceId: number, enabled: boolean): void {
+		const wasEnabled = this.gyroscopeEnabledDevices.has(deviceId);
+		if (enabled === wasEnabled) {
+			return;
+		}
+
+		this.api?.enableGyroscope(deviceId, enabled ? 1 : 0);
+
+		if (enabled) {
+			this.gyroscopeEnabledDevices.add(deviceId);
+		} else {
+			this.gyroscopeEnabledDevices.delete(deviceId);
 		}
 	}
 
@@ -405,7 +581,7 @@ export class GamepadClientApplication {
 
 	public async toggleHaptics() {
 		try {
-			this.isNowEnabled = await this.media?.toggle();
+			this.isNowEnabled = await this.media?.toggle(this.supportsDualSenseFeatures());
 			return this.isNowEnabled;
 		} catch (err) {
 			GamepadClientApplication.emitLog(`[Engine] Erro ao iniciar captura de áudio: ${err}`);

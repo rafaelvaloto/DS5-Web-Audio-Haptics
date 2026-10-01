@@ -1,5 +1,10 @@
-import { KEYBOARD_BINDING_DEFINITIONS, loadKeyboardBindings } from "./keyboard-bindings.ts";
-import type { state_t } from "./types.ts";
+import {
+	KEYBOARD_BINDING_DEFINITIONS,
+	loadGyroscopeMapping,
+	loadKeyboardBindings,
+	type GyroscopeMapping,
+} from "./keyboard-bindings.ts";
+import type { motion_sensors_t, state_t } from "./types.ts";
 
 export type BrowserKeyboardBridgeStatus = "disconnected" | "connecting" | "connected" | "error";
 
@@ -14,6 +19,9 @@ type KeyboardReport = {
 const UPDATE_INTERVAL_MS = 10;
 const MOUSE_DEADZONE = 0.12;
 const MOUSE_SENSITIVITY = 18;
+const GYROSCOPE_KEY_THRESHOLD = 0.08;
+const GYROSCOPE_MOUSE_DEADZONE = 0.025;
+const GYROSCOPE_MOUSE_SENSITIVITY = 6;
 const TRIGGER_PRESS_THRESHOLD = 0.02;
 const TRIGGER_RELEASE_THRESHOLD = 0.01;
 
@@ -87,12 +95,12 @@ export class BrowserKeyboardBridge {
 		return this.tabId !== null;
 	}
 
-	send(state: state_t): void {
+	send(state: state_t, motionSensors?: motion_sensors_t): void {
 		const now = performance.now();
 		if (this.tabId === null || now - this.lastSentAt < UPDATE_INTERVAL_MS) return;
 
 		this.lastSentAt = now;
-		this.sendReport(this.createReport(state));
+		this.sendReport(this.createReport(state, motionSensors));
 	}
 
 	reset(): void {
@@ -126,8 +134,9 @@ export class BrowserKeyboardBridge {
 		if (notify) this.statusListener?.("disconnected");
 	}
 
-	private createReport(state: state_t): KeyboardReport {
+	private createReport(state: state_t, motionSensors?: motion_sensors_t): KeyboardReport {
 		const bindings = loadKeyboardBindings();
+		const gyroscopeMapping = loadGyroscopeMapping();
 		const pressed: string[] = [];
 		const mouseButtons: string[] = [];
 		const mouseButtonValues: Partial<Record<string, number>> = {};
@@ -155,11 +164,22 @@ export class BrowserKeyboardBridge {
 			}
 			pressed.push(code);
 		}
+		let mouseDx = this.normalizeMouseAxis(state.rightAnalogX);
+		let mouseDy = this.normalizeMouseAxis(state.rightAnalogY);
+		if (gyroscopeMapping.enabled && gyroscopeMapping.output !== "gamepad" && motionSensors) {
+			if (gyroscopeMapping.output === "mouse") {
+				mouseDx += this.normalizeGyroscopeMouseAxis(motionSensors.gyroscopeZ);
+				mouseDy -= this.normalizeGyroscopeMouseAxis(motionSensors.gyroscopeY);
+			} else {
+				this.addGyroscopeKeyboardInput(pressed, motionSensors, gyroscopeMapping);
+			}
+		}
+
 		return {
 			pressed,
 			mouse: {
-				dx: this.normalizeMouseAxis(state.rightAnalogX),
-				dy: this.normalizeMouseAxis(state.rightAnalogY),
+				dx: mouseDx,
+				dy: mouseDy,
 			},
 			mouseButtons,
 			mouseButtonValues,
@@ -170,6 +190,30 @@ export class BrowserKeyboardBridge {
 	private normalizeMouseAxis(value: number): number {
 		if (Math.abs(value) < MOUSE_DEADZONE) return 0;
 		return Math.round(value * MOUSE_SENSITIVITY);
+	}
+
+	private normalizeGyroscopeMouseAxis(value: number): number {
+		if (Math.abs(value) < GYROSCOPE_MOUSE_DEADZONE) return 0;
+		return Math.round(value * GYROSCOPE_MOUSE_SENSITIVITY);
+	}
+
+	private addGyroscopeKeyboardInput(
+		pressed: string[],
+		motionSensors: motion_sensors_t,
+		mapping: GyroscopeMapping
+	): void {
+		const addBinding = (code: string): void => {
+			if (code && !pressed.includes(code)) pressed.push(code);
+		};
+		const pitch = motionSensors.gyroscopeY;
+		const lateral = mapping.lateralAxis === "roll"
+			? -motionSensors.gyroscopeX
+			: motionSensors.gyroscopeZ;
+
+		if (pitch > GYROSCOPE_KEY_THRESHOLD) addBinding(mapping.bindings.pitchUp);
+		if (pitch < -GYROSCOPE_KEY_THRESHOLD) addBinding(mapping.bindings.pitchDown);
+		if (lateral < -GYROSCOPE_KEY_THRESHOLD) addBinding(mapping.bindings.lateralLeft);
+		if (lateral > GYROSCOPE_KEY_THRESHOLD) addBinding(mapping.bindings.lateralRight);
 	}
 
 	private isBindingPressed(

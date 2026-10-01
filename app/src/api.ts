@@ -15,10 +15,14 @@ export type api = {
 
 	/** status device api */
 	state: (device: number, outBufferPtr: number) => void;
+	motionSensors: (device: number, outBufferPtr: number) => number | boolean;
 	create: (descriptorPtr: number) => void;
+	calibration?: (device: number, calibrationBytesPtr: number, byteCount: number) => void;
 	update: (device: number, timer: number) => void;
 	output: (device: number) => void;
 	battery: (device: number) => number;
+	enableGyroscope: (device: number, enabled: number) => void;
+	resetGyroscope: (device: number) => void;
 
 	/** outputs device api */
 	reset: (device: number, hand: number) => void;
@@ -50,6 +54,7 @@ export type api = {
 
 export function bindingAPI(module: NativeModule): api {
 	const cwrap = module.cwrap.bind(module);
+	const moduleExports = module as NativeModule & Record<string, unknown>;
 
 	const maybe = (name: string, returnType: string | null, args: string[]): any => {
 		try {
@@ -65,10 +70,17 @@ export function bindingAPI(module: NativeModule): api {
 		shutdown: maybe("GCH_Shutdown", null, []),
 
 		state: maybe("GCH_GetInputState", null, ["number", "number"]),
+		motionSensors: maybe("GCH_GetMotionSensors", "number", ["number", "number"]),
 		create: maybe("GCH_CreateDevice", null, ["number"]),
+		calibration:
+			typeof moduleExports._GCH_SetCalibrationValues === "function"
+				? cwrap("GCH_SetCalibrationValues", null, ["number", "number", "number"])
+				: undefined,
 		update: maybe("GCH_UpdateInput", null, ["number", "number"]),
 		output: maybe("GCH_UpdateOutput", null, ["number"]),
 		battery: maybe("GCH_BatteryLevelDevice", "number", ["number"]),
+		enableGyroscope: maybe("GCH_EnableGyroscopeValues", null, ["number", "number"]),
+		resetGyroscope: maybe("GCH_ResetGyroOrientation", null, ["number"]),
 
 		reset: maybe("GCH_StopTrigger", null, ["number", "number"]),
 		lightbar: maybe("GCH_Lightbar", null, ["number", "number", "number", "number"]),

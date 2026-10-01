@@ -116,7 +116,10 @@
 
     <section class="card">
         <div class="flow-control">
-            <h3 data-i18n="controls.browserGamepadTitle">🎮 Browser Gamepad</h3>
+            <div class="row">
+                <h3 data-i18n="controls.browserGamepadTitle">🎮 Browser Gamepad</h3>
+                <button id="btn-browser-gamepad-gyro" class="btn btn-outline btn-small" data-i18n="controls.browserGamepadGyroscope">Configurar giroscópio</button>
+            </div>
             <p class="input-server-help" data-i18n="controls.browserGamepadHint">For browser games, enable this option.</p>
             <div class="row" style="align-items: center">
                 <button id="btn-browser-gamepad" class="btn btn-primary" data-i18n="controls.browserGamepadConnect">Enable for Current Tab</button><strong id="lbl-browser-gamepad-status" class="input-server-help" style="text-align: right" data-i18n="controls.browserGamepadDisconnected">Disconnected</strong>
@@ -139,7 +142,7 @@
         </div>
     </section>
 
-    <section class="card">
+    <section class="card" data-dualsense-only>
         <div class="row trigger-selects" style="margin-bottom: 12px">
 			<div class="row">
 				<button id="create-trigger" class="btn btn-primary" data-i18n="controls.createTrigger">🔫 Create Profile</button>
@@ -148,7 +151,7 @@
 		<select id="sel-trigger-effect-profile" style="width: 100%"></select>
     </section>
 
-	<section class="card">
+	<section class="card" data-dualsense-only>
 		<div class="status-item">
 			<span id="dot-trigger" class="dot danger"></span><span id="trigger-selected-out" data-i18n="controls.changeTrigger">Change trigger use R3 + d-pad: ⬅️➡️⬆️⬇️</span>
 		</div>
@@ -160,7 +163,7 @@
         </div>
     </section>
 
-    <section class="card audio-card">
+    <section class="card audio-card" data-dualsense-only>
         <div class="audio-grid">
             <div class="audio-control">
                 <label><span data-i18n="controls.volume">🔊 Volume</span> (<output id="input-audio-volume-value">100</output>)</label><input id="input-audio-volume" type="range" min="0" max="100" value="100" />

@@ -1,6 +1,6 @@
 import { initTranslations } from "./i18n-init.ts";
 import i18n from "./i18n/index.ts";
-import { SONY_VENDOR_ID } from "./const.ts";
+import { SONY_HID_FILTERS } from "./const.ts";
 
 const deviceChannel = new BroadcastChannel("dualsense_channel");
 
@@ -11,10 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 (document.getElementById("btn-request-options") as HTMLButtonElement | null)?.addEventListener("click", async () => {
 	const devices = await navigator.hid.requestDevice({
-		filters: [
-			{ vendorId: SONY_VENDOR_ID, productId: 0x0ce6 },
-			{ vendorId: SONY_VENDOR_ID, productId: 0x0df2 },
-		],
+		filters: [...SONY_HID_FILTERS],
 	});
 
 	localStorage.setItem("dualsense_authorized_devices", JSON.stringify(devices));
@@ -44,7 +41,7 @@ function updateAuthorizedState(statusKey?: string): void {
 
 	if (devices.length > 0) {
 		authorized.removeAttribute("data-i18n");
-		authorized.textContent = devices.map((device) => device.productName || "DualSense").join(", ");
+		authorized.textContent = devices.map((device) => device.productName || "PlayStation Controller").join(", ");
 	} else {
 		authorized.dataset.i18n = "options.none";
 		authorized.textContent = i18n.t("options.none");
