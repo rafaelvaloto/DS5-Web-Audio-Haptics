@@ -1,6 +1,6 @@
-# 🔊 DS5 Web Audio Haptics Bluetooth
+# 🔊 Play any games your browser using DualSense or DualShock4
 
-Transform your browser into an immersive experience. This extension captures live game audio in the browser and streams it directly to your PlayStation DualSense controller via Bluetooth. Enjoy the sound through the controller's built-in speakers alongside high-fidelity synchronized tactile vibrations—no cables or custom dongles required!
+This tool also captures live game audio via Screen Share and streams it directly to your PlayStation DualSense controller via Bluetooth , delivering full audio playback through the controller's built-in speakers alongside high-fidelity haptics
 
 *[☕ Buy me a coffee or support the project!](https://github.com/sponsors/rafaelvaloto)*
 
