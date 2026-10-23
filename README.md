@@ -28,7 +28,7 @@ The extension is designed to work perfectly with web games. Play on platforms wh
 
 ## 🧩 How to Install and Use
 
-* **Installation:** 👉 **[Open the install page](https://rafaelvaloto.github.io/DS5-Web-Audio-Haptics/)**
+* **Installation:** 👉 **[Open the install page](https://chromewebstore.google.com/detail/npadkgahblelfcdfcoddadobolkfbchp?utm_source=item-share-cb)**
 * **Supported Browsers:** Google Chrome, Microsoft Edge, Brave, Opera, Firefox, and others.
 
 **Step-by-Step Setup:**
@@ -42,6 +42,7 @@ The extension is designed to work perfectly with web games. Play on platforms wh
 
 ## ⭐ Credits
 
+* [Gamepad-Core | Dualsense Multiplatform](https://github.com/rafaelvaloto/dualsense-multiplatform) - Base library web assembly integration, by Rafael Valoto.
 * [SAxense](https://github.com/egormanga/SAxense) - Base for Bluetooth Audio Haptics.
 * [Awalol/DS5Dongle](https://github.com/awalol/DS5Dongle) - Reference for **Bluetooth Audio (Headset/Speaker)** codec.
 
